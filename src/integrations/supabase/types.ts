@@ -14,7 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      waste_manifests: {
+        Row: {
+          created_at: string
+          destination_type: string
+          id: string
+          photo_url: string | null
+          status: string
+          transporter_name: string
+          updated_at: string
+          user_id: string
+          waste_class: string
+          weight_kg: number
+        }
+        Insert: {
+          created_at?: string
+          destination_type: string
+          id?: string
+          photo_url?: string | null
+          status?: string
+          transporter_name: string
+          updated_at?: string
+          user_id: string
+          waste_class: string
+          weight_kg: number
+        }
+        Update: {
+          created_at?: string
+          destination_type?: string
+          id?: string
+          photo_url?: string | null
+          status?: string
+          transporter_name?: string
+          updated_at?: string
+          user_id?: string
+          waste_class?: string
+          weight_kg?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

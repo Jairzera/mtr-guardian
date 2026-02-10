@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Camera, Loader2, CheckCircle2, ArrowLeft, ArrowRight, Upload } from "lucide-react";
+import WasteCodeSelect from "@/components/manifest/WasteCodeSelect";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -21,8 +22,9 @@ const NewManifest = () => {
   const [step, setStep] = useState(0);
   const [photo, setPhoto] = useState<string | null>(null);
   const [aiProgress, setAiProgress] = useState(0);
+  const [selectedWasteCodeId, setSelectedWasteCodeId] = useState("");
   const [formData, setFormData] = useState({
-    wasteClass: "Classe I - Perigoso",
+    wasteClass: "",
     weightKg: "1.250",
     transporterName: "TransLog Ambiental LTDA",
     transporterCnpj: "12.345.678/0001-90",
@@ -126,22 +128,13 @@ const NewManifest = () => {
           </div>
 
           <div className="space-y-4">
-            <div>
-              <Label className="text-sm font-medium text-muted-foreground">Classe do Resíduo</Label>
-              <Select
-                value={formData.wasteClass}
-                onValueChange={(v) => setFormData({ ...formData, wasteClass: v })}
-              >
-                <SelectTrigger className="mt-1.5">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Classe I - Perigoso">Classe I - Perigoso</SelectItem>
-                  <SelectItem value="Classe II A - Não Inerte">Classe II A - Não Inerte</SelectItem>
-                  <SelectItem value="Classe II B - Inerte">Classe II B - Inerte</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            <WasteCodeSelect
+              value={selectedWasteCodeId}
+              onValueChange={setSelectedWasteCodeId}
+              onWasteCodeChange={(wc) => {
+                if (wc) setFormData({ ...formData, wasteClass: wc.class });
+              }}
+            />
 
             <div>
               <Label className="text-sm font-medium text-muted-foreground">Peso Total (kg)</Label>

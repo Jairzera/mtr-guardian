@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      waste_codes_ibama: {
+        Row: {
+          class: string
+          code: string
+          created_at: string
+          description: string
+          id: string
+          requires_special_transport: boolean
+        }
+        Insert: {
+          class: string
+          code: string
+          created_at?: string
+          description: string
+          id?: string
+          requires_special_transport?: boolean
+        }
+        Update: {
+          class?: string
+          code?: string
+          created_at?: string
+          description?: string
+          id?: string
+          requires_special_transport?: boolean
+        }
+        Relationships: []
+      }
       waste_manifests: {
         Row: {
           created_at: string

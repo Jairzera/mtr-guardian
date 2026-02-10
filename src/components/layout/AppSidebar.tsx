@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, FileText, ShieldCheck, Settings, Plus } from "lucide-react";
+import { LayoutDashboard, FileText, ShieldCheck, Settings, Plus, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.gif";
 
@@ -12,6 +13,7 @@ const navItems = [
 
 const AppSidebar = () => {
   const location = useLocation();
+  const { signOut } = useAuth();
 
   return (
     <aside className="hidden md:flex md:flex-col md:w-64 bg-sidebar text-sidebar-foreground min-h-screen fixed left-0 top-0 z-30">
@@ -40,13 +42,17 @@ const AppSidebar = () => {
         })}
       </nav>
 
-      <div className="px-3 pb-6">
+      <div className="px-3 pb-6 space-y-2">
         <NavLink to="/novo-manifesto">
           <Button className="w-full gradient-primary shadow-primary font-semibold gap-2">
             <Plus className="w-4 h-4" />
             Novo Manifesto
           </Button>
         </NavLink>
+        <Button variant="ghost" onClick={signOut} className="w-full justify-start gap-2 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50">
+          <LogOut className="w-4 h-4" />
+          Sair
+        </Button>
       </div>
     </aside>
   );

@@ -20,7 +20,7 @@ const steps = ["Captura", "Análise IA", "Conferência", "Conclusão"];
 const NewManifest = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
-  const [photo, setPhoto] = useState<string | null>(null);
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [aiProgress, setAiProgress] = useState(0);
   const [selectedWasteCodeId, setSelectedWasteCodeId] = useState("");
   const [formData, setFormData] = useState({
@@ -31,8 +31,12 @@ const NewManifest = () => {
     destinationType: "Reciclagem",
   });
 
-  const handlePhotoUpload = useCallback(() => {
-    setPhoto("uploaded");
+  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const url = URL.createObjectURL(file);
+    setPhotoUrl(url);
     setStep(1);
 
     // Simulate AI analysis
@@ -79,8 +83,8 @@ const NewManifest = () => {
       {/* Step 0: Photo capture */}
       {step === 0 && (
         <Card className="p-6 shadow-card border-border/60">
-          <button
-            onClick={handlePhotoUpload}
+          <label
+            htmlFor="photo-upload"
             className="w-full aspect-[4/3] border-2 border-dashed border-primary/40 rounded-xl flex flex-col items-center justify-center gap-4 bg-accent/30 hover:bg-accent/50 transition-colors cursor-pointer"
           >
             <div className="w-16 h-16 rounded-full gradient-primary flex items-center justify-center shadow-primary">
@@ -94,7 +98,15 @@ const NewManifest = () => {
               <Upload className="w-4 h-4" />
               Selecionar arquivo
             </div>
-          </button>
+          </label>
+          <input
+            id="photo-upload"
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={handleFileChange}
+          />
         </Card>
       )}
 
@@ -126,6 +138,17 @@ const NewManifest = () => {
             <CheckCircle2 className="w-5 h-5" />
             <span className="text-sm font-semibold">Dados extraídos com sucesso</span>
           </div>
+
+          {photoUrl && (
+            <div className="mb-4">
+              <Label className="text-sm font-medium text-muted-foreground">Foto capturada</Label>
+              <img
+                src={photoUrl}
+                alt="Foto do MTR"
+                className="mt-1.5 w-24 h-24 object-cover rounded-lg border border-border"
+              />
+            </div>
+          )}
 
           <div className="space-y-4">
             <WasteCodeSelect
@@ -209,7 +232,7 @@ const NewManifest = () => {
               <ArrowRight className="w-4 h-4" />
               Ver Meus MTRs
             </Button>
-            <Button variant="outline" onClick={() => { setStep(0); setPhoto(null); setAiProgress(0); }}>
+            <Button variant="outline" onClick={() => { setStep(0); setPhotoUrl(null); setAiProgress(0); }}>
               Registrar Outro
             </Button>
           </div>

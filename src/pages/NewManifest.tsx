@@ -14,14 +14,19 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const steps = ["Captura", "Análise IA", "Conferência", "Conclusão"];
 
 const NewManifest = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [aiProgress, setAiProgress] = useState(0);
+  const [saving, setSaving] = useState(false);
   const [selectedWasteCodeId, setSelectedWasteCodeId] = useState("");
   const [formData, setFormData] = useState({
     wasteClass: "",
@@ -35,11 +40,11 @@ const NewManifest = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    setPhotoFile(file);
     const url = URL.createObjectURL(file);
     setPhotoUrl(url);
     setStep(1);
 
-    // Simulate AI analysis
     let progress = 0;
     const interval = setInterval(() => {
       progress += 20;
@@ -51,9 +56,57 @@ const NewManifest = () => {
     }, 500);
   }, []);
 
-  const handleConfirm = () => {
-    setStep(3);
-    toast.success("Manifesto registrado com sucesso!");
+  const handleConfirm = async () => {
+    if (!user) {
+      toast.error("Você precisa estar logado para registrar um MTR.");
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      let uploadedPhotoUrl: string | null = null;
+
+      // Upload photo to Storage
+      if (photoFile) {
+        const timestamp = Date.now();
+        const filePath = `${user.id}/${timestamp}_${photoFile.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from("mtr_documents")
+          .upload(filePath, photoFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrlData } = supabase.storage
+          .from("mtr_documents")
+          .getPublicUrl(filePath);
+
+        uploadedPhotoUrl = publicUrlData.publicUrl;
+      }
+
+      // Insert manifest into database
+      const weightNum = parseFloat(formData.weightKg.replace(/\./g, "").replace(",", "."));
+
+      const { error: insertError } = await supabase.from("waste_manifests").insert({
+        user_id: user.id,
+        waste_class: formData.wasteClass || "Não classificado",
+        weight_kg: isNaN(weightNum) ? 0 : weightNum,
+        transporter_name: formData.transporterName,
+        destination_type: formData.destinationType,
+        photo_url: uploadedPhotoUrl,
+        status: "pendente",
+      });
+
+      if (insertError) throw insertError;
+
+      setStep(3);
+      toast.success("Manifesto registrado com sucesso!");
+    } catch (err: any) {
+      console.error("Erro ao salvar MTR:", err);
+      toast.error(err.message || "Erro ao salvar o manifesto.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -207,10 +260,15 @@ const NewManifest = () => {
 
           <Button
             onClick={handleConfirm}
+            disabled={saving}
             className="w-full h-14 text-base font-semibold gradient-primary shadow-primary gap-2"
           >
-            <CheckCircle2 className="w-5 h-5" />
-            Confirmar e Gerar Comprovante
+            {saving ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <CheckCircle2 className="w-5 h-5" />
+            )}
+            {saving ? "Salvando..." : "Confirmar e Gerar Comprovante"}
           </Button>
         </Card>
       )}
@@ -232,7 +290,7 @@ const NewManifest = () => {
               <ArrowRight className="w-4 h-4" />
               Ver Meus MTRs
             </Button>
-            <Button variant="outline" onClick={() => { setStep(0); setPhotoUrl(null); setAiProgress(0); }}>
+            <Button variant="outline" onClick={() => { setStep(0); setPhotoUrl(null); setPhotoFile(null); setAiProgress(0); }}>
               Registrar Outro
             </Button>
           </div>

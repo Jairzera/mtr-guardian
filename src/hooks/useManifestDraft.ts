@@ -9,7 +9,8 @@ export interface ManifestDraft {
   aiSuggested: boolean;
   formData: {
     wasteClass: string;
-    weightKg: string;
+    quantity: string;
+    unit: string;
     transporterName: string;
     transporterCnpj: string;
     destinationType: string;
@@ -23,7 +24,7 @@ export function useManifestDraft() {
     const hasData =
       draft.step > 0 ||
       draft.selectedWasteCodeId ||
-      draft.formData.weightKg ||
+      draft.formData.quantity ||
       draft.formData.transporterCnpj;
 
     if (!hasData) return;

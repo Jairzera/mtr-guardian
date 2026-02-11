@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 import AppSidebar from "./AppSidebar";
 import BottomNav from "./BottomNav";
+import DraftBanner from "@/components/manifest/DraftBanner";
 
 const AppLayout = () => {
   return (
@@ -10,6 +11,7 @@ const AppLayout = () => {
         <Outlet />
       </main>
       <BottomNav />
+      <DraftBanner />
     </div>
   );
 };

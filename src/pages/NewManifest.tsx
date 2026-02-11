@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Camera, Loader2, CheckCircle2, ArrowLeft, ArrowRight, Upload } from "lucide-react";
 import WasteCodeSelect from "@/components/manifest/WasteCodeSelect";
@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { useWasteCodes } from "@/hooks/useWasteCodes";
+import { useManifestDraft } from "@/hooks/useManifestDraft";
 
 const steps = ["Captura", "Análise IA", "Conferência", "Conclusão"];
 
@@ -26,6 +27,8 @@ const NewManifest = () => {
   const { user } = useAuth();
   const { settings } = useCompanySettings();
   const { wasteCodes, loading: codesLoading } = useWasteCodes();
+  const { saveDraft, loadDraft, clearDraft } = useManifestDraft();
+  const draftLoaded = useRef(false);
   const [step, setStep] = useState(0);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -40,6 +43,37 @@ const NewManifest = () => {
     transporterCnpj: "",
     destinationType: "Reciclagem",
   });
+
+  // Restore draft on mount
+  useEffect(() => {
+    if (draftLoaded.current) return;
+    draftLoaded.current = true;
+    const draft = loadDraft();
+    if (draft) {
+      // Restore to step 2 (review) at most, skip AI step
+      setStep(draft.step >= 2 ? 2 : draft.step === 0 ? 0 : 2);
+      setPhotoUrl(draft.photoUrl);
+      setSelectedWasteCodeId(draft.selectedWasteCodeId);
+      setAiSuggested(draft.aiSuggested);
+      setFormData(draft.formData);
+    }
+  }, [loadDraft]);
+
+  // Save draft on unmount (if not completed)
+  useEffect(() => {
+    return () => {
+      // Don't save if completed (step 3) or at start with no data
+      if (step === 3) return;
+      saveDraft({
+        step,
+        photoUrl,
+        selectedWasteCodeId,
+        aiSuggested,
+        formData,
+      });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, photoUrl, selectedWasteCodeId, aiSuggested, formData]);
 
   // Pre-fill from company settings
   useEffect(() => {
@@ -190,6 +224,7 @@ const NewManifest = () => {
       if (insertError) throw insertError;
 
       setStep(3);
+      clearDraft();
       toast.success("Manifesto registrado com sucesso!");
     } catch (err: any) {
       console.error("Erro ao salvar MTR:", err);
@@ -399,6 +434,7 @@ const NewManifest = () => {
                 setAiProgress(0);
                 setAiSuggested(false);
                 setSelectedWasteCodeId("");
+                clearDraft();
               }}
             >
               Registrar Outro

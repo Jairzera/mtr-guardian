@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { useTheme } from "next-themes";
+import { formatCNPJ, isValidCNPJ } from "@/lib/cnpj";
 
 const Configuracoes = () => {
   const { settings, loading, saveSettings } = useCompanySettings();
@@ -15,21 +16,35 @@ const Configuracoes = () => {
   const [form, setForm] = useState(settings);
   const [saving, setSaving] = useState(false);
   const [alertasEmail, setAlertasEmail] = useState(true);
+  const [cnpjError, setCnpjError] = useState("");
 
   useEffect(() => {
     setForm(settings);
   }, [settings]);
 
   const handleChange = (field: string, value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    if (field === "cnpj") {
+      const formatted = formatCNPJ(value);
+      setForm((prev) => ({ ...prev, [field]: formatted }));
+      setCnpjError("");
+    } else {
+      setForm((prev) => ({ ...prev, [field]: value }));
+    }
   };
 
   const handleSave = async () => {
+    // Validar CNPJ
+    if (!isValidCNPJ(form.cnpj)) {
+      setCnpjError("CNPJ não corresponde ao modelo padrão");
+      return;
+    }
+
     setSaving(true);
     const ok = await saveSettings(form);
     setSaving(false);
     if (ok) {
       toast({ title: "Alterações salvas", description: "Suas configurações foram atualizadas com sucesso." });
+      setCnpjError("");
     } else {
       toast({ title: "Erro", description: "Não foi possível salvar as configurações.", variant: "destructive" });
     }
@@ -62,7 +77,14 @@ const Configuracoes = () => {
           </div>
           <div className="space-y-2">
             <Label htmlFor="cnpj">CNPJ</Label>
-            <Input id="cnpj" placeholder="00.000.000/0000-00" value={form.cnpj} onChange={(e) => handleChange("cnpj", e.target.value)} />
+            <Input 
+              id="cnpj" 
+              placeholder="00.000.000/0000-00" 
+              value={form.cnpj} 
+              onChange={(e) => handleChange("cnpj", e.target.value)}
+              className={cnpjError ? "border-destructive" : ""}
+            />
+            {cnpjError && <p className="text-sm text-destructive font-medium">{cnpjError}</p>}
           </div>
           <div className="space-y-2">
             <Label htmlFor="responsavel">Responsável Técnico</Label>

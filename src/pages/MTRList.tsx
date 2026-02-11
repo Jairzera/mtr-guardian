@@ -30,6 +30,9 @@ import { FileX2, Trash2, Info } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import ExportDropdown from "@/components/ExportDropdown";
+import { exportCSV, exportPDF } from "@/lib/exportUtils";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 
 interface MTRItem {
   id: string;
@@ -70,12 +73,39 @@ const StatusBadgeWithTooltip = ({ status }: { status: string }) => {
   );
 };
 
+const formatDate = (iso: string) => {
+  const d = new Date(iso);
+  return d.toLocaleDateString("pt-BR");
+};
+
 const MTRList = () => {
   const isMobile = useIsMobile();
   const [data, setData] = useState<MTRItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const { settings: company } = useCompanySettings();
+
+  const mtrColumns = [
+    { header: "Data", key: "date" },
+    { header: "ID", key: "shortId" },
+    { header: "Classe", key: "waste_class" },
+    { header: "Peso (kg)", key: "weight_kg" },
+    { header: "Transportadora", key: "transporter_name" },
+    { header: "Status", key: "statusLabel" },
+  ];
+
+  const exportRows = data.map((item) => ({
+    date: formatDate(item.created_at),
+    shortId: item.id.slice(0, 8),
+    waste_class: item.waste_class,
+    weight_kg: item.weight_kg,
+    transporter_name: item.transporter_name,
+    statusLabel: getStatusBadge(item.status).label,
+  }));
+
+  const handleExportCSV = () => exportCSV({ title: "Meus_MTRs", columns: mtrColumns, rows: exportRows });
+  const handleExportPDF = () => exportPDF({ title: "Meus MTRs", columns: mtrColumns, rows: exportRows, company });
 
   useEffect(() => {
     const fetchMTRs = async () => {
@@ -106,10 +136,6 @@ const MTRList = () => {
     setDeleteId(null);
   };
 
-  const formatDate = (iso: string) => {
-    const d = new Date(iso);
-    return d.toLocaleDateString("pt-BR");
-  };
 
   if (loading) {
     return (
@@ -127,9 +153,12 @@ const MTRList = () => {
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Meus MTRs</h1>
-        <p className="text-sm text-muted-foreground mt-1">Manifestos de Transporte de Resíduos</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Meus MTRs</h1>
+          <p className="text-sm text-muted-foreground mt-1">Manifestos de Transporte de Resíduos</p>
+        </div>
+        {data.length > 0 && <ExportDropdown onExportCSV={handleExportCSV} onExportPDF={handleExportPDF} />}
       </div>
 
       {data.length === 0 ? (

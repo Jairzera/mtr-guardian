@@ -7,6 +7,9 @@ import {
 } from "@/components/ui/table";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { toast } from "@/hooks/use-toast";
+import ExportDropdown from "@/components/ExportDropdown";
+import { exportCSV, exportPDF } from "@/lib/exportUtils";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 
 interface CDFItem {
   id: string;
@@ -30,12 +33,26 @@ const handleDownload = (certNumber: string) => {
 
 const Certificados = () => {
   const isMobile = useIsMobile();
+  const { settings: company } = useCompanySettings();
+
+  const cdfColumns = [
+    { header: "Data de Emissão", key: "date" },
+    { header: "Nº do Certificado", key: "certNumber" },
+    { header: "MTR Vinculado", key: "linkedMTR" },
+    { header: "Destinador Final", key: "destinador" },
+  ];
+
+  const handleExportCSV = () => exportCSV({ title: "Certificados_CDF", columns: cdfColumns, rows: mockData as unknown as Record<string, unknown>[] });
+  const handleExportPDF = () => exportPDF({ title: "Certificados CDF", columns: cdfColumns, rows: mockData as unknown as Record<string, unknown>[], company });
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Certificados</h1>
-        <p className="text-sm text-muted-foreground mt-1">Certificados de Destinação Final (CDF)</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Certificados</h1>
+          <p className="text-sm text-muted-foreground mt-1">Certificados de Destinação Final (CDF)</p>
+        </div>
+        <ExportDropdown onExportCSV={handleExportCSV} onExportPDF={handleExportPDF} />
       </div>
 
       {isMobile ? (

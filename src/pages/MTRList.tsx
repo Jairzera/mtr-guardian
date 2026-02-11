@@ -43,10 +43,31 @@ interface MTRItem {
   transporter_name: string;
 }
 
-const statusConfig: Record<string, { label: string; className: string; tooltip?: string }> = {
+const pendingReasons = [
+  "Falta assinatura do motorista",
+  "Aguardando peso na balança do destino",
+  "Divergência de classe de resíduo",
+  "Aguardando confirmação do destinador",
+  "Documento pendente de carimbo",
+];
+
+const riskReasons = [
+  "Documento ilegível ou dados inconsistentes",
+  "Licença ambiental do transportador vencida",
+  "Volume declarado acima do limite autorizado",
+  "CNPJ do destinador não encontrado no SINIR",
+];
+
+const getReasonByHash = (id: string, reasons: string[]) => {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) | 0;
+  return reasons[Math.abs(hash) % reasons.length];
+};
+
+const statusConfig: Record<string, { label: string; className: string }> = {
   conformidade: { label: "Em Conformidade", className: "bg-accent text-accent-foreground border-0" },
-  pendente: { label: "Pendente", className: "bg-warning/15 text-warning border-0", tooltip: "Aguardando assinatura do destinador" },
-  risco: { label: "Risco", className: "bg-risk/15 text-risk border-0", tooltip: "Documento ilegível ou dados inconsistentes" },
+  pendente: { label: "Pendente", className: "bg-warning/15 text-warning border-0" },
+  risco: { label: "Risco", className: "bg-risk/15 text-risk border-0" },
 };
 
 const getStatusBadge = (status: string) => {
@@ -54,18 +75,23 @@ const getStatusBadge = (status: string) => {
   return config;
 };
 
-const StatusBadgeWithTooltip = ({ status }: { status: string }) => {
+const StatusBadgeWithTooltip = ({ status, id }: { status: string; id: string }) => {
   const badge = getStatusBadge(status);
+  const tooltip =
+    status === "pendente" ? getReasonByHash(id, pendingReasons) :
+    status === "risco" ? getReasonByHash(id, riskReasons) :
+    null;
+
   return (
     <div className="flex items-center gap-1.5">
       <Badge className={badge.className}>{badge.label}</Badge>
-      {badge.tooltip && (
+      {tooltip && (
         <Tooltip>
           <TooltipTrigger asChild>
             <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
           </TooltipTrigger>
-          <TooltipContent side="top" className="max-w-[200px]">
-            <p className="text-xs">{badge.tooltip}</p>
+          <TooltipContent side="top" className="max-w-[220px]">
+            <p className="text-xs">{tooltip}</p>
           </TooltipContent>
         </Tooltip>
       )}
@@ -176,7 +202,7 @@ const MTRList = () => {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-semibold text-card-foreground">{item.id.slice(0, 8)}</span>
                 <div className="flex items-center gap-2">
-                  <StatusBadgeWithTooltip status={item.status} />
+                   <StatusBadgeWithTooltip status={item.status} id={item.id} />
                   <Button
                     variant="ghost"
                     size="icon"
@@ -218,7 +244,7 @@ const MTRList = () => {
                   <TableCell>{Number(item.weight_kg).toLocaleString()}</TableCell>
                   <TableCell>{item.transporter_name}</TableCell>
                   <TableCell>
-                    <StatusBadgeWithTooltip status={item.status} />
+                    <StatusBadgeWithTooltip status={item.status} id={item.id} />
                   </TableCell>
                   <TableCell>
                     <Button

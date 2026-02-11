@@ -19,6 +19,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { useWasteCodes } from "@/hooks/useWasteCodes";
 import { useManifestDraft } from "@/hooks/useManifestDraft";
+import { formatCNPJ } from "@/lib/cnpj";
 
 const steps = ["Captura", "Análise IA", "Conferência", "Conclusão"];
 
@@ -77,12 +78,11 @@ const NewManifest = () => {
 
   // Pre-fill from company settings
   useEffect(() => {
-    if (settings.razaoSocial) {
-      setFormData((prev) => ({
-        ...prev,
-        transporterName: prev.transporterName || settings.razaoSocial,
-      }));
-    }
+    setFormData((prev) => ({
+      ...prev,
+      transporterName: prev.transporterName || settings.razaoSocial,
+      transporterCnpj: prev.transporterCnpj || formatCNPJ(settings.cnpj),
+    }));
   }, [settings]);
 
   const analyzeWithAI = useCallback(async (file: File) => {
@@ -369,8 +369,10 @@ const NewManifest = () => {
               <Label className="text-sm font-medium text-muted-foreground">CNPJ da Transportadora</Label>
               <Input
                 className="mt-1.5"
+                placeholder="00.000.000/0000-00"
+                inputMode="numeric"
                 value={formData.transporterCnpj}
-                onChange={(e) => setFormData({ ...formData, transporterCnpj: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, transporterCnpj: formatCNPJ(e.target.value) })}
               />
             </div>
 

@@ -39,7 +39,8 @@ const NewManifest = () => {
   const [selectedWasteCodeId, setSelectedWasteCodeId] = useState("");
   const [formData, setFormData] = useState({
     wasteClass: "",
-    weightKg: "",
+    quantity: "",
+    unit: "kg",
     transporterName: "",
     transporterCnpj: "",
     destinationType: "Reciclagem",
@@ -114,7 +115,7 @@ const NewManifest = () => {
         return null;
       }
 
-      return data as { waste_code_id: string | null; confidence: string };
+      return data as { waste_code_id: string | null; confidence: string; quantity?: number | null; unit?: string };
     } catch (err) {
       console.error("AI analysis failed:", err);
       return null;
@@ -135,7 +136,7 @@ const NewManifest = () => {
       // Start progress animation + real AI call in parallel
       let progress = 0;
       let progressDone = false;
-      let aiResult: { waste_code_id: string | null; confidence: string } | null = null;
+      let aiResult: { waste_code_id: string | null; confidence: string; quantity?: number | null; unit?: string } | null = null;
       let aiDone = false;
 
       const tryAdvance = () => {
@@ -146,7 +147,12 @@ const NewManifest = () => {
             setAiSuggested(true);
             const wc = wasteCodes.find((w) => w.id === aiResult!.waste_code_id);
             if (wc) {
-              setFormData((prev) => ({ ...prev, wasteClass: wc.class }));
+              setFormData((prev) => ({
+                ...prev,
+                wasteClass: wc.class,
+                quantity: aiResult!.quantity ? String(aiResult!.quantity) : prev.quantity,
+                unit: aiResult!.unit && ["kg", "L", "m²"].includes(aiResult!.unit) ? aiResult!.unit : prev.unit,
+              }));
             }
           }
           setTimeout(() => setStep(2), 400);
@@ -209,12 +215,12 @@ const NewManifest = () => {
         uploadedPhotoUrl = publicUrlData.publicUrl;
       }
 
-      const weightNum = parseFloat(formData.weightKg.replace(/\./g, "").replace(",", "."));
+      const quantityNum = parseFloat(formData.quantity.replace(/\./g, "").replace(",", "."));
 
       const { error: insertError } = await supabase.from("waste_manifests").insert({
         user_id: user.id,
         waste_class: formData.wasteClass || "Não classificado",
-        weight_kg: isNaN(weightNum) ? 0 : weightNum,
+        weight_kg: isNaN(quantityNum) ? 0 : quantityNum,
         transporter_name: formData.transporterName,
         destination_type: formData.destinationType,
         photo_url: uploadedPhotoUrl,
@@ -348,12 +354,29 @@ const NewManifest = () => {
             />
 
             <div>
-              <Label className="text-sm font-medium text-muted-foreground">Peso Total (kg)</Label>
-              <Input
-                className="mt-1.5"
-                value={formData.weightKg}
-                onChange={(e) => setFormData({ ...formData, weightKg: e.target.value })}
-              />
+              <Label className="text-sm font-medium text-muted-foreground">Quantidade</Label>
+              <div className="flex gap-2 mt-1.5">
+                <Input
+                  className="flex-1"
+                  placeholder="Ex: 500"
+                  inputMode="decimal"
+                  value={formData.quantity}
+                  onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                />
+                <Select
+                  value={formData.unit}
+                  onValueChange={(v) => setFormData({ ...formData, unit: v })}
+                >
+                  <SelectTrigger className="w-28">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="kg">kg</SelectItem>
+                    <SelectItem value="L">Litros (L)</SelectItem>
+                    <SelectItem value="m²">m²</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div>

@@ -22,7 +22,10 @@ serve(async (req) => {
 
     const systemPrompt = `You are a waste classification expert for Brazilian environmental regulations (IBAMA/CONAMA).
 Analyze the image of a waste manifest (MTR) document and determine which waste code best matches.
-You MUST respond with ONLY a JSON object: {"waste_code_id":"<uuid>","confidence":"high"|"medium"|"low"}
+Also identify the quantity and unit of measure if visible on the document.
+You MUST respond with ONLY a JSON object: {"waste_code_id":"<uuid>","confidence":"high"|"medium"|"low","quantity":null|<number>,"unit":"kg"|"L"|"m²"}
+- quantity: the numeric amount visible on the document, or null if not found.
+- unit: one of "kg", "L", or "m²". Default to "kg" if unclear.
 Do NOT include any other text. Pick from these codes:
 ${codeList}
 

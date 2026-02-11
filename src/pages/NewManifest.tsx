@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { useWasteCodes } from "@/hooks/useWasteCodes";
 
 const steps = ["Captura", "Análise IA", "Conferência", "Conclusão"];
 
@@ -24,10 +25,12 @@ const NewManifest = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { settings } = useCompanySettings();
+  const { wasteCodes, loading: codesLoading } = useWasteCodes();
   const [step, setStep] = useState(0);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [aiProgress, setAiProgress] = useState(0);
+  const [aiSuggested, setAiSuggested] = useState(false);
   const [saving, setSaving] = useState(false);
   const [selectedWasteCodeId, setSelectedWasteCodeId] = useState("");
   const [formData, setFormData] = useState({
@@ -48,25 +51,102 @@ const NewManifest = () => {
     }
   }, [settings]);
 
-  const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setPhotoFile(file);
-    const url = URL.createObjectURL(file);
-    setPhotoUrl(url);
-    setStep(1);
-
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 20;
-      setAiProgress(progress);
-      if (progress >= 100) {
-        clearInterval(interval);
-        setTimeout(() => setStep(2), 500);
+  const analyzeWithAI = useCallback(async (file: File) => {
+    try {
+      // Convert file to base64
+      const buffer = await file.arrayBuffer();
+      const bytes = new Uint8Array(buffer);
+      let binary = "";
+      for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
       }
-    }, 500);
-  }, []);
+      const imageBase64 = btoa(binary);
+
+      // Wait for waste codes to be loaded
+      if (wasteCodes.length === 0) return null;
+
+      const codeList = wasteCodes.map((wc) => ({
+        id: wc.id,
+        code: wc.code,
+        description: wc.description,
+      }));
+
+      const { data, error } = await supabase.functions.invoke("analyze-waste", {
+        body: { imageBase64, wasteCodes: codeList },
+      });
+
+      if (error) {
+        console.error("AI analysis error:", error);
+        return null;
+      }
+
+      return data as { waste_code_id: string | null; confidence: string };
+    } catch (err) {
+      console.error("AI analysis failed:", err);
+      return null;
+    }
+  }, [wasteCodes]);
+
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      setPhotoFile(file);
+      const url = URL.createObjectURL(file);
+      setPhotoUrl(url);
+      setStep(1);
+      setAiProgress(0);
+
+      // Start progress animation + real AI call in parallel
+      let progress = 0;
+      let progressDone = false;
+      let aiResult: { waste_code_id: string | null; confidence: string } | null = null;
+      let aiDone = false;
+
+      const tryAdvance = () => {
+        if (progressDone && aiDone) {
+          // Apply AI result
+          if (aiResult?.waste_code_id) {
+            setSelectedWasteCodeId(aiResult.waste_code_id);
+            setAiSuggested(true);
+            const wc = wasteCodes.find((w) => w.id === aiResult!.waste_code_id);
+            if (wc) {
+              setFormData((prev) => ({ ...prev, wasteClass: wc.class }));
+            }
+          }
+          setTimeout(() => setStep(2), 400);
+        }
+      };
+
+      const interval = setInterval(() => {
+        progress += 10;
+        setAiProgress(Math.min(progress, 95));
+        if (progress >= 95) {
+          clearInterval(interval);
+          progressDone = true;
+          tryAdvance();
+        }
+      }, 400);
+
+      analyzeWithAI(file).then((result) => {
+        aiResult = result;
+        aiDone = true;
+        // If progress bar is already done, advance
+        if (progressDone) {
+          setAiProgress(100);
+          tryAdvance();
+        } else {
+          // Speed up progress bar
+          clearInterval(interval);
+          setAiProgress(100);
+          progressDone = true;
+          tryAdvance();
+        }
+      });
+    },
+    [analyzeWithAI, wasteCodes]
+  );
 
   const handleConfirm = async () => {
     if (!user) {
@@ -79,7 +159,6 @@ const NewManifest = () => {
     try {
       let uploadedPhotoUrl: string | null = null;
 
-      // Upload photo to Storage
       if (photoFile) {
         const timestamp = Date.now();
         const filePath = `${user.id}/${timestamp}_${photoFile.name}`;
@@ -96,7 +175,6 @@ const NewManifest = () => {
         uploadedPhotoUrl = publicUrlData.publicUrl;
       }
 
-      // Insert manifest into database
       const weightNum = parseFloat(formData.weightKg.replace(/\./g, "").replace(",", "."));
 
       const { error: insertError } = await supabase.from("waste_manifests").insert({
@@ -183,7 +261,11 @@ const NewManifest = () => {
           </div>
           <div className="space-y-2">
             <p className="text-lg font-semibold text-foreground">
-              {aiProgress < 60 ? "IA Analisando Documento..." : "Validando Leis Ambientais..."}
+              {aiProgress < 40
+                ? "IA Analisando Documento..."
+                : aiProgress < 80
+                ? "Identificando Tipo de Resíduo..."
+                : "Validando Leis Ambientais..."}
             </p>
             <p className="text-sm text-muted-foreground">Extraindo dados do manifesto</p>
           </div>
@@ -218,10 +300,16 @@ const NewManifest = () => {
           <div className="space-y-4">
             <WasteCodeSelect
               value={selectedWasteCodeId}
-              onValueChange={setSelectedWasteCodeId}
+              onValueChange={(id) => {
+                setSelectedWasteCodeId(id);
+                setAiSuggested(false); // user overrode AI
+              }}
               onWasteCodeChange={(wc) => {
                 if (wc) setFormData({ ...formData, wasteClass: wc.class });
               }}
+              wasteCodes={wasteCodes}
+              loading={codesLoading}
+              aiSuggested={aiSuggested}
             />
 
             <div>
@@ -302,7 +390,17 @@ const NewManifest = () => {
               <ArrowRight className="w-4 h-4" />
               Ver Meus MTRs
             </Button>
-            <Button variant="outline" onClick={() => { setStep(0); setPhotoUrl(null); setPhotoFile(null); setAiProgress(0); }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setStep(0);
+                setPhotoUrl(null);
+                setPhotoFile(null);
+                setAiProgress(0);
+                setAiSuggested(false);
+                setSelectedWasteCodeId("");
+              }}
+            >
               Registrar Outro
             </Button>
           </div>

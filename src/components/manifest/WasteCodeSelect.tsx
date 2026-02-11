@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { AlertTriangle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { AlertTriangle, Sparkles } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -10,40 +9,37 @@ import {
 } from "@/components/ui/select";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Label } from "@/components/ui/label";
-
-type WasteCode = {
-  id: string;
-  code: string;
-  description: string;
-  class: string;
-  requires_special_transport: boolean;
-};
+import { type WasteCode } from "@/hooks/useWasteCodes";
 
 interface WasteCodeSelectProps {
   value: string;
   onValueChange: (value: string) => void;
   onWasteCodeChange: (wasteCode: WasteCode | null) => void;
+  wasteCodes: WasteCode[];
+  loading?: boolean;
+  aiSuggested?: boolean;
 }
 
-const WasteCodeSelect = ({ value, onValueChange, onWasteCodeChange }: WasteCodeSelectProps) => {
-  const [wasteCodes, setWasteCodes] = useState<WasteCode[]>([]);
+const WasteCodeSelect = ({
+  value,
+  onValueChange,
+  onWasteCodeChange,
+  wasteCodes,
+  loading = false,
+  aiSuggested = false,
+}: WasteCodeSelectProps) => {
   const [selectedCode, setSelectedCode] = useState<WasteCode | null>(null);
-  const [loading, setLoading] = useState(true);
 
+  // Sync selectedCode when value changes externally (e.g. from AI)
   useEffect(() => {
-    const fetchCodes = async () => {
-      const { data, error } = await supabase
-        .from("waste_codes_ibama")
-        .select("*")
-        .order("code");
-
-      if (!error && data) {
-        setWasteCodes(data);
+    if (value && wasteCodes.length > 0) {
+      const found = wasteCodes.find((wc) => wc.id === value) ?? null;
+      if (found && found.id !== selectedCode?.id) {
+        setSelectedCode(found);
+        onWasteCodeChange(found);
       }
-      setLoading(false);
-    };
-    fetchCodes();
-  }, []);
+    }
+  }, [value, wasteCodes]);
 
   const handleChange = (codeId: string) => {
     const found = wasteCodes.find((wc) => wc.id === codeId) ?? null;
@@ -57,6 +53,12 @@ const WasteCodeSelect = ({ value, onValueChange, onWasteCodeChange }: WasteCodeS
   return (
     <div className="space-y-2">
       <Label className="text-sm font-medium text-muted-foreground">Tipo de Resíduo (IBAMA)</Label>
+      {aiSuggested && value && (
+        <div className="flex items-center gap-1.5 text-xs text-primary font-medium">
+          <Sparkles className="w-3.5 h-3.5" />
+          Sugerido pela IA — você pode alterar
+        </div>
+      )}
       <Select value={value} onValueChange={handleChange}>
         <SelectTrigger className="mt-1.5">
           <SelectValue placeholder={loading ? "Carregando códigos…" : "Selecione o resíduo"} />

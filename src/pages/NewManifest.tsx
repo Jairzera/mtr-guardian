@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Camera, Loader2, CheckCircle2, ArrowLeft, ArrowRight, Upload } from "lucide-react";
 import WasteCodeSelect from "@/components/manifest/WasteCodeSelect";
@@ -16,12 +16,14 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 
 const steps = ["Captura", "Análise IA", "Conferência", "Conclusão"];
 
 const NewManifest = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { settings } = useCompanySettings();
   const [step, setStep] = useState(0);
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photoFile, setPhotoFile] = useState<File | null>(null);
@@ -30,11 +32,21 @@ const NewManifest = () => {
   const [selectedWasteCodeId, setSelectedWasteCodeId] = useState("");
   const [formData, setFormData] = useState({
     wasteClass: "",
-    weightKg: "1.250",
-    transporterName: "TransLog Ambiental LTDA",
-    transporterCnpj: "12.345.678/0001-90",
+    weightKg: "",
+    transporterName: "",
+    transporterCnpj: "",
     destinationType: "Reciclagem",
   });
+
+  // Pre-fill from company settings
+  useEffect(() => {
+    if (settings.razaoSocial) {
+      setFormData((prev) => ({
+        ...prev,
+        transporterName: prev.transporterName || settings.razaoSocial,
+      }));
+    }
+  }, [settings]);
 
   const handleFileChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

@@ -18,6 +18,18 @@ const DraftBanner = () => {
     }
   }, [location.pathname, hasDraft]);
 
+  // Monitor localStorage changes (from other tabs/windows or same window)
+  useEffect(() => {
+    const handleStorageChange = () => {
+      if (location.pathname !== "/novo-manifesto") {
+        setVisible(hasDraft());
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [location.pathname, hasDraft]);
+
   if (!visible) return null;
 
   return (

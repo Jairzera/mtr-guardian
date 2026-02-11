@@ -1,35 +1,52 @@
-import { useState } from "react";
-import { Building2, SlidersHorizontal } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Building2, SlidersHorizontal, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { useTheme } from "next-themes";
 
 const Configuracoes = () => {
-  const [form, setForm] = useState({
-    razaoSocial: "",
-    cnpj: "",
-    endereco: "",
-    responsavel: "",
-  });
-  const [darkMode, setDarkMode] = useState(false);
+  const { settings, loading, saveSettings } = useCompanySettings();
+  const { theme, setTheme } = useTheme();
+  const [form, setForm] = useState(settings);
+  const [saving, setSaving] = useState(false);
   const [alertasEmail, setAlertasEmail] = useState(true);
+
+  useEffect(() => {
+    setForm(settings);
+  }, [settings]);
 
   const handleChange = (field: string, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
-    toast({ title: "Alterações salvas", description: "Suas configurações foram atualizadas com sucesso." });
+  const handleSave = async () => {
+    setSaving(true);
+    const ok = await saveSettings(form);
+    setSaving(false);
+    if (ok) {
+      toast({ title: "Alterações salvas", description: "Suas configurações foram atualizadas com sucesso." });
+    } else {
+      toast({ title: "Erro", description: "Não foi possível salvar as configurações.", variant: "destructive" });
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-6">
       <h1 className="text-2xl md:text-3xl font-bold text-foreground">Configurações</h1>
 
-      {/* Dados da Empresa */}
       <Card className="shadow-card border-border/60">
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -58,7 +75,6 @@ const Configuracoes = () => {
         </CardContent>
       </Card>
 
-      {/* Preferências */}
       <Card className="shadow-card border-border/60">
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -72,7 +88,7 @@ const Configuracoes = () => {
               <p className="text-sm font-medium text-foreground">Modo Escuro</p>
               <p className="text-xs text-muted-foreground">Alterna o tema da interface</p>
             </div>
-            <Switch checked={darkMode} onCheckedChange={setDarkMode} />
+            <Switch checked={theme === "dark"} onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")} />
           </div>
           <div className="flex items-center justify-between">
             <div>
@@ -85,7 +101,10 @@ const Configuracoes = () => {
       </Card>
 
       <div className="flex justify-end">
-        <Button onClick={handleSave}>Salvar Alterações</Button>
+        <Button onClick={handleSave} disabled={saving}>
+          {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+          Salvar Alterações
+        </Button>
       </div>
     </div>
   );

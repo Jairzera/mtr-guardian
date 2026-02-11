@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      company_settings: {
+        Row: {
+          cnpj: string
+          created_at: string
+          endereco: string
+          id: string
+          razao_social: string
+          responsavel: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cnpj?: string
+          created_at?: string
+          endereco?: string
+          id?: string
+          razao_social?: string
+          responsavel?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cnpj?: string
+          created_at?: string
+          endereco?: string
+          id?: string
+          razao_social?: string
+          responsavel?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       waste_codes_ibama: {
         Row: {
           class: string

@@ -10,9 +10,26 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
-import { FileX2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { FileX2, Trash2, Info } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface MTRItem {
   id: string;
@@ -23,10 +40,10 @@ interface MTRItem {
   transporter_name: string;
 }
 
-const statusConfig: Record<string, { label: string; className: string }> = {
+const statusConfig: Record<string, { label: string; className: string; tooltip?: string }> = {
   conformidade: { label: "Em Conformidade", className: "bg-accent text-accent-foreground border-0" },
-  pendente: { label: "Pendente", className: "bg-warning/15 text-warning border-0" },
-  risco: { label: "Risco", className: "bg-risk/15 text-risk border-0" },
+  pendente: { label: "Pendente", className: "bg-warning/15 text-warning border-0", tooltip: "Aguardando assinatura do destinador" },
+  risco: { label: "Risco", className: "bg-risk/15 text-risk border-0", tooltip: "Documento ilegível ou dados inconsistentes" },
 };
 
 const getStatusBadge = (status: string) => {
@@ -34,10 +51,31 @@ const getStatusBadge = (status: string) => {
   return config;
 };
 
+const StatusBadgeWithTooltip = ({ status }: { status: string }) => {
+  const badge = getStatusBadge(status);
+  return (
+    <div className="flex items-center gap-1.5">
+      <Badge className={badge.className}>{badge.label}</Badge>
+      {badge.tooltip && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
+          </TooltipTrigger>
+          <TooltipContent side="top" className="max-w-[200px]">
+            <p className="text-xs">{badge.tooltip}</p>
+          </TooltipContent>
+        </Tooltip>
+      )}
+    </div>
+  );
+};
+
 const MTRList = () => {
   const isMobile = useIsMobile();
   const [data, setData] = useState<MTRItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const fetchMTRs = async () => {
@@ -53,6 +91,20 @@ const MTRList = () => {
     };
     fetchMTRs();
   }, []);
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    setDeleting(true);
+    const { error } = await supabase.from("waste_manifests").delete().eq("id", deleteId);
+    if (error) {
+      toast.error("Erro ao excluir o manifesto.");
+    } else {
+      setData((prev) => prev.filter((item) => item.id !== deleteId));
+      toast.success("Manifesto excluído com sucesso.");
+    }
+    setDeleting(false);
+    setDeleteId(null);
+  };
 
   const formatDate = (iso: string) => {
     const d = new Date(iso);
@@ -90,22 +142,29 @@ const MTRList = () => {
         </Card>
       ) : isMobile ? (
         <div className="space-y-3">
-          {data.map((item) => {
-            const badge = getStatusBadge(item.status);
-            return (
-              <Card key={item.id} className="p-4 shadow-card border-border/60">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-semibold text-card-foreground">{item.id.slice(0, 8)}</span>
-                  <Badge className={badge.className}>{badge.label}</Badge>
+          {data.map((item) => (
+            <Card key={item.id} className="p-4 shadow-card border-border/60">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-semibold text-card-foreground">{item.id.slice(0, 8)}</span>
+                <div className="flex items-center gap-2">
+                  <StatusBadgeWithTooltip status={item.status} />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    onClick={() => setDeleteId(item.id)}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </div>
-                <p className="text-sm text-muted-foreground">{item.waste_class}</p>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs text-muted-foreground">{formatDate(item.created_at)}</span>
-                  <span className="text-sm font-medium text-card-foreground">{item.weight_kg} kg</span>
-                </div>
-              </Card>
-            );
-          })}
+              </div>
+              <p className="text-sm text-muted-foreground">{item.waste_class}</p>
+              <div className="flex items-center justify-between mt-2">
+                <span className="text-xs text-muted-foreground">{formatDate(item.created_at)}</span>
+                <span className="text-sm font-medium text-card-foreground">{item.weight_kg} kg</span>
+              </div>
+            </Card>
+          ))}
         </div>
       ) : (
         <Card className="shadow-card border-border/60 overflow-hidden">
@@ -118,28 +177,53 @@ const MTRList = () => {
                 <TableHead>Peso (kg)</TableHead>
                 <TableHead>Transportadora</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead className="w-[60px]">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.map((item) => {
-                const badge = getStatusBadge(item.status);
-                return (
-                  <TableRow key={item.id}>
-                    <TableCell className="text-muted-foreground">{formatDate(item.created_at)}</TableCell>
-                    <TableCell className="font-medium">{item.id.slice(0, 8)}</TableCell>
-                    <TableCell>{item.waste_class}</TableCell>
-                    <TableCell>{Number(item.weight_kg).toLocaleString()}</TableCell>
-                    <TableCell>{item.transporter_name}</TableCell>
-                    <TableCell>
-                      <Badge className={badge.className}>{badge.label}</Badge>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {data.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell className="text-muted-foreground">{formatDate(item.created_at)}</TableCell>
+                  <TableCell className="font-medium">{item.id.slice(0, 8)}</TableCell>
+                  <TableCell>{item.waste_class}</TableCell>
+                  <TableCell>{Number(item.weight_kg).toLocaleString()}</TableCell>
+                  <TableCell>{item.transporter_name}</TableCell>
+                  <TableCell>
+                    <StatusBadgeWithTooltip status={item.status} />
+                  </TableCell>
+                  <TableCell>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={() => setDeleteId(item.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </Card>
       )}
+
+      <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir Manifesto</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              {deleting ? "Excluindo..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

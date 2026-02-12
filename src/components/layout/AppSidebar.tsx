@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, FileText, ShieldCheck, Settings, Plus, LogOut } from "lucide-react";
+import { LayoutDashboard, FileText, ShieldCheck, Settings, Plus, LogOut, ShieldAlert, Store, MapPin, Leaf } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import logo from "@/assets/logo.gif";
@@ -7,6 +7,10 @@ import logo from "@/assets/logo.gif";
 const navItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/mtrs", label: "MTRs", icon: FileText },
+  { to: "/auditoria", label: "Auditoria", icon: ShieldAlert },
+  { to: "/mercado", label: "Mercado", icon: Store },
+  { to: "/mapa", label: "Mapa", icon: MapPin },
+  { to: "/esg", label: "ESG", icon: Leaf },
   { to: "/certificados", label: "Certificados", icon: ShieldCheck },
   { to: "/configuracoes", label: "Configurações", icon: Settings },
 ];
@@ -22,7 +26,7 @@ const AppSidebar = () => {
         <span className="text-xl font-bold tracking-tight">CicloMTR</span>
       </div>
 
-      <nav className="flex-1 px-3 py-4 space-y-1">
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = location.pathname === item.to;
           return (

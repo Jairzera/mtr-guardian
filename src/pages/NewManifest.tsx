@@ -369,13 +369,31 @@ const NewManifest = () => {
             <div>
               <Label className="text-sm font-medium text-muted-foreground">Quantidade</Label>
               <div className="flex gap-2 mt-1.5">
-                <Input
-                  className="flex-1"
-                  placeholder="Ex: 500"
-                  inputMode="decimal"
-                  value={formData.quantity}
-                  onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-                />
+                <div className="flex-1 relative">
+                  <Input
+                    className="pr-24"
+                    placeholder="Ex: 500"
+                    inputMode="decimal"
+                    value={formData.quantity}
+                    onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 text-xs text-primary hover:text-primary font-medium gap-1"
+                    onClick={() => {
+                      toast.info("⚖️ Conectando à balança...");
+                      setTimeout(() => {
+                        const simWeight = (Math.random() * 20000 + 500).toFixed(0);
+                        setFormData((prev) => ({ ...prev, quantity: simWeight }));
+                        toast.success(`⚖️ Leitura: ${Number(simWeight).toLocaleString("pt-BR")} kg`);
+                      }, 1500);
+                    }}
+                  >
+                    ⚖️ Ler Balança
+                  </Button>
+                </div>
                 <Select
                   value={formData.unit}
                   onValueChange={(v) => setFormData({ ...formData, unit: v })}

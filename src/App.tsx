@@ -12,6 +12,10 @@ import MTRList from "./pages/MTRList";
 import NewManifest from "./pages/NewManifest";
 import Certificados from "./pages/Certificados";
 import Configuracoes from "./pages/Configuracoes";
+import Auditoria from "./pages/Auditoria";
+import Mercado from "./pages/Mercado";
+import Mapa from "./pages/Mapa";
+import ESG from "./pages/ESG";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -39,6 +43,10 @@ const App = () => (
                 <Route path="/novo-manifesto" element={<NewManifest />} />
                 <Route path="/certificados" element={<Certificados />} />
                 <Route path="/configuracoes" element={<Configuracoes />} />
+                <Route path="/auditoria" element={<Auditoria />} />
+                <Route path="/mercado" element={<Mercado />} />
+                <Route path="/mapa" element={<Mapa />} />
+                <Route path="/esg" element={<ESG />} />
               </Route>
               <Route path="*" element={<NotFound />} />
             </Routes>

@@ -83,6 +83,7 @@ export type Database = {
           rejection_reason: string | null
           status: string
           transporter_name: string
+          unit: string
           updated_at: string
           user_id: string
           waste_class: string
@@ -96,6 +97,7 @@ export type Database = {
           rejection_reason?: string | null
           status?: string
           transporter_name: string
+          unit?: string
           updated_at?: string
           user_id: string
           waste_class: string
@@ -109,6 +111,7 @@ export type Database = {
           rejection_reason?: string | null
           status?: string
           transporter_name?: string
+          unit?: string
           updated_at?: string
           user_id?: string
           waste_class?: string

@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           endereco: string
           id: string
+          phone: string
           razao_social: string
           responsavel: string
           updated_at: string
@@ -30,6 +31,7 @@ export type Database = {
           created_at?: string
           endereco?: string
           id?: string
+          phone?: string
           razao_social?: string
           responsavel?: string
           updated_at?: string
@@ -40,6 +42,7 @@ export type Database = {
           created_at?: string
           endereco?: string
           id?: string
+          phone?: string
           razao_social?: string
           responsavel?: string
           updated_at?: string

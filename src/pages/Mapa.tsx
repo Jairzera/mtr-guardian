@@ -1,8 +1,7 @@
-import { useState, Fragment } from "react";
-import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
+import { useState, useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { MapPin, Truck, CheckCircle2, Clock, Copy, ExternalLink } from "lucide-react";
+import { MapPin, Truck, CheckCircle2, Clock, Copy } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -75,6 +74,36 @@ const statusConfig = {
 
 const Mapa = () => {
   const [shipments] = useState<Shipment[]>(mockShipments);
+  const mapRef = useRef<L.Map | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!mapContainerRef.current || mapRef.current) return;
+
+    const map = L.map(mapContainerRef.current).setView([-23.5505, -46.6333], 10);
+    mapRef.current = map;
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    }).addTo(map);
+
+    shipments.forEach((s) => {
+      L.marker(s.currentCoords, { icon: truckIcon })
+        .addTo(map)
+        .bindPopup(`<strong>${s.mtrNumber}</strong><br/>${s.transporter}<br/><em>${statusConfig[s.status].label}</em>`);
+
+      L.polyline([s.originCoords, s.currentCoords, s.destCoords], {
+        color: s.status === "delivered" ? "#22c55e" : "#3b82f6",
+        weight: 3,
+        dashArray: s.status === "collecting" ? "8 8" : undefined,
+      }).addTo(map);
+    });
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+  }, [shipments]);
 
   const handleCopyLink = (mtrNumber: string) => {
     const link = `${window.location.origin}/tracking/${mtrNumber}`;
@@ -89,43 +118,10 @@ const Mapa = () => {
         <p className="text-sm text-muted-foreground mt-1">Acompanhe suas cargas em tempo real</p>
       </div>
 
-      {/* Leaflet Map */}
       <Card className="shadow-card border-border/60 overflow-hidden">
-        <div className="w-full h-[50vh] md:h-80">
-          <MapContainer
-            center={[-23.5505, -46.6333]}
-            zoom={10}
-            scrollWheelZoom
-            className="w-full h-full z-0"
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            {shipments.map((s) => (
-              <Fragment key={s.id}>
-                <Marker position={s.currentCoords} icon={truckIcon}>
-                  <Popup>
-                    <strong>{s.mtrNumber}</strong><br />
-                    {s.transporter}<br />
-                    <em>{statusConfig[s.status].label}</em>
-                  </Popup>
-                </Marker>
-                <Polyline
-                  positions={[s.originCoords, s.currentCoords, s.destCoords]}
-                  pathOptions={{
-                    color: s.status === "delivered" ? "#22c55e" : "#3b82f6",
-                    weight: 3,
-                    dashArray: s.status === "collecting" ? "8 8" : undefined,
-                  }}
-                />
-              </Fragment>
-            ))}
-          </MapContainer>
-        </div>
+        <div ref={mapContainerRef} className="w-full h-[50vh] md:h-80 z-0" />
       </Card>
 
-      {/* Shipment cards */}
       <div className="space-y-3">
         <h2 className="text-lg font-semibold text-foreground">Cargas Ativas</h2>
         {shipments.map((s) => {

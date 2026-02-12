@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Camera, Loader2, CheckCircle2, ArrowLeft, ArrowRight, Upload, CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { ptBR } from "date-fns/locale/pt-BR";
 import WasteCodeSelect from "@/components/manifest/WasteCodeSelect";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";

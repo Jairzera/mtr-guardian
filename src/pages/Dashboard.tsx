@@ -8,6 +8,7 @@ import { useDashboardData } from "@/hooks/useDashboardData";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { DashboardSkeleton } from "@/components/Skeletons";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -23,9 +24,9 @@ const Dashboard = () => {
     setUnitFilter,
     expiringCount,
     expiredCount,
+    isLoading,
   } = useDashboardData();
 
-  // Simulate email alert when alertas enabled
   useEffect(() => {
     if (alertShown.current) return;
     const alertasEnabled = localStorage.getItem("alertas_email") !== "false";
@@ -43,8 +44,12 @@ const Dashboard = () => {
     }
   }, [expiringCount, expiredCount, user]);
 
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
+
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">Dashboard</h1>

@@ -20,7 +20,7 @@ const variantStyles = {
 
 const KPICard = ({ title, value, subtitle, icon: Icon, variant = "default", extra }: KPICardProps) => {
   return (
-    <Card className="p-5 shadow-card border-border/60">
+    <Card className="p-5 shadow-card border-border/60 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <p className="text-sm font-medium text-muted-foreground">{title}</p>

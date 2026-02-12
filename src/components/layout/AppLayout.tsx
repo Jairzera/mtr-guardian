@@ -10,7 +10,9 @@ const AppLayout = () => {
       <OfflineBanner />
       <AppSidebar />
       <main className="md:ml-64 pb-20 md:pb-0 min-h-screen">
-        <Outlet />
+        <div className="animate-fade-in">
+          <Outlet />
+        </div>
       </main>
       <BottomNav />
       <DraftBanner />

@@ -50,6 +50,45 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_listings: {
+        Row: {
+          created_at: string
+          id: string
+          material: string
+          price_per_kg: number | null
+          quantity: number
+          region: string
+          status: string
+          unit: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          material: string
+          price_per_kg?: number | null
+          quantity: number
+          region?: string
+          status?: string
+          unit?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          material?: string
+          price_per_kg?: number | null
+          quantity?: number
+          region?: string
+          status?: string
+          unit?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

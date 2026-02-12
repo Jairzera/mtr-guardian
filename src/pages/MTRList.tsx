@@ -22,10 +22,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { FileX2, Trash2, Info } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,28 +43,8 @@ interface MTRItem {
   weight_kg: number;
   status: string;
   transporter_name: string;
+  rejection_reason: string | null;
 }
-
-const pendingReasons = [
-  "Falta assinatura do motorista",
-  "Aguardando peso na balança do destino",
-  "Divergência de classe de resíduo",
-  "Aguardando confirmação do destinador",
-  "Documento pendente de carimbo",
-];
-
-const riskReasons = [
-  "Documento ilegível ou dados inconsistentes",
-  "Licença ambiental do transportador vencida",
-  "Volume declarado acima do limite autorizado",
-  "CNPJ do destinador não encontrado no SINIR",
-];
-
-const getReasonByHash = (id: string, reasons: string[]) => {
-  let hash = 0;
-  for (let i = 0; i < id.length; i++) hash = (hash * 31 + id.charCodeAt(i)) | 0;
-  return reasons[Math.abs(hash) % reasons.length];
-};
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   conformidade: { label: "Em Conformidade", className: "bg-accent text-accent-foreground border-0" },
@@ -75,26 +57,27 @@ const getStatusBadge = (status: string) => {
   return config;
 };
 
-const StatusBadgeWithTooltip = ({ status, id }: { status: string; id: string }) => {
+const StatusBadgeClickable = ({
+  status,
+  rejectionReason,
+  onShowReason,
+}: {
+  status: string;
+  rejectionReason: string | null;
+  onShowReason: (reason: string) => void;
+}) => {
   const badge = getStatusBadge(status);
-  const tooltip =
-    status === "pendente" ? getReasonByHash(id, pendingReasons) :
-    status === "risco" ? getReasonByHash(id, riskReasons) :
-    null;
+  const isClickable = (status === "pendente" || status === "risco") && rejectionReason;
 
   return (
-    <div className="flex items-center gap-1.5">
-      <Badge className={badge.className}>{badge.label}</Badge>
-      {tooltip && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Info className="w-3.5 h-3.5 text-muted-foreground cursor-help" />
-          </TooltipTrigger>
-          <TooltipContent side="top" className="max-w-[220px]">
-            <p className="text-xs">{tooltip}</p>
-          </TooltipContent>
-        </Tooltip>
-      )}
+    <div
+      className={`flex items-center gap-1.5 ${isClickable ? "cursor-pointer" : ""}`}
+      onClick={() => isClickable && onShowReason(rejectionReason)}
+    >
+      <Badge className={badge.className}>
+        {badge.label}
+        {isClickable && <Info className="w-3 h-3 ml-1 inline" />}
+      </Badge>
     </div>
   );
 };
@@ -110,6 +93,7 @@ const MTRList = () => {
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [selectedReason, setSelectedReason] = useState<string | null>(null);
   const { settings: company } = useCompanySettings();
 
   const mtrColumns = [
@@ -137,7 +121,7 @@ const MTRList = () => {
     const fetchMTRs = async () => {
       const { data: manifests, error } = await supabase
         .from("waste_manifests")
-        .select("id, created_at, waste_class, weight_kg, status, transporter_name")
+        .select("id, created_at, waste_class, weight_kg, status, transporter_name, rejection_reason")
         .order("created_at", { ascending: false });
 
       if (!error && manifests) {
@@ -202,7 +186,7 @@ const MTRList = () => {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-semibold text-card-foreground">{item.id.slice(0, 8)}</span>
                 <div className="flex items-center gap-2">
-                   <StatusBadgeWithTooltip status={item.status} id={item.id} />
+                   <StatusBadgeClickable status={item.status} rejectionReason={item.rejection_reason} onShowReason={setSelectedReason} />
                   <Button
                     variant="ghost"
                     size="icon"
@@ -244,7 +228,7 @@ const MTRList = () => {
                   <TableCell>{Number(item.weight_kg).toLocaleString()}</TableCell>
                   <TableCell>{item.transporter_name}</TableCell>
                   <TableCell>
-                    <StatusBadgeWithTooltip status={item.status} id={item.id} />
+                    <StatusBadgeClickable status={item.status} rejectionReason={item.rejection_reason} onShowReason={setSelectedReason} />
                   </TableCell>
                   <TableCell>
                     <Button
@@ -262,6 +246,20 @@ const MTRList = () => {
           </Table>
         </Card>
       )}
+
+      <Dialog open={!!selectedReason} onOpenChange={(open) => !open && setSelectedReason(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Detalhes da Pendência</DialogTitle>
+          </DialogHeader>
+          <div className="rounded-md bg-warning/10 border border-warning/20 p-4">
+            <p className="text-sm text-foreground">{selectedReason}</p>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setSelectedReason(null)}>Entendi</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
         <AlertDialogContent>

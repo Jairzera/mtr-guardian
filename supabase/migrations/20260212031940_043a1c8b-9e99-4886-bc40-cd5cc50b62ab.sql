@@ -1,0 +1,2 @@
+UPDATE public.waste_manifests SET rejection_reason = 'Falta assinatura do motorista' WHERE id = '29c7c29a-e4fe-4d23-885a-6e3075fac878';
+UPDATE public.waste_manifests SET rejection_reason = 'Peso divergente da balança' WHERE id = '6b0c0975-ef83-4be6-999a-0e5ded392390';

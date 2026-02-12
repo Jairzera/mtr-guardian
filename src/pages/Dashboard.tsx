@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Weight, FileWarning, ShieldCheck, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -5,9 +6,13 @@ import KPICard from "@/components/dashboard/KPICard";
 import WeeklyChart from "@/components/dashboard/WeeklyChart";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const alertShown = useRef(false);
   const {
     totalProcessed,
     pendingCount,
@@ -16,7 +21,27 @@ const Dashboard = () => {
     unitLabel,
     unitFilter,
     setUnitFilter,
+    expiringCount,
+    expiredCount,
   } = useDashboardData();
+
+  // Simulate email alert when alertas enabled
+  useEffect(() => {
+    if (alertShown.current) return;
+    const alertasEnabled = localStorage.getItem("alertas_email") !== "false";
+    const total = expiringCount + expiredCount;
+    if (alertasEnabled && total > 0) {
+      alertShown.current = true;
+      const email = user?.email || "gestor@empresa.com";
+      const parts: string[] = [];
+      if (expiredCount > 0) parts.push(`${expiredCount} vencido(s)`);
+      if (expiringCount > 0) parts.push(`${expiringCount} próximo(s) do vencimento`);
+      toast.info(
+        `📧 Alerta enviado para ${email}: ${parts.join(" e ")} — ${total} MTR(s) requerem atenção.`,
+        { duration: 8000 }
+      );
+    }
+  }, [expiringCount, expiredCount, user]);
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">

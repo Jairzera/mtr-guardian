@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Fragment } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -103,8 +103,7 @@ const Mapa = () => {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             {shipments.map((s) => (
-              <span key={s.id}>
-                {/* Current truck position */}
+              <Fragment key={s.id}>
                 <Marker position={s.currentCoords} icon={truckIcon}>
                   <Popup>
                     <strong>{s.mtrNumber}</strong><br />
@@ -112,7 +111,6 @@ const Mapa = () => {
                     <em>{statusConfig[s.status].label}</em>
                   </Popup>
                 </Marker>
-                {/* Route line */}
                 <Polyline
                   positions={[s.originCoords, s.currentCoords, s.destCoords]}
                   pathOptions={{
@@ -121,7 +119,7 @@ const Mapa = () => {
                     dashArray: s.status === "collecting" ? "8 8" : undefined,
                   }}
                 />
-              </span>
+              </Fragment>
             ))}
           </MapContainer>
         </div>

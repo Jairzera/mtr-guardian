@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
@@ -9,7 +10,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -28,7 +28,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { FileX2, Trash2, Info, AlertTriangle } from "lucide-react";
+import { ClipboardList, Trash2, Info, AlertTriangle, Plus } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -36,6 +36,9 @@ import ExportDropdown from "@/components/ExportDropdown";
 import { exportCSV, exportPDF } from "@/lib/exportUtils";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { differenceInDays } from "date-fns";
+import { formatDateBR, formatNumber } from "@/lib/format";
+import { TableSkeleton } from "@/components/Skeletons";
+import EmptyState from "@/components/EmptyState";
 
 interface MTRItem {
   id: string;
@@ -106,12 +109,8 @@ const StatusBadgeClickable = ({
   );
 };
 
-const formatDate = (iso: string) => {
-  const d = new Date(iso);
-  return d.toLocaleDateString("pt-BR");
-};
-
 const MTRList = () => {
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [data, setData] = useState<MTRItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -130,7 +129,7 @@ const MTRList = () => {
   ];
 
   const exportRows = data.map((item) => ({
-    date: formatDate(item.created_at),
+    date: formatDateBR(item.created_at, false),
     shortId: item.id.slice(0, 8),
     waste_class: item.waste_class,
     weight_kg: item.weight_kg,
@@ -141,18 +140,20 @@ const MTRList = () => {
   const handleExportCSV = () => exportCSV({ title: "Meus_MTRs", columns: mtrColumns, rows: exportRows });
   const handleExportPDF = () => exportPDF({ title: "Meus MTRs", columns: mtrColumns, rows: exportRows, company });
 
-  useEffect(() => {
-    const fetchMTRs = async () => {
-      const { data: manifests, error } = await supabase
-        .from("waste_manifests")
-        .select("id, created_at, waste_class, weight_kg, status, transporter_name, rejection_reason, expiration_date")
-        .order("created_at", { ascending: false });
+  const fetchMTRs = async () => {
+    setLoading(true);
+    const { data: manifests, error } = await supabase
+      .from("waste_manifests")
+      .select("id, created_at, waste_class, weight_kg, status, transporter_name, rejection_reason, expiration_date")
+      .order("created_at", { ascending: false });
 
-      if (!error && manifests) {
-        setData(manifests);
-      }
-      setLoading(false);
-    };
+    if (!error && manifests) {
+      setData(manifests);
+    }
+    setLoading(false);
+  };
+
+  useEffect(() => {
     fetchMTRs();
   }, []);
 
@@ -161,10 +162,10 @@ const MTRList = () => {
     setDeleting(true);
     const { error } = await supabase.from("waste_manifests").delete().eq("id", deleteId);
     if (error) {
-      toast.error("Erro ao excluir o manifesto.");
+      toast.error("Erro ao excluir o manifesto ❌");
     } else {
       setData((prev) => prev.filter((item) => item.id !== deleteId));
-      toast.success("Manifesto excluído com sucesso.");
+      toast.success("Manifesto excluído com sucesso 🗑️");
     }
     setDeleting(false);
     setDeleteId(null);
@@ -172,20 +173,18 @@ const MTRList = () => {
 
   if (loading) {
     return (
-      <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-4">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-4 w-64" />
-        <div className="space-y-3 mt-6">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-20 w-full rounded-lg" />
-          ))}
+      <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
+        <div className="space-y-2">
+          <div className="h-8 w-40 bg-muted animate-pulse rounded-md" />
+          <div className="h-4 w-64 bg-muted animate-pulse rounded-md" />
         </div>
+        <TableSkeleton rows={4} />
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">Meus MTRs</h1>
@@ -195,17 +194,17 @@ const MTRList = () => {
       </div>
 
       {data.length === 0 ? (
-        <Card className="p-12 shadow-card border-border/60 flex flex-col items-center justify-center gap-4 text-center">
-          <FileX2 className="w-12 h-12 text-muted-foreground/50" />
-          <div>
-            <p className="text-lg font-semibold text-foreground">Nenhum MTR registrado ainda.</p>
-            <p className="text-sm text-muted-foreground mt-1">Registre seu primeiro manifesto para vê-lo aqui.</p>
-          </div>
-        </Card>
+        <EmptyState
+          icon={ClipboardList}
+          title="Tudo limpo! Comece seu primeiro manifesto agora."
+          description="Registre seu primeiro MTR para acompanhar a conformidade ambiental da sua empresa."
+          actionLabel="Novo MTR"
+          onAction={() => navigate("/novo-manifesto")}
+        />
       ) : isMobile ? (
         <div className="space-y-3">
           {data.map((item) => (
-            <Card key={item.id} className="p-4 shadow-card border-border/60">
+            <Card key={item.id} className="p-4 shadow-card border-border/60 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-semibold text-card-foreground">{item.id.slice(0, 8)}</span>
                 <div className="flex items-center gap-2">
@@ -213,7 +212,7 @@ const MTRList = () => {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-7 w-7 text-muted-foreground hover:text-destructive"
+                    className="h-11 w-11 min-h-[44px] min-w-[44px] text-muted-foreground hover:text-destructive"
                     onClick={() => setDeleteId(item.id)}
                   >
                     <Trash2 className="w-4 h-4" />
@@ -222,8 +221,8 @@ const MTRList = () => {
               </div>
               <p className="text-sm text-muted-foreground">{item.waste_class}</p>
               <div className="flex items-center justify-between mt-2">
-                <span className="text-xs text-muted-foreground">{formatDate(item.created_at)}</span>
-                <span className="text-sm font-medium text-card-foreground">{item.weight_kg} kg</span>
+                <span className="text-xs text-muted-foreground">{formatDateBR(item.created_at)}</span>
+                <span className="text-sm font-medium text-card-foreground">{formatNumber(item.weight_kg)} kg</span>
               </div>
             </Card>
           ))}
@@ -244,11 +243,11 @@ const MTRList = () => {
             </TableHeader>
             <TableBody>
               {data.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="text-muted-foreground">{formatDate(item.created_at)}</TableCell>
+                <TableRow key={item.id} className="transition-colors hover:bg-muted/30">
+                  <TableCell className="text-muted-foreground">{formatDateBR(item.created_at)}</TableCell>
                   <TableCell className="font-medium">{item.id.slice(0, 8)}</TableCell>
                   <TableCell>{item.waste_class}</TableCell>
-                  <TableCell>{Number(item.weight_kg).toLocaleString()}</TableCell>
+                  <TableCell>{formatNumber(item.weight_kg)}</TableCell>
                   <TableCell>{item.transporter_name}</TableCell>
                   <TableCell>
                     <StatusBadgeClickable item={item} onShowReason={setSelectedReason} />
@@ -279,7 +278,7 @@ const MTRList = () => {
             <p className="text-sm text-foreground">{selectedReason}</p>
           </div>
           <DialogFooter>
-            <Button onClick={() => setSelectedReason(null)}>Entendi</Button>
+            <Button onClick={() => setSelectedReason(null)} className="min-h-[44px]">Entendi</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -293,8 +292,8 @@ const MTRList = () => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogCancel disabled={deleting} className="min-h-[44px]">Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 min-h-[44px]">
               {deleting ? "Excluindo..." : "Excluir"}
             </AlertDialogAction>
           </AlertDialogFooter>

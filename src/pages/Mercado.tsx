@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Package, TrendingUp, Users, Plus, Sparkles, MessageCircle } from "lucide-react";
+import { Package, TrendingUp, Users, Plus, MessageCircle, Store } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { formatNumber, formatCurrency } from "@/lib/format";
+import { CardListSkeleton } from "@/components/Skeletons";
+import EmptyState from "@/components/EmptyState";
 
 interface ListingWithSeller {
   id: string;
@@ -45,7 +48,6 @@ const Mercado = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  // New listing form
   const [newMaterial, setNewMaterial] = useState("");
   const [newQuantity, setNewQuantity] = useState("");
   const [newUnit, setNewUnit] = useState("kg");
@@ -54,7 +56,6 @@ const Mercado = () => {
 
   const fetchListings = async () => {
     setLoading(true);
-    // Fetch listings
     const { data: listingsData, error } = await supabase
       .from("marketplace_listings")
       .select("*")
@@ -73,22 +74,17 @@ const Mercado = () => {
       return;
     }
 
-    // Get unique user_ids to fetch their company_settings
     const userIds = [...new Set(listingsData.map((l) => l.user_id))];
-
     const { data: settingsData } = await supabase
       .from("company_settings")
       .select("user_id, phone, razao_social")
       .in("user_id", userIds);
 
-    // Build a map of user_id -> settings
     const settingsMap = new Map<string, { phone: string; razao_social: string }>();
     settingsData?.forEach((s) => {
       settingsMap.set(s.user_id, { phone: s.phone, razao_social: s.razao_social });
     });
 
-    // We also need emails from auth — but we can't query auth.users from client.
-    // We'll use user metadata if the listing belongs to the current user, otherwise null.
     const enriched: ListingWithSeller[] = listingsData.map((l) => {
       const settings = settingsMap.get(l.user_id);
       return {
@@ -101,7 +97,7 @@ const Mercado = () => {
         status: l.status,
         user_id: l.user_id,
         seller_phone: settings?.phone || null,
-        seller_email: null, // Can't access auth.users from client
+        seller_email: null,
         seller_name: settings?.razao_social || null,
       };
     });
@@ -117,7 +113,7 @@ const Mercado = () => {
   const handleCreateListing = async () => {
     if (!user) return;
     if (!newMaterial.trim() || !newQuantity.trim()) {
-      toast.error("Preencha material e quantidade.");
+      toast.error("Preencha material e quantidade ❌");
       return;
     }
 
@@ -132,10 +128,10 @@ const Mercado = () => {
     });
 
     if (error) {
-      toast.error("Erro ao criar anúncio.");
+      toast.error("Erro ao criar anúncio ❌");
       console.error(error);
     } else {
-      toast.success("Anúncio publicado!");
+      toast.success("Anúncio publicado com sucesso 🎉");
       setNewMaterial("");
       setNewQuantity("");
       setNewPricePerKg("");
@@ -165,8 +161,7 @@ const Mercado = () => {
 
   const formatValue = (qty: number, pricePerKg: number | null) => {
     if (!pricePerKg) return null;
-    const total = qty * pricePerKg;
-    return `R$ ${total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
+    return formatCurrency(qty * pricePerKg);
   };
 
   const totalRevenue = listings.reduce((sum, l) => {
@@ -174,7 +169,7 @@ const Mercado = () => {
   }, 0);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">Receita Verde</h1>
@@ -182,7 +177,7 @@ const Mercado = () => {
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="gradient-primary shadow-primary font-semibold gap-2">
+            <Button className="gradient-primary shadow-primary font-semibold gap-2 min-h-[44px]">
               <Plus className="w-4 h-4" />
               <span className="hidden sm:inline">Anunciar</span>
             </Button>
@@ -194,24 +189,12 @@ const Mercado = () => {
             <div className="space-y-4 pt-2">
               <div>
                 <Label>Material *</Label>
-                <Input
-                  placeholder="Ex: Sucata de Alumínio"
-                  className="mt-1.5"
-                  value={newMaterial}
-                  onChange={(e) => setNewMaterial(e.target.value)}
-                  maxLength={200}
-                />
+                <Input placeholder="Ex: Sucata de Alumínio" className="mt-1.5" value={newMaterial} onChange={(e) => setNewMaterial(e.target.value)} maxLength={200} />
               </div>
               <div className="flex gap-3">
                 <div className="flex-1">
                   <Label>Quantidade *</Label>
-                  <Input
-                    placeholder="Ex: 500"
-                    inputMode="decimal"
-                    className="mt-1.5"
-                    value={newQuantity}
-                    onChange={(e) => setNewQuantity(e.target.value)}
-                  />
+                  <Input placeholder="Ex: 500" inputMode="decimal" className="mt-1.5" value={newQuantity} onChange={(e) => setNewQuantity(e.target.value)} />
                 </div>
                 <div className="w-28">
                   <Label>Unidade</Label>
@@ -227,29 +210,13 @@ const Mercado = () => {
               </div>
               <div>
                 <Label>Preço por kg (R$)</Label>
-                <Input
-                  placeholder="Ex: 3,75"
-                  inputMode="decimal"
-                  className="mt-1.5"
-                  value={newPricePerKg}
-                  onChange={(e) => setNewPricePerKg(e.target.value)}
-                />
+                <Input placeholder="Ex: 3,75" inputMode="decimal" className="mt-1.5" value={newPricePerKg} onChange={(e) => setNewPricePerKg(e.target.value)} />
               </div>
               <div>
                 <Label>Região</Label>
-                <Input
-                  placeholder="Ex: São Paulo, SP"
-                  className="mt-1.5"
-                  value={newRegion}
-                  onChange={(e) => setNewRegion(e.target.value)}
-                  maxLength={100}
-                />
+                <Input placeholder="Ex: São Paulo, SP" className="mt-1.5" value={newRegion} onChange={(e) => setNewRegion(e.target.value)} maxLength={100} />
               </div>
-              <Button
-                className="w-full gradient-primary shadow-primary font-semibold"
-                onClick={handleCreateListing}
-                disabled={submitting}
-              >
+              <Button className="w-full gradient-primary shadow-primary font-semibold min-h-[44px]" onClick={handleCreateListing} disabled={submitting}>
                 {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 Publicar Anúncio
               </Button>
@@ -260,44 +227,40 @@ const Mercado = () => {
 
       {/* Summary KPIs */}
       <div className="grid grid-cols-3 gap-3 md:gap-4">
-        <Card className="p-3 md:p-4 shadow-card border-border/60 flex items-center gap-3">
+        <Card className="p-3 md:p-4 shadow-card border-border/60 flex items-center gap-3 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
           <div className="p-2.5 rounded-xl bg-primary/10 hidden sm:block"><Package className="w-5 h-5 text-primary" /></div>
           <div>
             <p className="text-xs text-muted-foreground">Anúncios</p>
             <p className="text-xl md:text-2xl font-bold text-card-foreground">{listings.length}</p>
           </div>
         </Card>
-        <Card className="p-3 md:p-4 shadow-card border-border/60 flex items-center gap-3">
+        <Card className="p-3 md:p-4 shadow-card border-border/60 flex items-center gap-3 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
           <div className="p-2.5 rounded-xl bg-primary/10 hidden sm:block"><TrendingUp className="w-5 h-5 text-primary" /></div>
           <div>
             <p className="text-xs text-muted-foreground">Receita</p>
-            <p className="text-xl md:text-2xl font-bold text-card-foreground">
-              R$ {totalRevenue.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
-            </p>
+            <p className="text-xl md:text-2xl font-bold text-card-foreground">{formatCurrency(totalRevenue)}</p>
           </div>
         </Card>
-        <Card className="p-3 md:p-4 shadow-card border-border/60 flex items-center gap-3">
+        <Card className="p-3 md:p-4 shadow-card border-border/60 flex items-center gap-3 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
           <div className="p-2.5 rounded-xl bg-primary/10 hidden sm:block"><Users className="w-5 h-5 text-primary" /></div>
           <div>
             <p className="text-xs text-muted-foreground">Vendedores</p>
-            <p className="text-xl md:text-2xl font-bold text-card-foreground">
-              {new Set(listings.map((l) => l.user_id)).size}
-            </p>
+            <p className="text-xl md:text-2xl font-bold text-card-foreground">{new Set(listings.map((l) => l.user_id)).size}</p>
           </div>
         </Card>
       </div>
 
       {/* Listings */}
       {loading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="w-6 h-6 text-primary animate-spin" />
-        </div>
+        <CardListSkeleton count={4} />
       ) : listings.length === 0 ? (
-        <Card className="p-8 shadow-card border-border/60 text-center">
-          <Package className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-          <p className="text-muted-foreground">Nenhum anúncio publicado ainda.</p>
-          <p className="text-sm text-muted-foreground mt-1">Clique em "Anunciar" para vender seus resíduos.</p>
-        </Card>
+        <EmptyState
+          icon={Store}
+          title="Nenhuma oportunidade na sua região ainda."
+          description="Publique seu primeiro anúncio e conecte-se com compradores interessados."
+          actionLabel="Anunciar Resíduo"
+          onAction={() => setDialogOpen(true)}
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
           {listings.map((item) => {
@@ -305,17 +268,15 @@ const Mercado = () => {
             const isOwn = item.user_id === user?.id;
 
             return (
-              <Card key={item.id} className="p-4 md:p-5 shadow-card border-border/60 space-y-3">
+              <Card key={item.id} className="p-4 md:p-5 shadow-card border-border/60 space-y-3 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-semibold text-foreground">{item.material}</h3>
-                      {isOwn && (
-                        <Badge variant="secondary" className="text-xs">Seu anúncio</Badge>
-                      )}
+                      {isOwn && <Badge variant="secondary" className="text-xs">Seu anúncio</Badge>}
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {item.quantity.toLocaleString("pt-BR")} {item.unit}
+                      {formatNumber(item.quantity)} {item.unit}
                       {item.region ? ` · ${item.region}` : ""}
                     </p>
                     {item.price_per_kg && (
@@ -323,9 +284,7 @@ const Mercado = () => {
                         R$ {item.price_per_kg.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}/{item.unit}
                       </p>
                     )}
-                    {item.seller_name && (
-                      <p className="text-xs text-muted-foreground">{item.seller_name}</p>
-                    )}
+                    {item.seller_name && <p className="text-xs text-muted-foreground">{item.seller_name}</p>}
                   </div>
                   {estimatedValue && (
                     <div className="text-right shrink-0">
@@ -336,7 +295,7 @@ const Mercado = () => {
 
                 {!isOwn && (
                   <Button
-                    className="w-full gap-2 font-semibold"
+                    className="w-full gap-2 font-semibold min-h-[44px]"
                     variant="default"
                     onClick={() => handleInterest(item)}
                   >

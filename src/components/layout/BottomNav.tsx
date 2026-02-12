@@ -7,10 +7,10 @@ const BottomNav = () => {
   const { role } = useUserRole();
 
   const linkClass = (path: string) =>
-    `flex flex-col items-center gap-1 text-xs font-medium transition-colors ${
+    `flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors min-w-[44px] min-h-[44px] py-1 ${
       location.pathname === path
         ? "text-primary"
-        : "text-muted-foreground"
+        : "text-muted-foreground active:text-primary/70"
     }`;
 
   return (
@@ -28,14 +28,14 @@ const BottomNav = () => {
 
         {role === "generator" ? (
           <NavLink to="/novo-manifesto" className="flex flex-col items-center -mt-5">
-            <div className="w-14 h-14 rounded-full gradient-primary shadow-primary flex items-center justify-center">
+            <div className="w-14 h-14 rounded-full gradient-primary shadow-primary flex items-center justify-center active:scale-95 transition-transform">
               <ScanLine className="w-7 h-7 text-primary-foreground" />
             </div>
             <span className="text-xs font-semibold text-primary mt-1">Scan</span>
           </NavLink>
         ) : (
           <NavLink to="/recebimento" className="flex flex-col items-center -mt-5">
-            <div className="w-14 h-14 rounded-full gradient-primary shadow-primary flex items-center justify-center">
+            <div className="w-14 h-14 rounded-full gradient-primary shadow-primary flex items-center justify-center active:scale-95 transition-transform">
               <PackageCheck className="w-7 h-7 text-primary-foreground" />
             </div>
             <span className="text-xs font-semibold text-primary mt-1">Validar</span>

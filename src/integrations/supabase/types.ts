@@ -80,6 +80,7 @@ export type Database = {
           destination_type: string
           id: string
           photo_url: string | null
+          rejection_reason: string | null
           status: string
           transporter_name: string
           updated_at: string
@@ -92,6 +93,7 @@ export type Database = {
           destination_type: string
           id?: string
           photo_url?: string | null
+          rejection_reason?: string | null
           status?: string
           transporter_name: string
           updated_at?: string
@@ -104,6 +106,7 @@ export type Database = {
           destination_type?: string
           id?: string
           photo_url?: string | null
+          rejection_reason?: string | null
           status?: string
           transporter_name?: string
           updated_at?: string

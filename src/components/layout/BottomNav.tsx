@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, FileText, ScanLine, PackageCheck } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, ScanLine, PackageCheck, Map, User } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 
 const BottomNav = () => {
@@ -21,6 +21,11 @@ const BottomNav = () => {
           <span>Home</span>
         </NavLink>
 
+        <NavLink to="/mercado" className={linkClass("/mercado")}>
+          <ShoppingCart className="w-6 h-6" />
+          <span>Mercado</span>
+        </NavLink>
+
         {role === "generator" ? (
           <NavLink to="/novo-manifesto" className="flex flex-col items-center -mt-5">
             <div className="w-14 h-14 rounded-full gradient-primary shadow-primary flex items-center justify-center">
@@ -33,13 +38,18 @@ const BottomNav = () => {
             <div className="w-14 h-14 rounded-full gradient-primary shadow-primary flex items-center justify-center">
               <PackageCheck className="w-7 h-7 text-primary-foreground" />
             </div>
-            <span className="text-xs font-semibold text-primary mt-1">Receber</span>
+            <span className="text-xs font-semibold text-primary mt-1">Validar</span>
           </NavLink>
         )}
 
-        <NavLink to="/mtrs" className={linkClass("/mtrs")}>
-          <FileText className="w-6 h-6" />
-          <span>Lista</span>
+        <NavLink to="/mapa" className={linkClass("/mapa")}>
+          <Map className="w-6 h-6" />
+          <span>Mapa</span>
+        </NavLink>
+
+        <NavLink to="/configuracoes" className={linkClass("/configuracoes")}>
+          <User className="w-6 h-6" />
+          <span>Perfil</span>
         </NavLink>
       </div>
     </nav>

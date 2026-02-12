@@ -17,6 +17,7 @@ import Mercado from "./pages/Mercado";
 import Mapa from "./pages/Mapa";
 import ESG from "./pages/ESG";
 import Auth from "./pages/Auth";
+import PublicTracking from "./pages/PublicTracking";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -46,8 +47,11 @@ const App = () => (
                 <Route path="/auditoria" element={<Auditoria />} />
                 <Route path="/mercado" element={<Mercado />} />
                 <Route path="/mapa" element={<Mapa />} />
-                <Route path="/esg" element={<ESG />} />
+              <Route path="/esg" element={<ESG />} />
+              <Route path="/recebimento" element={<MTRList />} />
+              <Route path="/validar-carga" element={<MTRList />} />
               </Route>
+              <Route path="/tracking/:id" element={<PublicTracking />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AuthProvider>

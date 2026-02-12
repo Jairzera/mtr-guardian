@@ -1,10 +1,15 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, FileText, ShieldCheck, Settings, Plus, LogOut, ShieldAlert, Store, MapPin, Leaf } from "lucide-react";
+import {
+  LayoutDashboard, FileText, ShieldCheck, Settings, Plus, LogOut,
+  ShieldAlert, Store, MapPin, Leaf, ArrowLeftRight, PackageCheck, ClipboardCheck,
+} from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/logo.gif";
 
-const navItems = [
+const commonItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/mtrs", label: "MTRs", icon: FileText },
   { to: "/auditoria", label: "Auditoria", icon: ShieldAlert },
@@ -15,9 +20,25 @@ const navItems = [
   { to: "/configuracoes", label: "Configurações", icon: Settings },
 ];
 
+const receiverOnlyItems = [
+  { to: "/recebimento", label: "Recebimento", icon: PackageCheck },
+  { to: "/validar-carga", label: "Validar Carga", icon: ClipboardCheck },
+];
+
 const AppSidebar = () => {
   const location = useLocation();
   const { signOut } = useAuth();
+  const { role, toggleDevRole, isDevOverride } = useUserRole();
+
+  const navItems =
+    role === "receiver"
+      ? [
+          commonItems[0], // Dashboard
+          commonItems[1], // MTRs
+          ...receiverOnlyItems,
+          ...commonItems.slice(2), // rest
+        ]
+      : commonItems;
 
   return (
     <aside className="hidden md:flex md:flex-col md:w-64 bg-sidebar text-sidebar-foreground min-h-screen fixed left-0 top-0 z-30">
@@ -25,6 +46,20 @@ const AppSidebar = () => {
         <img src={logo} alt="CicloMTR" className="w-10 h-10" />
         <span className="text-xl font-bold tracking-tight">CicloMTR</span>
       </div>
+
+      {/* Dev mode role toggle */}
+      <button
+        onClick={toggleDevRole}
+        className="mx-3 mt-3 flex items-center justify-between gap-2 rounded-lg border border-dashed border-sidebar-border px-3 py-2 text-xs text-sidebar-foreground/60 hover:bg-sidebar-accent/50 transition-colors"
+      >
+        <span className="flex items-center gap-1.5">
+          <ArrowLeftRight className="w-3.5 h-3.5" />
+          Trocar Perfil (Dev)
+        </span>
+        <Badge variant="outline" className="text-[10px] capitalize">
+          {role === "generator" ? "Gerador" : "Destinador"}
+        </Badge>
+      </button>
 
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => {
@@ -47,12 +82,14 @@ const AppSidebar = () => {
       </nav>
 
       <div className="px-3 pb-6 space-y-2">
-        <NavLink to="/novo-manifesto">
-          <Button className="w-full gradient-primary shadow-primary font-semibold gap-2">
-            <Plus className="w-4 h-4" />
-            Novo Manifesto
-          </Button>
-        </NavLink>
+        {role === "generator" && (
+          <NavLink to="/novo-manifesto">
+            <Button className="w-full gradient-primary shadow-primary font-semibold gap-2">
+              <Plus className="w-4 h-4" />
+              Novo Manifesto
+            </Button>
+          </NavLink>
+        )}
         <Button variant="ghost" onClick={signOut} className="w-full justify-start gap-2 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50">
           <LogOut className="w-4 h-4" />
           Sair

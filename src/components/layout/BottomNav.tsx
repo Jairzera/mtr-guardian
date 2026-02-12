@@ -1,8 +1,10 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, FileText, ScanLine } from "lucide-react";
+import { LayoutDashboard, FileText, ScanLine, PackageCheck } from "lucide-react";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const BottomNav = () => {
   const location = useLocation();
+  const { role } = useUserRole();
 
   const linkClass = (path: string) =>
     `flex flex-col items-center gap-1 text-xs font-medium transition-colors ${
@@ -19,12 +21,21 @@ const BottomNav = () => {
           <span>Home</span>
         </NavLink>
 
-        <NavLink to="/novo-manifesto" className="flex flex-col items-center -mt-5">
-          <div className="w-14 h-14 rounded-full gradient-primary shadow-primary flex items-center justify-center">
-            <ScanLine className="w-7 h-7 text-primary-foreground" />
-          </div>
-          <span className="text-xs font-semibold text-primary mt-1">Scan</span>
-        </NavLink>
+        {role === "generator" ? (
+          <NavLink to="/novo-manifesto" className="flex flex-col items-center -mt-5">
+            <div className="w-14 h-14 rounded-full gradient-primary shadow-primary flex items-center justify-center">
+              <ScanLine className="w-7 h-7 text-primary-foreground" />
+            </div>
+            <span className="text-xs font-semibold text-primary mt-1">Scan</span>
+          </NavLink>
+        ) : (
+          <NavLink to="/recebimento" className="flex flex-col items-center -mt-5">
+            <div className="w-14 h-14 rounded-full gradient-primary shadow-primary flex items-center justify-center">
+              <PackageCheck className="w-7 h-7 text-primary-foreground" />
+            </div>
+            <span className="text-xs font-semibold text-primary mt-1">Receber</span>
+          </NavLink>
+        )}
 
         <NavLink to="/mtrs" className={linkClass("/mtrs")}>
           <FileText className="w-6 h-6" />

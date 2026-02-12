@@ -10,6 +10,8 @@ import { toast } from "@/hooks/use-toast";
 import ExportDropdown from "@/components/ExportDropdown";
 import { exportCSV, exportPDF } from "@/lib/exportUtils";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { generateCDFPdf } from "@/lib/cdfPdfUtils";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CDFItem {
   id: string;
@@ -17,6 +19,7 @@ interface CDFItem {
   certNumber: string;
   linkedMTR: string;
   destinador: string;
+  fileUrl?: string | null;
 }
 
 const mockData: CDFItem[] = [
@@ -27,13 +30,37 @@ const mockData: CDFItem[] = [
   { id: "5", date: "20/01/2026", certNumber: "CDF-2026/0025", linkedMTR: "MTR-004", destinador: "Ambiental Sul S.A." },
 ];
 
-const handleDownload = (certNumber: string) => {
-  toast({ title: "Download iniciado", description: `Baixando ${certNumber}.pdf` });
-};
-
 const Certificados = () => {
   const isMobile = useIsMobile();
   const { settings: company } = useCompanySettings();
+
+  const handleDownload = async (item: CDFItem) => {
+    toast({ title: "Preparando download...", description: `Gerando ${item.certNumber}.pdf` });
+
+    // Try Supabase Storage first
+    if (item.fileUrl) {
+      try {
+        const response = await fetch(item.fileUrl);
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = `${item.certNumber}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          return;
+        }
+      } catch {
+        // Fall through to dynamic generation
+      }
+    }
+
+    // Fallback: generate PDF dynamically
+    generateCDFPdf(item, company);
+  };
 
   const cdfColumns = [
     { header: "Data de Emissão", key: "date" },
@@ -64,7 +91,7 @@ const Certificados = () => {
                   <span className="text-sm font-semibold text-card-foreground">{item.certNumber}</span>
                   <p className="text-xs text-muted-foreground">{item.destinador}</p>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => handleDownload(item.certNumber)}>
+                <Button variant="ghost" size="icon" onClick={() => handleDownload(item)}>
                   <Download className="w-5 h-5" />
                 </Button>
               </div>
@@ -95,7 +122,7 @@ const Certificados = () => {
                   </TableCell>
                   <TableCell>{item.destinador}</TableCell>
                   <TableCell className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => handleDownload(item.certNumber)}>
+                    <Button variant="ghost" size="icon" onClick={() => handleDownload(item)}>
                       <Download className="w-4 h-4" />
                     </Button>
                   </TableCell>

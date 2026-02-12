@@ -1,68 +1,60 @@
 
 
-## Plano: Conectar CicloMTR ao Supabase (Storage + Database + Base Regulatoria)
+# Correcao do Motivo da Pendencia - Backend e Frontend
 
-Este plano elimina todos os dados fictícios e conecta o sistema ao backend real do Supabase em 3 frentes.
+## Problema Atual
+- A coluna `rejection_reason` nao existe na tabela `waste_manifests`
+- Os tooltips com motivos sao gerados via hash no frontend (dados ficticios)
+- Tooltips nao funcionam em dispositivos moveis (toque)
 
----
+## Plano de Implementacao
 
-### Objetivo 1: Upload Real de Fotos (Supabase Storage)
+### Passo 1 - Migrar banco de dados
+Adicionar coluna `rejection_reason` (text, nullable) na tabela `waste_manifests`.
 
-**Migração SQL** -- Criar bucket `mtr_documents` com politicas RLS:
-- Bucket publico para leitura das URLs
-- Politicas de INSERT, SELECT e DELETE restritas ao `auth.uid()` do usuario
-- Path pattern: `{user_id}/{timestamp}_{filename}`
+```text
+ALTER TABLE waste_manifests ADD COLUMN rejection_reason text;
+```
 
-**Alteracao em `NewManifest.tsx`**:
-- No `handleFileChange`, alem de gerar o preview local com `createObjectURL`, armazenar o `File` em estado
-- Apos o usuario confirmar no Passo 3, fazer upload real via `supabase.storage.from('mtr_documents').upload()`
-- Obter a URL publica com `getPublicUrl()`
+### Passo 2 - Popular dados de teste
+Atualizar os 2 registros existentes com status "pendente" para incluir motivos reais:
+- Registro `29c7c29a...`: "Falta assinatura do motorista"
+- Registro `6b0c0975...`: "Peso divergente da balanca"
 
----
+### Passo 3 - Atualizar MTRList.tsx
 
-### Objetivo 2: Salvar e Listar MTRs Reais (Database)
+**Remover:**
+- Arrays `pendingReasons` e `riskReasons`
+- Funcao `getReasonByHash`
+- Componente `StatusBadgeWithTooltip` com tooltip
+- Imports de `Tooltip`, `TooltipContent`, `TooltipTrigger`
 
-**Alteracao em `NewManifest.tsx` (funcao `handleConfirm`)**:
-- Obter `user.id` via `useAuth()`
-- Fazer upload da foto para o bucket
-- Executar `supabase.from('waste_manifests').insert()` com os campos: `user_id`, `waste_class`, `weight_kg`, `transporter_name`, `destination_type`, `photo_url`, `status: 'pendente'`
-- Exibir erro via toast em caso de falha; avancar para Passo 4 em caso de sucesso
+**Adicionar:**
+- Import do componente `Dialog` (ja existe em `src/components/ui/dialog.tsx`)
+- Estado `selectedReason` para controlar o modal
+- Novo componente `StatusBadgeClickable` que:
+  - Renderiza o Badge com um icone `Info` (tamanho pequeno) dentro do badge para status "pendente" e "risco"
+  - Ao clicar, abre um Dialog com titulo "Detalhes da Pendencia" e o texto de `rejection_reason`
+  - Para status "conformidade", o badge nao e clicavel
+  - Aplica `cursor-pointer` nos badges clicaveis
 
-**Reescrita de `MTRList.tsx`**:
-- Remover todo o `mockData`
-- Usar `useEffect` + `supabase.from('waste_manifests').select('*').order('created_at', { ascending: false })` para buscar dados reais
-- Mapear o campo `status` para os badges existentes (conformidade/pendente/risco)
-- Exibir estado de loading (skeleton) e estado vazio ("Nenhum MTR registrado ainda.")
+**Dialog:**
+- Titulo: "Detalhes da Pendencia"
+- Conteudo: texto do `rejection_reason` com destaque visual (fundo amarelo/vermelho sutil)
+- Botao: "Entendi" para fechar
 
----
+### Passo 4 - Atualizar interface MTRItem
+Adicionar `rejection_reason` ao tipo `MTRItem` e a query do Supabase (no select).
 
-### Objetivo 3: Expandir Base Regulatoria (30+ codigos IBAMA/FEAM/CETESB)
+### Passo 5 - Mobile e Desktop
+O componente `StatusBadgeClickable` funciona identicamente em ambas as views (card mobile e tabela desktop), pois usa Dialog em vez de Tooltip.
 
-**Script de INSERT** (via ferramenta de dados, nao migracao) adicionando ~25 novos codigos cobrindo:
+### Detalhes Tecnicos
 
-| Categoria | Exemplos |
-|---|---|
-| Metalurgia/Mecanica | Borras de usinagem, sucatas metalicas mistas, fluidos de corte |
-| Construcao/Demolicao | Entulho Classe A/B/C, gesso, amianto (Classe I) |
-| Textil/Quimico | Estopas contaminadas, solventes halogenados/nao-halogenados |
-| Gerais | Lampadas fluorescentes, EPIs contaminados, lixo eletronico (REEE), pilhas |
+**Arquivos a modificar:**
+- `src/pages/MTRList.tsx` - remover tooltips, adicionar dialog clicavel, atualizar query e tipo
+- Migracao SQL para adicionar coluna
 
-Os codigos seguirao a estrutura da Lista Brasileira de Residuos Solidos (IN 13/2012) e serao inseridos com `ON CONFLICT (code) DO NOTHING` para evitar duplicatas.
-
-O dropdown `WasteCodeSelect` ja busca da tabela ordenado por `code` -- nenhuma alteracao necessaria nesse componente.
-
----
-
-### Resumo Tecnico de Arquivos Afetados
-
-| Arquivo | Tipo de Alteracao |
-|---|---|
-| Migracao SQL (novo) | Criar bucket `mtr_documents` + politicas RLS de storage |
-| INSERT SQL (dados) | ~25 novos codigos de residuos na `waste_codes_ibama` |
-| `src/pages/NewManifest.tsx` | Upload real + INSERT no banco + uso de `useAuth` |
-| `src/pages/MTRList.tsx` | SELECT real do Supabase, remocao de mock, estado vazio |
-
-### Dependencias
-- O usuario precisa estar autenticado (ja implementado) para que o RLS funcione
-- O bucket sera criado via migracao SQL automatica
+**Arquivos sem alteracao:**
+- `src/components/ui/dialog.tsx` - ja existe e esta pronto para uso
 

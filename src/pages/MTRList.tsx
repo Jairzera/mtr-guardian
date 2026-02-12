@@ -28,13 +28,14 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { FileX2, Trash2, Info } from "lucide-react";
+import { FileX2, Trash2, Info, AlertTriangle } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import ExportDropdown from "@/components/ExportDropdown";
 import { exportCSV, exportPDF } from "@/lib/exportUtils";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { differenceInDays } from "date-fns";
 
 interface MTRItem {
   id: string;
@@ -44,12 +45,32 @@ interface MTRItem {
   status: string;
   transporter_name: string;
   rejection_reason: string | null;
+  expiration_date: string | null;
 }
+
+type ExpirationState = "expired" | "expiring_soon" | "ok";
+
+const getExpirationState = (expDate: string | null): ExpirationState => {
+  if (!expDate) return "ok";
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const exp = new Date(expDate);
+  if (exp < today) return "expired";
+  if (differenceInDays(exp, today) <= 3) return "expiring_soon";
+  return "ok";
+};
 
 const statusConfig: Record<string, { label: string; className: string }> = {
   conformidade: { label: "Em Conformidade", className: "bg-accent text-accent-foreground border-0" },
   pendente: { label: "Pendente", className: "bg-warning/15 text-warning border-0" },
   risco: { label: "Risco", className: "bg-risk/15 text-risk border-0" },
+  vencido: { label: "Vencido", className: "bg-destructive/15 text-destructive border-0" },
+};
+
+const getEffectiveStatus = (item: MTRItem): string => {
+  const expState = getExpirationState(item.expiration_date);
+  if (expState === "expired") return "vencido";
+  return item.status;
 };
 
 const getStatusBadge = (status: string) => {
@@ -58,22 +79,25 @@ const getStatusBadge = (status: string) => {
 };
 
 const StatusBadgeClickable = ({
-  status,
-  rejectionReason,
+  item,
   onShowReason,
 }: {
-  status: string;
-  rejectionReason: string | null;
+  item: MTRItem;
   onShowReason: (reason: string) => void;
 }) => {
-  const badge = getStatusBadge(status);
-  const isClickable = (status === "pendente" || status === "risco") && rejectionReason;
+  const effectiveStatus = getEffectiveStatus(item);
+  const badge = getStatusBadge(effectiveStatus);
+  const expState = getExpirationState(item.expiration_date);
+  const isClickable = (effectiveStatus === "pendente" || effectiveStatus === "risco") && item.rejection_reason;
 
   return (
     <div
       className={`flex items-center gap-1.5 ${isClickable ? "cursor-pointer" : ""}`}
-      onClick={() => isClickable && onShowReason(rejectionReason)}
+      onClick={() => isClickable && onShowReason(item.rejection_reason!)}
     >
+      {expState === "expiring_soon" && effectiveStatus !== "vencido" && (
+        <AlertTriangle className="w-4 h-4 text-warning" />
+      )}
       <Badge className={badge.className}>
         {badge.label}
         {isClickable && <Info className="w-3 h-3 ml-1 inline" />}
@@ -111,7 +135,7 @@ const MTRList = () => {
     waste_class: item.waste_class,
     weight_kg: item.weight_kg,
     transporter_name: item.transporter_name,
-    statusLabel: getStatusBadge(item.status).label,
+    statusLabel: getStatusBadge(getEffectiveStatus(item)).label,
   }));
 
   const handleExportCSV = () => exportCSV({ title: "Meus_MTRs", columns: mtrColumns, rows: exportRows });
@@ -121,7 +145,7 @@ const MTRList = () => {
     const fetchMTRs = async () => {
       const { data: manifests, error } = await supabase
         .from("waste_manifests")
-        .select("id, created_at, waste_class, weight_kg, status, transporter_name, rejection_reason")
+        .select("id, created_at, waste_class, weight_kg, status, transporter_name, rejection_reason, expiration_date")
         .order("created_at", { ascending: false });
 
       if (!error && manifests) {
@@ -145,7 +169,6 @@ const MTRList = () => {
     setDeleting(false);
     setDeleteId(null);
   };
-
 
   if (loading) {
     return (
@@ -186,7 +209,7 @@ const MTRList = () => {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-semibold text-card-foreground">{item.id.slice(0, 8)}</span>
                 <div className="flex items-center gap-2">
-                   <StatusBadgeClickable status={item.status} rejectionReason={item.rejection_reason} onShowReason={setSelectedReason} />
+                  <StatusBadgeClickable item={item} onShowReason={setSelectedReason} />
                   <Button
                     variant="ghost"
                     size="icon"
@@ -228,7 +251,7 @@ const MTRList = () => {
                   <TableCell>{Number(item.weight_kg).toLocaleString()}</TableCell>
                   <TableCell>{item.transporter_name}</TableCell>
                   <TableCell>
-                    <StatusBadgeClickable status={item.status} rejectionReason={item.rejection_reason} onShowReason={setSelectedReason} />
+                    <StatusBadgeClickable item={item} onShowReason={setSelectedReason} />
                   </TableCell>
                   <TableCell>
                     <Button

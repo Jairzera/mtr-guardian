@@ -78,6 +78,7 @@ export type Database = {
         Row: {
           created_at: string
           destination_type: string
+          expiration_date: string | null
           id: string
           photo_url: string | null
           rejection_reason: string | null
@@ -92,6 +93,7 @@ export type Database = {
         Insert: {
           created_at?: string
           destination_type: string
+          expiration_date?: string | null
           id?: string
           photo_url?: string | null
           rejection_reason?: string | null
@@ -106,6 +108,7 @@ export type Database = {
         Update: {
           created_at?: string
           destination_type?: string
+          expiration_date?: string | null
           id?: string
           photo_url?: string | null
           rejection_reason?: string | null

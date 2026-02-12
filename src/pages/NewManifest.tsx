@@ -1,6 +1,8 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Camera, Loader2, CheckCircle2, ArrowLeft, ArrowRight, Upload } from "lucide-react";
+import { Camera, Loader2, CheckCircle2, ArrowLeft, ArrowRight, Upload, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import WasteCodeSelect from "@/components/manifest/WasteCodeSelect";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -13,6 +15,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -37,6 +46,7 @@ const NewManifest = () => {
   const [aiSuggested, setAiSuggested] = useState(false);
   const [saving, setSaving] = useState(false);
   const [selectedWasteCodeId, setSelectedWasteCodeId] = useState("");
+  const [expirationDate, setExpirationDate] = useState<Date | undefined>(undefined);
   const [formData, setFormData] = useState({
     wasteClass: "",
     quantity: "",
@@ -52,19 +62,20 @@ const NewManifest = () => {
     draftLoaded.current = true;
     const draft = loadDraft();
     if (draft) {
-      // Restore to step 2 (review) at most, skip AI step
       setStep(draft.step >= 2 ? 2 : draft.step === 0 ? 0 : 2);
       setPhotoUrl(draft.photoUrl);
       setSelectedWasteCodeId(draft.selectedWasteCodeId);
       setAiSuggested(draft.aiSuggested);
       setFormData(draft.formData);
+      if (draft.expirationDate) {
+        setExpirationDate(new Date(draft.expirationDate));
+      }
     }
   }, [loadDraft]);
 
-  // Save draft on unmount (if not completed)
+  // Save draft on unmount
   useEffect(() => {
     return () => {
-      // Don't save if completed (step 3) or at start with no data
       if (step === 3) return;
       saveDraft({
         step,
@@ -72,10 +83,11 @@ const NewManifest = () => {
         selectedWasteCodeId,
         aiSuggested,
         formData,
+        expirationDate: expirationDate?.toISOString() ?? null,
       });
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step, photoUrl, selectedWasteCodeId, aiSuggested, formData]);
+  }, [step, photoUrl, selectedWasteCodeId, aiSuggested, formData, expirationDate]);
 
   // Pre-fill from company settings
   useEffect(() => {
@@ -88,7 +100,6 @@ const NewManifest = () => {
 
   const analyzeWithAI = useCallback(async (file: File) => {
     try {
-      // Convert file to base64
       const buffer = await file.arrayBuffer();
       const bytes = new Uint8Array(buffer);
       let binary = "";
@@ -97,7 +108,6 @@ const NewManifest = () => {
       }
       const imageBase64 = btoa(binary);
 
-      // Wait for waste codes to be loaded
       if (wasteCodes.length === 0) return null;
 
       const codeList = wasteCodes.map((wc) => ({
@@ -133,7 +143,6 @@ const NewManifest = () => {
       setStep(1);
       setAiProgress(0);
 
-      // Start progress animation + real AI call in parallel
       let progress = 0;
       let progressDone = false;
       let aiResult: { waste_code_id: string | null; confidence: string; quantity?: number | null; unit?: string } | null = null;
@@ -141,7 +150,6 @@ const NewManifest = () => {
 
       const tryAdvance = () => {
         if (progressDone && aiDone) {
-          // Apply AI result
           if (aiResult?.waste_code_id) {
             setSelectedWasteCodeId(aiResult.waste_code_id);
             setAiSuggested(true);
@@ -172,12 +180,10 @@ const NewManifest = () => {
       analyzeWithAI(file).then((result) => {
         aiResult = result;
         aiDone = true;
-        // If progress bar is already done, advance
         if (progressDone) {
           setAiProgress(100);
           tryAdvance();
         } else {
-          // Speed up progress bar
           clearInterval(interval);
           setAiProgress(100);
           progressDone = true;
@@ -191,6 +197,11 @@ const NewManifest = () => {
   const handleConfirm = async () => {
     if (!user) {
       toast.error("Você precisa estar logado para registrar um MTR.");
+      return;
+    }
+
+    if (!expirationDate) {
+      toast.error("Informe a data de vencimento da licença ambiental.");
       return;
     }
 
@@ -221,10 +232,12 @@ const NewManifest = () => {
         user_id: user.id,
         waste_class: formData.wasteClass || "Não classificado",
         weight_kg: isNaN(quantityNum) ? 0 : quantityNum,
+        unit: formData.unit,
         transporter_name: formData.transporterName,
         destination_type: formData.destinationType,
         photo_url: uploadedPhotoUrl,
         status: "pendente",
+        expiration_date: format(expirationDate, "yyyy-MM-dd"),
       });
 
       if (insertError) throw insertError;
@@ -343,7 +356,7 @@ const NewManifest = () => {
               value={selectedWasteCodeId}
               onValueChange={(id) => {
                 setSelectedWasteCodeId(id);
-                setAiSuggested(false); // user overrode AI
+                setAiSuggested(false);
               }}
               onWasteCodeChange={(wc) => {
                 if (wc) setFormData({ ...formData, wasteClass: wc.class });
@@ -377,6 +390,35 @@ const NewManifest = () => {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium text-muted-foreground">Vencimento da Licença Ambiental</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full mt-1.5 justify-start text-left font-normal",
+                      !expirationDate && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {expirationDate
+                      ? format(expirationDate, "dd/MM/yyyy", { locale: ptBR })
+                      : "Selecione a data de vencimento"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={expirationDate}
+                    onSelect={setExpirationDate}
+                    initialFocus
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div>
@@ -459,6 +501,7 @@ const NewManifest = () => {
                 setAiProgress(0);
                 setAiSuggested(false);
                 setSelectedWasteCodeId("");
+                setExpirationDate(undefined);
                 clearDraft();
               }}
             >

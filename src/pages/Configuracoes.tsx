@@ -15,7 +15,9 @@ const Configuracoes = () => {
   const { theme, setTheme } = useTheme();
   const [form, setForm] = useState(settings);
   const [saving, setSaving] = useState(false);
-  const [alertasEmail, setAlertasEmail] = useState(true);
+  const [alertasEmail, setAlertasEmail] = useState(() => {
+    return localStorage.getItem("alertas_email") !== "false";
+  });
   const [cnpjError, setCnpjError] = useState("");
 
   useEffect(() => {
@@ -117,7 +119,7 @@ const Configuracoes = () => {
               <p className="text-sm font-medium text-foreground">Alertas de Vencimento por E-mail</p>
               <p className="text-xs text-muted-foreground">Receba notificações sobre MTRs próximos do vencimento</p>
             </div>
-            <Switch checked={alertasEmail} onCheckedChange={setAlertasEmail} />
+            <Switch checked={alertasEmail} onCheckedChange={(v) => { setAlertasEmail(v); localStorage.setItem("alertas_email", String(v)); }} />
           </div>
         </CardContent>
       </Card>

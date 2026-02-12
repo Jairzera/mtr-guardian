@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useState } from "react";
-import { startOfWeek, differenceInWeeks, subWeeks } from "date-fns";
+import { startOfWeek, differenceInWeeks, subWeeks, differenceInDays } from "date-fns";
 
 type UnitFilter = "solids" | "liquids";
 
@@ -10,6 +10,7 @@ interface Manifest {
   unit: string;
   status: string;
   created_at: string;
+  expiration_date: string | null;
 }
 
 export function useDashboardData() {
@@ -20,7 +21,7 @@ export function useDashboardData() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("waste_manifests")
-        .select("weight_kg, unit, status, created_at");
+        .select("weight_kg, unit, status, created_at, expiration_date");
       if (error) throw error;
       return data as Manifest[];
     },
@@ -87,12 +88,29 @@ export function useDashboardData() {
       maximumFractionDigits: 1,
     });
 
+    // Expiration alerts
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    let expiringCount = 0;
+    let expiredCount = 0;
+    for (const m of manifests) {
+      if (!m.expiration_date) continue;
+      const exp = new Date(m.expiration_date);
+      if (exp < today) {
+        expiredCount++;
+      } else if (differenceInDays(exp, today) <= 3) {
+        expiringCount++;
+      }
+    }
+
     return {
       totalProcessed: `${totalFormatted} ${unitLabel}`,
       pendingCount: String(pendingCount),
       complianceRate: `${complianceRate}%`,
       weeklyData: weeks.map((w) => ({ semana: w.label, volume: w.volume })),
       unitLabel,
+      expiringCount,
+      expiredCount,
     };
   }, [manifests, unitFilter]);
 

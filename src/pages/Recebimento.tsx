@@ -22,7 +22,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "sonner";
-import { Loader2, PackageCheck, Scale, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Loader2, PackageCheck, Scale, AlertTriangle, CheckCircle2, Search } from "lucide-react";
 import { format } from "date-fns";
 
 interface Manifest {
@@ -40,6 +40,7 @@ const Recebimento = () => {
   const queryClient = useQueryClient();
   const [selectedManifest, setSelectedManifest] = useState<Manifest | null>(null);
   const [pesoReal, setPesoReal] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: manifests = [], isLoading } = useQuery({
     queryKey: ["receiver-manifests"],
@@ -111,13 +112,30 @@ const Recebimento = () => {
     return <Badge variant="secondary">Enviado</Badge>;
   };
 
+  const filteredManifests = manifests.filter((m) =>
+    m.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    m.waste_class.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    m.transporter_name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-in">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Recebimento de Carga</h1>
         <p className="text-muted-foreground text-sm mt-1">
           Valide as cargas recebidas e gere o CDF automaticamente.
         </p>
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <Input
+          placeholder="Buscar por nº MTR, resíduo ou transportador..."
+          className="pl-10"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
 
       {/* KPI summary */}
@@ -126,7 +144,7 @@ const Recebimento = () => {
           <CardContent className="p-4 flex items-center gap-3">
             <PackageCheck className="w-8 h-8 text-primary" />
             <div>
-              <p className="text-2xl font-bold text-foreground">{manifests.length}</p>
+              <p className="text-2xl font-bold text-foreground">{filteredManifests.length}</p>
               <p className="text-xs text-muted-foreground">Aguardando</p>
             </div>
           </CardContent>
@@ -136,7 +154,7 @@ const Recebimento = () => {
             <Scale className="w-8 h-8 text-primary" />
             <div>
               <p className="text-2xl font-bold text-foreground">
-                {manifests.reduce((sum, m) => sum + Number(m.weight_kg), 0).toLocaleString("pt-BR")}
+                {filteredManifests.reduce((sum, m) => sum + Number(m.weight_kg), 0).toLocaleString("pt-BR")}
               </p>
               <p className="text-xs text-muted-foreground">kg Total</p>
             </div>
@@ -147,7 +165,7 @@ const Recebimento = () => {
             <AlertTriangle className="w-8 h-8 text-destructive" />
             <div>
               <p className="text-2xl font-bold text-foreground">
-                {manifests.filter((m) => m.status === "em_transito").length}
+                {filteredManifests.filter((m) => m.status === "em_transito").length}
               </p>
               <p className="text-xs text-muted-foreground">Em Trânsito</p>
             </div>
@@ -165,7 +183,7 @@ const Recebimento = () => {
             <div className="flex justify-center py-12">
               <Loader2 className="w-6 h-6 text-primary animate-spin" />
             </div>
-          ) : manifests.length === 0 ? (
+          ) : filteredManifests.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
               <CheckCircle2 className="w-12 h-12 mx-auto mb-3 opacity-40" />
               <p className="font-medium">Nenhuma carga pendente</p>
@@ -185,7 +203,7 @@ const Recebimento = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {manifests.map((m) => (
+                  {filteredManifests.map((m) => (
                     <TableRow key={m.id}>
                       <TableCell className="text-xs">
                         {format(new Date(m.created_at), "dd/MM/yy")}

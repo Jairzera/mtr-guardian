@@ -1,10 +1,25 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, createContext, useContext, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import React from "react";
 
 export type AppRole = "generator" | "receiver";
 
-export const useUserRole = () => {
+interface UserRoleContextType {
+  role: AppRole;
+  loading: boolean;
+  toggleDevRole: () => void;
+  isDevOverride: boolean;
+}
+
+const UserRoleContext = createContext<UserRoleContextType>({
+  role: "generator",
+  loading: true,
+  toggleDevRole: () => {},
+  isDevOverride: false,
+});
+
+export const UserRoleProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const [role, setRole] = useState<AppRole>("generator");
   const [loading, setLoading] = useState(true);
@@ -26,7 +41,6 @@ export const useUserRole = () => {
       if (data) {
         setRole(data.role as AppRole);
       } else {
-        // Auto-assign default role via secure RPC
         await supabase.rpc("assign_user_role", { _user_id: user.id, _role: "generator" });
         setRole("generator");
       }
@@ -45,5 +59,11 @@ export const useUserRole = () => {
 
   const activeRole = devOverride ?? role;
 
-  return { role: activeRole, loading, toggleDevRole, isDevOverride: devOverride !== null };
+  return React.createElement(
+    UserRoleContext.Provider,
+    { value: { role: activeRole, loading, toggleDevRole, isDevOverride: devOverride !== null } },
+    children
+  );
 };
+
+export const useUserRole = () => useContext(UserRoleContext);

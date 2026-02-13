@@ -26,8 +26,8 @@ export const useUserRole = () => {
       if (data) {
         setRole(data.role as AppRole);
       } else {
-        // Auto-insert default role for new users
-        await supabase.from("user_roles").insert({ user_id: user.id, role: "generator" });
+        // Auto-assign default role via secure RPC
+        await supabase.rpc("assign_user_role", { _user_id: user.id, _role: "generator" });
         setRole("generator");
       }
       setLoading(false);

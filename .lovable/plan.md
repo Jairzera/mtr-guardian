@@ -1,119 +1,81 @@
 
+## Implementação da Funcionalidade de Recebimento (Receipt Validation)
 
-# Correção RBAC: 3 Fixes Criticos para o Perfil Destinador
+### Análise da Situação Atual
+1. ✅ A rota `/recebimento` já existe e funciona bem
+2. ✅ O `BottomNav.tsx` já roteia corretamente para `/recebimento` para receivers
+3. ✅ A tela `Recebimento.tsx` tem busca, lista e modal de validação
+4. ❌ **Problema crítico**: A tabela `waste_manifests` não possui a coluna `received_weight` para registrar o peso real recebido
+5. ⚠️ **Melhorias necessárias**: 
+   - Adicionar coluna `received_weight` (numeric, nullable)
+   - Atualizar a lógica de validação para guardar peso real
+   - Melhorar a interface para fazer busca individual por MTR (não apenas lista filtrada)
 
-## Resumo
+### Solução Técnica - 3 Etapas
 
-Tres correções para garantir que o Destinador tenha uma experiência focada em compra e recebimento, sem acesso a funcionalidades de Gerador.
+#### **Etapa 1: Adicionar Coluna `received_weight` à Tabela**
+- Executar migration SQL para adicionar coluna `received_weight` numeric nullable à tabela `waste_manifests`
+- Isso permitirá registrar o peso real conferido na balança
+- Atualizar o tipo TypeScript em `src/integrations/supabase/types.ts` (será feito automaticamente após migration)
 
----
+#### **Etapa 2: Atualizar Lógica de Validação (`src/pages/Recebimento.tsx`)**
+- Modificar o `validateMutation.mutationFn` para:
+  - Salvar `received_weight` (peso real informado) junto com o status
+  - Manter a lógica de divergência existente
+  - Atualizar para status `'received'` em vez de `'concluido'` (mais semanticamente correto)
+- Adicionar campo visível de "Peso Recebido" na modal de validação com visualização clara
+- Melhorar a comparação: mostrar diferença absoluta e percentual
 
-## 1. Mercado -- Renderização Condicional por Role
+#### **Etapa 3: Melhorias de UX**
+- Adicionar ícone de balança (Scale) para reforçar a ação de pesagem
+- Adicionar validação de campo obrigatório para `received_weight`
+- Mostrar aviso visual quando houver divergência > 0.5kg
+- Adicionar toast de sucesso com detalhes: "Carga recebida: [peso_real]kg (Divergência: [diff]kg)"
 
-**Arquivo:** `src/pages/Mercado.tsx`
+### Detalhes Técnicos
 
-- Importar `useUserRole` no componente
-- **Receiver (Destinador):**
-  - Titulo muda para "Mercado de Oportunidades"
-  - Subtitulo: "Encontre residuos disponiveis para compra"
-  - Botao "Anunciar" e Dialog de criacao ficam **ocultos**
-  - KPI "Vendedores" muda label para "Fornecedores"
-  - Empty state mostra mensagem passiva (sem botao de criar anuncio)
-- **Generator (Gerador):**
-  - Mantém tudo como esta (titulo "Receita Verde", botao Anunciar, etc.)
-
----
-
-## 2. Tela Recebimento -- Adicionar Busca por MTR
-
-**Arquivo:** `src/pages/Recebimento.tsx`
-
-- Adicionar campo de busca no topo: "Buscar por numero do MTR ou residuo"
-- O campo filtra a lista de manifestos pendentes em tempo real (client-side filter no array `manifests`)
-- Adicionar `animate-fade-in` e melhorar skeleton de loading
-- A logica de validacao com pesagem e divergencia ja existe e sera mantida intacta
-
----
-
-## 3. Bottom Nav -- Botao Central Condicional
-
-**Arquivo:** `src/components/layout/BottomNav.tsx`
-
-O botao central ja alterna entre "Scan" (generator) e "Validar" (receiver) com icones diferentes. Porem, a rota do receiver aponta para `/recebimento`.
-
-- Confirmar que a rota `/recebimento` esta correta no link do botao central para receiver
-- Manter o icone `PackageCheck` e label "Validar" (ja implementado)
-- Nenhuma mudanca necessaria neste arquivo -- ja esta correto
-
----
-
-## Detalhes Tecnicos
-
-### Mercado.tsx -- Mudancas
-
-```text
-+import { useUserRole } from "@/hooks/useUserRole";
-
- const Mercado = () => {
-+  const { role } = useUserRole();
-   const { user } = useAuth();
-   ...
-
-   // Titulo condicional
--  <h1>Receita Verde</h1>
-+  <h1>{role === "receiver" ? "Mercado de Oportunidades" : "Receita Verde"}</h1>
-
-   // Botao Anunciar: so para generator
-+  {role === "generator" && (
-     <Dialog ...> ... </Dialog>
-+  )}
-
-   // Empty state: sem botao de acao para receiver
-   <EmptyState
-     ...
--    actionLabel="Anunciar Residuo"
--    onAction={() => setDialogOpen(true)}
-+    actionLabel={role === "generator" ? "Anunciar Residuo" : undefined}
-+    onAction={role === "generator" ? () => setDialogOpen(true) : undefined}
-   />
+**Migration SQL:**
+```sql
+ALTER TABLE public.waste_manifests
+ADD COLUMN received_weight numeric;
 ```
 
-### Recebimento.tsx -- Mudancas
-
-```text
-+const [searchQuery, setSearchQuery] = useState("");
-
-+// Filtro client-side
-+const filteredManifests = manifests.filter((m) =>
-+  m.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-+  m.waste_class.toLowerCase().includes(searchQuery.toLowerCase()) ||
-+  m.transporter_name.toLowerCase().includes(searchQuery.toLowerCase())
-+);
-
- // Novo campo de busca antes da tabela
-+<div className="relative">
-+  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-+  <Input
-+    placeholder="Buscar por numero MTR, residuo ou transportador..."
-+    className="pl-10"
-+    value={searchQuery}
-+    onChange={(e) => setSearchQuery(e.target.value)}
-+  />
-+</div>
-
- // Usar filteredManifests no lugar de manifests na tabela e KPIs
+**Atualização do UpdateMutation (`Recebimento.tsx`):**
+```typescript
+const { error } = await supabase
+  .from("waste_manifests")
+  .update({
+    status: "received",
+    received_weight: pesoReal,
+    rejection_reason: divergente
+      ? `Divergência: ${pesoReal}kg recebido vs ${selectedManifest?.weight_kg}kg declarado`
+      : null,
+  })
+  .eq("id", id);
 ```
 
-### BottomNav.tsx
+**Interface Type no modal:**
+- Campo de input já existe (peso real)
+- Botão "Confirmar Recebimento" já existe
+- Apenas ajustar labels para melhor clareza
 
-Nenhuma alteracao necessaria -- o componente ja implementa a logica condicional correta com `role === "generator"` vs `role === "receiver"`.
+### Arquivos a Modificar
+1. **supabase/migrations/** - Nova migration para adicionar `received_weight`
+2. **src/integrations/supabase/types.ts** - Atualizar tipos (automático após migration)
+3. **src/pages/Recebimento.tsx** - Atualizar lógica de validação para salvar peso real
 
----
-
-## Arquivos Modificados
-
-| Arquivo | Tipo de Mudanca |
-|---|---|
-| `src/pages/Mercado.tsx` | Renderizacao condicional por role |
-| `src/pages/Recebimento.tsx` | Campo de busca + filtro client-side |
+### Fluxo Final de Validação
+1. Receiver busca manifestos com status "enviado" ou "em_transito"
+2. Clica "Validar" em um manifesto específico
+3. Modal abre mostrando:
+   - Dados do gerador e carga
+   - **Peso Declarado** (peso_kg) em destaque
+   - Campo **Peso Real na Balança** (novo input)
+4. Sistema detecta divergência automática
+5. Ao clicar "Confirmar Recebimento":
+   - Atualiza status para "received"
+   - Salva `received_weight` com o valor inserido
+   - Registra divergência se houver
+   - Exibe toast de sucesso
+6. Manifesto sai da lista de pendentes
 

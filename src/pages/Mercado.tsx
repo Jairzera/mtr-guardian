@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Package, TrendingUp, Users, Plus, MessageCircle, Store } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -166,7 +166,14 @@ const Mercado = () => {
     return formatCurrency(qty * pricePerKg);
   };
 
-  const totalRevenue = listings.reduce((sum, l) => {
+  const filteredListings = useMemo(() => {
+    if (role === "receiver") {
+      return listings.filter((item) => item.user_id !== user?.id);
+    }
+    return listings.filter((item) => item.user_id === user?.id);
+  }, [listings, role, user?.id]);
+
+  const totalRevenue = filteredListings.reduce((sum, l) => {
     return sum + (l.price_per_kg ? l.quantity * l.price_per_kg : 0);
   }, 0);
 
@@ -241,7 +248,7 @@ const Mercado = () => {
           <div className="p-2.5 rounded-xl bg-primary/10 hidden sm:block"><Package className="w-5 h-5 text-primary" /></div>
           <div>
             <p className="text-xs text-muted-foreground">Anúncios</p>
-            <p className="text-xl md:text-2xl font-bold text-card-foreground">{listings.length}</p>
+            <p className="text-xl md:text-2xl font-bold text-card-foreground">{filteredListings.length}</p>
           </div>
         </Card>
         <Card className="p-3 md:p-4 shadow-card border-border/60 flex items-center gap-3 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
@@ -255,7 +262,7 @@ const Mercado = () => {
           <div className="p-2.5 rounded-xl bg-primary/10 hidden sm:block"><Users className="w-5 h-5 text-primary" /></div>
           <div>
             <p className="text-xs text-muted-foreground">{role === "receiver" ? "Fornecedores" : "Vendedores"}</p>
-            <p className="text-xl md:text-2xl font-bold text-card-foreground">{new Set(listings.map((l) => l.user_id)).size}</p>
+            <p className="text-xl md:text-2xl font-bold text-card-foreground">{new Set(filteredListings.map((l) => l.user_id)).size}</p>
           </div>
         </Card>
       </div>
@@ -263,7 +270,7 @@ const Mercado = () => {
       {/* Listings */}
       {loading ? (
         <CardListSkeleton count={4} />
-      ) : listings.length === 0 ? (
+      ) : filteredListings.length === 0 ? (
         <EmptyState
           icon={Store}
           title={role === "receiver" ? "Nenhuma oportunidade disponível ainda." : "Nenhuma oportunidade na sua região ainda."}
@@ -273,7 +280,7 @@ const Mercado = () => {
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-          {listings.filter((item) => role === "receiver" ? item.user_id !== user?.id : item.user_id === user?.id).map((item) => {
+          {filteredListings.map((item) => {
             const estimatedValue = formatValue(item.quantity, item.price_per_kg);
             const isOwn = item.user_id === user?.id;
 

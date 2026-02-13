@@ -69,21 +69,23 @@ const Recebimento = () => {
       const { error } = await supabase
         .from("waste_manifests")
         .update({
-          status: "concluido",
+          status: "received",
+          received_weight: pesoReal,
           rejection_reason: divergente
-            ? `Divergência de peso: declarado ${selectedManifest?.weight_kg}${selectedManifest?.unit}, real ${pesoReal}${selectedManifest?.unit}`
+            ? `Divergência: ${pesoReal}${selectedManifest?.unit} recebido vs ${selectedManifest?.weight_kg}${selectedManifest?.unit} declarado`
             : null,
-        })
+        } as any)
         .eq("id", id);
 
       if (error) throw error;
     },
     onSuccess: (_, variables) => {
+      const diff = Math.abs(variables.pesoReal - (selectedManifest?.weight_kg ?? 0));
       queryClient.invalidateQueries({ queryKey: ["receiver-manifests"] });
       toast.success(
         variables.divergente
-          ? "Carga aprovada com divergência registrada. CDF gerado."
-          : "Carga aprovada com sucesso! CDF gerado."
+          ? `Carga recebida: ${variables.pesoReal}kg (Divergência: ${diff.toFixed(1)}kg)`
+          : `Carga recebida com sucesso: ${variables.pesoReal}kg`
       );
       setSelectedManifest(null);
       setPesoReal("");

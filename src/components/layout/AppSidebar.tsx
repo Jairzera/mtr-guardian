@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/logo.gif";
 
-const commonItems = [
+const generatorItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/mtrs", label: "MTRs", icon: FileText },
   { to: "/auditoria", label: "Auditoria", icon: ShieldAlert },
@@ -20,9 +20,16 @@ const commonItems = [
   { to: "/configuracoes", label: "Configurações", icon: Settings },
 ];
 
-const receiverOnlyItems = [
+const receiverItems = [
+  { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/recebimento", label: "Recebimento", icon: PackageCheck },
   { to: "/validar-carga", label: "Validar Carga", icon: ClipboardCheck },
+  { to: "/auditoria", label: "Auditoria", icon: ShieldAlert },
+  { to: "/mercado", label: "Mercado", icon: Store },
+  { to: "/mapa", label: "Mapa", icon: MapPin },
+  { to: "/esg", label: "ESG", icon: Leaf },
+  { to: "/certificados", label: "Certificados", icon: ShieldCheck },
+  { to: "/configuracoes", label: "Configurações", icon: Settings },
 ];
 
 const AppSidebar = () => {
@@ -30,16 +37,7 @@ const AppSidebar = () => {
   const { signOut } = useAuth();
   const { role, toggleDevRole, isDevOverride } = useUserRole();
 
-  const navItems =
-    role === "receiver"
-      ? [
-          commonItems[0], // Dashboard
-          commonItems[1], // MTRs
-          ...receiverOnlyItems,
-          ...commonItems.slice(2), // rest
-        ]
-      : commonItems;
-
+  const navItems = role === "receiver" ? receiverItems : generatorItems;
   return (
     <aside className="hidden md:flex md:flex-col md:w-64 bg-sidebar text-sidebar-foreground min-h-screen fixed left-0 top-0 z-30">
       <div className="flex items-center gap-3 px-6 py-5 border-b border-sidebar-border">

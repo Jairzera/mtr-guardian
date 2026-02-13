@@ -219,11 +219,12 @@ const NewManifest = () => {
 
         if (uploadError) throw uploadError;
 
-        const { data: publicUrlData } = supabase.storage
+        const { data: signedUrlData, error: signedUrlError } = await supabase.storage
           .from("mtr_documents")
-          .getPublicUrl(filePath);
+          .createSignedUrl(filePath, 86400); // 24 hour expiry
 
-        uploadedPhotoUrl = publicUrlData.publicUrl;
+        if (signedUrlError) throw signedUrlError;
+        uploadedPhotoUrl = signedUrlData.signedUrl;
       }
 
       const quantityNum = parseFloat(formData.quantity.replace(/\./g, "").replace(",", "."));

@@ -83,10 +83,9 @@ const Auth = () => {
     }
 
     if (data.user) {
-      // Save role
+      // Save role via secure RPC (no direct INSERT policy)
       const { error: roleError } = await supabase
-        .from("user_roles")
-        .insert({ user_id: data.user.id, role: selectedRole! });
+        .rpc("assign_user_role", { _user_id: data.user.id, _role: selectedRole! });
 
       if (roleError) {
         toast.error("Erro ao salvar perfil. Tente novamente.");

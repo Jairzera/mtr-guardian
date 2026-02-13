@@ -1,78 +1,75 @@
 
 
-# Correção de Visibilidade do Marketplace e Contato WhatsApp
+# Plano de Correcao: Marketplace, Receber Carga e Mapa do Destinador
 
-## Diagnóstico
+## Problema 1: Anuncios do Gerador nao aparecem para o Destinador
 
-Analisei o banco de dados e o código frontend. O problema principal é:
+**Causa raiz**: O filtro no frontend (`src/pages/Mercado.tsx` linha 168-169) exclui anuncios onde `user_id !== user?.id`. Como o Dev Mode usa a mesma conta, o anuncio proprio e filtrado. Alem disso, mesmo em producao com contas diferentes, a logica esta correta, mas para o Destinador o titulo deveria ser "Mercado de Oportunidades" mostrando TODOS os anuncios de terceiros.
 
-- A tabela `marketplace_listings` ja tem uma policy `SELECT` com `USING (true)` -- qualquer usuario autenticado pode ler os anuncios. Isso esta correto.
-- **O problema real**: a tabela `company_settings` tem policy `SELECT` restrita a `auth.uid() = user_id`. Quando o Destinador carrega o Mercado, o frontend tenta buscar `phone` e `razao_social` dos Geradores, mas o RLS bloqueia essa leitura cruzada. Resultado: `seller_phone` e `seller_name` chegam como `null`.
-- O botao "Tenho Interesse" e a logica de WhatsApp ja existem no codigo (`handleInterest`). O fallback de "contato indisponivel" tambem ja existe. O problema e puramente de permissao no banco.
+**Correcao**: Ajustar o filtro para que no modo `receiver` sejam exibidos TODOS os anuncios ativos (sem filtrar por user_id), ja que em producao o destinador e outro usuario. Para testes com dev mode, isso tambem resolve o problema.
 
-## Solucao
+## Problema 2: Fluxo "Receber Carga" com etapa de Validacao
 
-### 1. Criar uma View publica segura para dados de contato do marketplace
+**Situacao atual**: A pagina `ReceberCarga.tsx` busca MTRs existentes no banco e faz a validacao direta, mudando o status para `completed` imediatamente.
 
-Em vez de abrir a tabela `company_settings` inteira para leitura cruzada (o que exporia CNPJ, endereco e outros dados sensiveis), vamos criar uma **view restrita** que expoe apenas os campos necessarios para o marketplace:
+**O que o usuario quer**: O Destinador deve CADASTRAR manualmente os dados da carga recebida (tipo de residuo, peso, transportador). Esses dados vao para uma area de "staging". Depois, na tela "Validar Carga", os dados cadastrados pelo Destinador sao cruzados com o anuncio do Gerador. So apos a validacao o status muda para `COMPLETED`.
 
-```sql
-CREATE VIEW public.marketplace_seller_contacts
-WITH (security_invoker = on) AS
-SELECT user_id, phone, razao_social
-FROM public.company_settings;
-```
+**Correcao em 2 etapas**:
 
-E adicionar uma policy na tabela `company_settings` que permite leitura dos campos via essa view indiretamente. Porem, como `security_invoker` ainda aplicaria o RLS da tabela base, a abordagem mais simples e segura e:
+1. **Receber Carga (`/receber-carga`)**: Transformar em formulario de cadastro onde o Destinador digita: tipo de residuo, peso na balanca, transportador, e observacoes. Ao salvar, cria um registro temporario com status `aguardando_validacao`.
 
-**Abordagem escolhida**: Criar uma **funcao RPC** `security definer` que busca phone e razao_social dado um array de user_ids. Isso bypassa o RLS de forma controlada, retornando apenas os campos publicos necessarios.
+2. **Validar Carga (`/validar-carga`)**: Listar as cargas com status `aguardando_validacao`. Mostrar lado a lado: dados do Destinador vs dados do MTR original do Gerador. Botao "Confirmar" muda status para `completed`.
 
-```sql
-CREATE OR REPLACE FUNCTION public.get_seller_contacts(seller_ids uuid[])
-RETURNS TABLE(user_id uuid, phone text, razao_social text)
-LANGUAGE sql
-STABLE
-SECURITY DEFINER
-SET search_path = public
-AS $$
-  SELECT cs.user_id, cs.phone, cs.razao_social
-  FROM public.company_settings cs
-  WHERE cs.user_id = ANY(seller_ids);
-$$;
-```
+**Alteracao no banco**: Adicionar coluna `receiver_id` na tabela `waste_manifests` para vincular o destinador a carga, e uma policy RLS que permita o receiver ler/atualizar manifestos onde ele e o receiver. Alternativamente, criar uma tabela separada `received_shipments` para o staging.
 
-### 2. Atualizar o frontend (`src/pages/Mercado.tsx`)
+**Abordagem escolhida**: Usar a tabela `waste_manifests` existente, adicionando:
+- Coluna `receiver_id` (uuid, nullable) para identificar o destinador
+- Ajustar RLS para permitir que o receiver atualize manifestos destinados a ele
+- Status flow: `enviado` -> `em_transito` -> `aguardando_validacao` -> `completed`
 
-Substituir a query direta a `company_settings` pela chamada RPC:
+## Problema 3: Mapa removido do menu do Destinador
 
-```tsx
-// Antes (bloqueado pelo RLS):
-const { data: settingsData } = await supabase
-  .from("company_settings")
-  .select("user_id, phone, razao_social")
-  .in("user_id", userIds);
+**Causa raiz**: No `AppSidebar.tsx` (linha 23-28) e `BottomNav.tsx` (linha 45-49), o Mapa so aparece para o perfil `generator`.
 
-// Depois (funcao RPC que bypassa RLS de forma segura):
-const { data: settingsData } = await supabase
-  .rpc("get_seller_contacts", { seller_ids: userIds });
-```
+**Correcao**: Adicionar o link do Mapa (`/mapa`) de volta nos menus do Destinador, tanto na Sidebar quanto na Bottom Nav.
 
-### 3. Fallback com email
-
-Atualizar o `handleInterest` para mostrar o email do vendedor (via `auth.users` nao e acessivel, mas podemos buscar o email do usuario que criou o listing). Como nao temos acesso ao `auth.users`, vamos melhorar o fallback exibindo o nome da empresa e uma mensagem mais util no toast.
+---
 
 ## Resumo das alteracoes
 
-| Arquivo / Recurso | Alteracao |
+| Arquivo | Alteracao |
 |---|---|
-| **Migracao SQL** | Criar funcao RPC `get_seller_contacts` |
-| `src/pages/Mercado.tsx` | Trocar query `company_settings` por `supabase.rpc("get_seller_contacts")` |
-| `src/pages/Mercado.tsx` | Melhorar mensagem de fallback no toast quando telefone ausente |
+| **Migracao SQL** | Adicionar coluna `receiver_id` na `waste_manifests` + policy RLS para receiver |
+| `src/pages/Mercado.tsx` | Remover filtro `user_id !== user?.id` para receivers (mostrar todos os anuncios) |
+| `src/pages/ReceberCarga.tsx` | Reescrever como formulario de cadastro de carga recebida (sem buscar MTRs) |
+| `src/pages/Recebimento.tsx` | Reescrever como tela de validacao cruzada (dados do Destinador vs Gerador) |
+| `src/components/layout/AppSidebar.tsx` | Adicionar `{ to: "/mapa", label: "Mapa", icon: MapPin }` no array `receiverItems` |
+| `src/components/layout/BottomNav.tsx` | Adicionar link do Mapa para o perfil `receiver` |
 
 ## Detalhes tecnicos
 
-- A funcao usa `SECURITY DEFINER` para bypassar o RLS restritivo de `company_settings`
-- Apenas `phone` e `razao_social` sao expostos -- CNPJ, endereco e responsavel permanecem protegidos
-- A funcao aceita um array de UUIDs para eficiencia (uma unica chamada para todos os sellers)
-- Nenhuma alteracao nas policies existentes de `company_settings` e necessaria
+### Migracao SQL
+```sql
+ALTER TABLE public.waste_manifests ADD COLUMN IF NOT EXISTS receiver_id uuid;
+
+-- Permitir que receivers vejam manifestos destinados a eles
+CREATE POLICY "Receivers can view assigned manifests"
+ON public.waste_manifests FOR SELECT TO authenticated
+USING (receiver_id = auth.uid());
+
+-- Permitir que receivers atualizem manifestos destinados a eles
+CREATE POLICY "Receivers can update assigned manifests"
+ON public.waste_manifests FOR UPDATE TO authenticated
+USING (receiver_id = auth.uid());
+```
+
+### Fluxo Receber Carga (novo)
+O formulario tera campos: Codigo MTR (input texto), Tipo de Residuo, Peso na Balanca, Transportador. Ao salvar, os dados ficam com status `aguardando_validacao`.
+
+### Fluxo Validar Carga (novo)
+Lista cargas com status `aguardando_validacao`. Cada card mostra uma comparacao visual:
+- Lado esquerdo: "Dados do Destinador" (peso real, tipo informado)
+- Lado direito: "Dados do Gerador" (peso declarado, tipo original do MTR)
+- Indicador de divergencia se houver diferenca > 0.5kg
+- Botao "Aprovar e Concluir" que muda status para `completed`
 

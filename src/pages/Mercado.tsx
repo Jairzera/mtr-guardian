@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useUserRole } from "@/hooks/useUserRole";
 import { Package, TrendingUp, Users, Plus, MessageCircle, Store } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +43,7 @@ interface ListingWithSeller {
 }
 
 const Mercado = () => {
+  const { role } = useUserRole();
   const { user } = useAuth();
   const [listings, setListings] = useState<ListingWithSeller[]>([]);
   const [loading, setLoading] = useState(true);
@@ -172,57 +174,65 @@ const Mercado = () => {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Receita Verde</h1>
-          <p className="text-sm text-muted-foreground mt-1">Marketplace de resíduos com valor comercial</p>
+         <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+           {role === "receiver" ? "Mercado de Oportunidades" : "Receita Verde"}
+         </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            {role === "receiver"
+              ? "Encontre resíduos disponíveis para compra"
+              : "Marketplace de resíduos com valor comercial"}
+          </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="gradient-primary shadow-primary font-semibold gap-2 min-h-[44px]">
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Anunciar</span>
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Vender Resíduo</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4 pt-2">
-              <div>
-                <Label>Material *</Label>
-                <Input placeholder="Ex: Sucata de Alumínio" className="mt-1.5" value={newMaterial} onChange={(e) => setNewMaterial(e.target.value)} maxLength={200} />
-              </div>
-              <div className="flex gap-3">
-                <div className="flex-1">
-                  <Label>Quantidade *</Label>
-                  <Input placeholder="Ex: 500" inputMode="decimal" className="mt-1.5" value={newQuantity} onChange={(e) => setNewQuantity(e.target.value)} />
-                </div>
-                <div className="w-28">
-                  <Label>Unidade</Label>
-                  <Select value={newUnit} onValueChange={setNewUnit}>
-                    <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="kg">kg</SelectItem>
-                      <SelectItem value="ton">Ton</SelectItem>
-                      <SelectItem value="L">Litros</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div>
-                <Label>Preço por kg (R$)</Label>
-                <Input placeholder="Ex: 3,75" inputMode="decimal" className="mt-1.5" value={newPricePerKg} onChange={(e) => setNewPricePerKg(e.target.value)} />
-              </div>
-              <div>
-                <Label>Região</Label>
-                <Input placeholder="Ex: São Paulo, SP" className="mt-1.5" value={newRegion} onChange={(e) => setNewRegion(e.target.value)} maxLength={100} />
-              </div>
-              <Button className="w-full gradient-primary shadow-primary font-semibold min-h-[44px]" onClick={handleCreateListing} disabled={submitting}>
-                {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                Publicar Anúncio
+        {role === "generator" && (
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="gradient-primary shadow-primary font-semibold gap-2 min-h-[44px]">
+                <Plus className="w-4 h-4" />
+                <span className="hidden sm:inline">Anunciar</span>
               </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Vender Resíduo</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-2">
+                <div>
+                  <Label>Material *</Label>
+                  <Input placeholder="Ex: Sucata de Alumínio" className="mt-1.5" value={newMaterial} onChange={(e) => setNewMaterial(e.target.value)} maxLength={200} />
+                </div>
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <Label>Quantidade *</Label>
+                    <Input placeholder="Ex: 500" inputMode="decimal" className="mt-1.5" value={newQuantity} onChange={(e) => setNewQuantity(e.target.value)} />
+                  </div>
+                  <div className="w-28">
+                    <Label>Unidade</Label>
+                    <Select value={newUnit} onValueChange={setNewUnit}>
+                      <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="kg">kg</SelectItem>
+                        <SelectItem value="ton">Ton</SelectItem>
+                        <SelectItem value="L">Litros</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div>
+                  <Label>Preço por kg (R$)</Label>
+                  <Input placeholder="Ex: 3,75" inputMode="decimal" className="mt-1.5" value={newPricePerKg} onChange={(e) => setNewPricePerKg(e.target.value)} />
+                </div>
+                <div>
+                  <Label>Região</Label>
+                  <Input placeholder="Ex: São Paulo, SP" className="mt-1.5" value={newRegion} onChange={(e) => setNewRegion(e.target.value)} maxLength={100} />
+                </div>
+                <Button className="w-full gradient-primary shadow-primary font-semibold min-h-[44px]" onClick={handleCreateListing} disabled={submitting}>
+                  {submitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  Publicar Anúncio
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
 
       {/* Summary KPIs */}
@@ -244,7 +254,7 @@ const Mercado = () => {
         <Card className="p-3 md:p-4 shadow-card border-border/60 flex items-center gap-3 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
           <div className="p-2.5 rounded-xl bg-primary/10 hidden sm:block"><Users className="w-5 h-5 text-primary" /></div>
           <div>
-            <p className="text-xs text-muted-foreground">Vendedores</p>
+            <p className="text-xs text-muted-foreground">{role === "receiver" ? "Fornecedores" : "Vendedores"}</p>
             <p className="text-xl md:text-2xl font-bold text-card-foreground">{new Set(listings.map((l) => l.user_id)).size}</p>
           </div>
         </Card>
@@ -256,10 +266,10 @@ const Mercado = () => {
       ) : listings.length === 0 ? (
         <EmptyState
           icon={Store}
-          title="Nenhuma oportunidade na sua região ainda."
-          description="Publique seu primeiro anúncio e conecte-se com compradores interessados."
-          actionLabel="Anunciar Resíduo"
-          onAction={() => setDialogOpen(true)}
+          title={role === "receiver" ? "Nenhuma oportunidade disponível ainda." : "Nenhuma oportunidade na sua região ainda."}
+          description={role === "receiver" ? "Novos resíduos serão listados aqui quando disponíveis." : "Publique seu primeiro anúncio e conecte-se com compradores interessados."}
+          actionLabel={role === "generator" ? "Anunciar Resíduo" : undefined}
+          onAction={role === "generator" ? () => setDialogOpen(true) : undefined}
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">

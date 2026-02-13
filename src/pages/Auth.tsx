@@ -101,7 +101,10 @@ const Auth = () => {
           razao_social: razaoSocial.trim(),
           cnpj: cnpj.replace(/\D/g, ""),
           phone: phone.replace(/\D/g, ""),
-        });
+          trial_start_date: new Date().toISOString(),
+          subscription_status: "trial",
+          plan: selectedRole === "receiver" ? "corporate" : "standard",
+        } as any);
 
       if (companyError) {
         console.error("Error saving company settings:", companyError);

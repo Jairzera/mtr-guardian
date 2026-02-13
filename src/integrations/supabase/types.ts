@@ -21,8 +21,11 @@ export type Database = {
           endereco: string
           id: string
           phone: string
+          plan: string
           razao_social: string
           responsavel: string
+          subscription_status: string
+          trial_start_date: string | null
           updated_at: string
           user_id: string
         }
@@ -32,8 +35,11 @@ export type Database = {
           endereco?: string
           id?: string
           phone?: string
+          plan?: string
           razao_social?: string
           responsavel?: string
+          subscription_status?: string
+          trial_start_date?: string | null
           updated_at?: string
           user_id: string
         }
@@ -43,8 +49,11 @@ export type Database = {
           endereco?: string
           id?: string
           phone?: string
+          plan?: string
           razao_social?: string
           responsavel?: string
+          subscription_status?: string
+          trial_start_date?: string | null
           updated_at?: string
           user_id?: string
         }

@@ -159,20 +159,23 @@ const AchievementsSection = () => {
           />
         </div>
 
-        <p className="text-xs text-zinc-400 mt-3">
-          {nextMilestone ? (
-            <>
-              Você já processou <span className="text-emerald-400 font-semibold">{formatWeight(totalKg)}</span>.
-              Faltam <span className="text-white font-semibold">{formatWeight(remainingKg)}</span> para desbloquear a placa{" "}
-              <span className="text-white font-semibold">{nextMilestone.name}</span>.
-            </>
-          ) : (
-            <>
-              🎉 Parabéns! Você alcançou o nível máximo com{" "}
-              <span className="text-emerald-400 font-semibold">{formatWeight(totalKg)}</span> processados!
-            </>
-          )}
-        </p>
+        <div className="flex items-center justify-between mt-3">
+          <p className="text-xs text-zinc-400">
+            {nextMilestone ? (
+              <>
+                Total Reciclado: <span className="text-emerald-400 font-semibold">{formatWeight(totalKg)}</span>
+                {" / "}Próximo Nível: <span className="text-white font-semibold">{formatWeight(nextMilestone.thresholdKg)}</span>
+                {" — "}Faltam <span className="text-white font-semibold">{formatWeight(remainingKg)}</span> para a placa{" "}
+                <span className="text-white font-semibold">{nextMilestone.name}</span>.
+              </>
+            ) : (
+              <>
+                🎉 Parabéns! Total Reciclado:{" "}
+                <span className="text-emerald-400 font-semibold">{formatWeight(totalKg)}</span> — Nível máximo alcançado!
+              </>
+            )}
+          </p>
+        </div>
       </div>
 
       {/* Milestone cards grid */}

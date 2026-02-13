@@ -12,6 +12,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardSkeleton } from "@/components/Skeletons";
+import AchievementsSection from "@/components/dashboard/AchievementsSection";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -144,6 +145,8 @@ const Dashboard = () => {
       </div>
 
       <WeeklyChart data={generatorData.weeklyData} unitLabel={generatorData.unitLabel} />
+
+      <AchievementsSection />
     </div>
   );
 };

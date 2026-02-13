@@ -78,9 +78,7 @@ const Mercado = () => {
 
     const userIds = [...new Set(listingsData.map((l) => l.user_id))];
     const { data: settingsData } = await supabase
-      .from("company_settings")
-      .select("user_id, phone, razao_social")
-      .in("user_id", userIds);
+      .rpc("get_seller_contacts", { seller_ids: userIds }) as { data: { user_id: string; phone: string; razao_social: string }[] | null };
 
     const settingsMap = new Map<string, { phone: string; razao_social: string }>();
     settingsData?.forEach((s) => {

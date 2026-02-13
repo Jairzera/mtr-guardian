@@ -200,6 +200,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      get_seller_contacts: {
+        Args: { seller_ids: string[] }
+        Returns: {
+          phone: string
+          razao_social: string
+          user_id: string
+        }[]
+      }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]

@@ -1,0 +1,1 @@
+ALTER TABLE public.waste_manifests ADD COLUMN received_weight numeric;

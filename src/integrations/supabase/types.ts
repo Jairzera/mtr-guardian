@@ -144,6 +144,7 @@ export type Database = {
           expiration_date: string | null
           id: string
           photo_url: string | null
+          received_weight: number | null
           rejection_reason: string | null
           status: string
           transporter_name: string
@@ -159,6 +160,7 @@ export type Database = {
           expiration_date?: string | null
           id?: string
           photo_url?: string | null
+          received_weight?: number | null
           rejection_reason?: string | null
           status?: string
           transporter_name: string
@@ -174,6 +176,7 @@ export type Database = {
           expiration_date?: string | null
           id?: string
           photo_url?: string | null
+          received_weight?: number | null
           rejection_reason?: string | null
           status?: string
           transporter_name?: string

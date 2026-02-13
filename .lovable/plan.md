@@ -1,38 +1,45 @@
 
 
-# Correcao do Bug no Mercado - Filtragem Inconsistente
+# Limpeza de Interface do Destinador
 
-## Problema Encontrado
+## Problema
 
-Na pagina `src/pages/Mercado.tsx`, os KPIs e o estado vazio usam `listings.length` (todos os anuncios do banco), mas os cards sao filtrados por role:
-- **Gerador**: ve apenas `item.user_id === user?.id` (seus proprios)
-- **Destinador**: ve apenas `item.user_id !== user?.id` (de outros)
+O `receiverItems` na Sidebar ainda inclui itens irrelevantes para o Destinador:
+- **ESG** (linha 29) - irrelevante para receiver
+- **Mapa** (linha 28) - nao solicitado na lista final
+- **Certificados** (linha 30) - nao solicitado na lista final
+- **Recebimento** (linha 25) - redundante com "Validar Carga"
 
-Isso causa discrepancia entre os numeros mostrados nos KPIs e os cards exibidos. O estado vazio tambem nunca aparece se existirem anuncios de outros usuarios.
+O usuario quer que o Destinador veja **apenas**: Dashboard, Mercado, Validar Carga, Configuracoes.
 
-## Solucao
+## Alteracoes
 
-Aplicar o filtro de role **antes** de calcular KPIs e checar estado vazio, usando `useMemo` para derivar a lista filtrada.
+### 1. Sidebar (`src/components/layout/AppSidebar.tsx`)
 
-## Detalhes Tecnicos
-
-### Arquivo: `src/pages/Mercado.tsx`
-
-1. Adicionar `useMemo` aos imports
-2. Criar uma lista filtrada derivada:
+Reduzir o array `receiverItems` para apenas 4 itens:
 
 ```tsx
-const filteredListings = useMemo(() => {
-  if (role === "receiver") {
-    return listings.filter((item) => item.user_id !== user?.id);
-  }
-  return listings.filter((item) => item.user_id === user?.id);
-}, [listings, role, user?.id]);
+const receiverItems = [
+  { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/mercado", label: "Mercado", icon: Store },
+  { to: "/validar-carga", label: "Validar Carga", icon: ClipboardCheck },
+  { to: "/configuracoes", label: "Configurações", icon: Settings },
+];
 ```
 
-3. Substituir todas as referencias a `listings.length`, `listings.reduce(...)`, `listings.map(...)`, e `listings.filter(...)` no JSX por `filteredListings`
+Remover os icones nao utilizados do import (`Leaf`, `MapPin`, `ShieldCheck`, `PackageCheck`) se nao forem usados pelo `generatorItems`.
 
-4. Remover o `.filter()` inline no grid de cards, ja que `filteredListings` ja esta filtrado
+### 2. Bottom Nav (`src/components/layout/BottomNav.tsx`)
 
-Isso garante que KPIs, estado vazio e cards usem exatamente o mesmo conjunto de dados filtrado por role.
+A bottom nav mobile ja esta quase correta, mas inclui "Mapa" para ambos os perfis. Ajustar para que o receiver veja apenas:
+- Home (Dashboard)
+- Mercado
+- Validar (botao central - ja correto)
+- Configuracoes (Perfil)
+
+Substituir o link "Mapa" por logica condicional: mostrar "Mapa" apenas para generator, e para receiver nao mostrar (ja tem 4 itens + botao central = 5 slots completos sem Mapa).
+
+### 3. Protecao de Rota (nenhuma alteracao necessaria)
+
+As rotas `/esg`, `/mapa`, `/certificados` continuam existindo no `App.tsx` para o Gerador. O Destinador simplesmente nao tera acesso via navegacao. Nao e necessario bloquear por rota neste momento.
 

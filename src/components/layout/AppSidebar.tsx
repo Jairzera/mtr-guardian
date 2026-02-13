@@ -75,11 +75,18 @@ const AppSidebar = () => {
       </nav>
 
       <div className="px-3 pb-6 space-y-2">
-        {role === "generator" && (
+        {role === "generator" ? (
           <NavLink to="/novo-manifesto">
             <Button className="w-full gradient-primary shadow-primary font-semibold gap-2">
               <Plus className="w-4 h-4" />
               Novo Manifesto
+            </Button>
+          </NavLink>
+        ) : (
+          <NavLink to="/receber-carga">
+            <Button className="w-full gradient-primary shadow-primary font-semibold gap-2">
+              <PackageCheck className="w-4 h-4" />
+              Receber Carga
             </Button>
           </NavLink>
         )}

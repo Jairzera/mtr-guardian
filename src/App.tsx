@@ -20,6 +20,7 @@ import ESG from "./pages/ESG";
 import Auth from "./pages/Auth";
 import PublicTracking from "./pages/PublicTracking";
 import Recebimento from "./pages/Recebimento";
+import ReceberCarga from "./pages/ReceberCarga";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,6 +54,7 @@ const App = () => (
                 <Route path="/esg" element={<ESG />} />
                 <Route path="/recebimento" element={<Recebimento />} />
                 <Route path="/validar-carga" element={<Recebimento />} />
+                <Route path="/receber-carga" element={<ReceberCarga />} />
               </Route>
               <Route path="/tracking/:id" element={<PublicTracking />} />
               <Route path="*" element={<NotFound />} />

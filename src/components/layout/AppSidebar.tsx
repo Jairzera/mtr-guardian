@@ -24,7 +24,6 @@ const receiverItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/recebimento", label: "Recebimento", icon: PackageCheck },
   { to: "/validar-carga", label: "Validar Carga", icon: ClipboardCheck },
-  { to: "/auditoria", label: "Auditoria", icon: ShieldAlert },
   { to: "/mercado", label: "Mercado", icon: Store },
   { to: "/mapa", label: "Mapa", icon: MapPin },
   { to: "/esg", label: "ESG", icon: Leaf },

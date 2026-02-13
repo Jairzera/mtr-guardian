@@ -145,6 +145,7 @@ export type Database = {
           id: string
           photo_url: string | null
           received_weight: number | null
+          receiver_id: string | null
           rejection_reason: string | null
           status: string
           transporter_name: string
@@ -161,6 +162,7 @@ export type Database = {
           id?: string
           photo_url?: string | null
           received_weight?: number | null
+          receiver_id?: string | null
           rejection_reason?: string | null
           status?: string
           transporter_name: string
@@ -177,6 +179,7 @@ export type Database = {
           id?: string
           photo_url?: string | null
           received_weight?: number | null
+          receiver_id?: string | null
           rejection_reason?: string | null
           status?: string
           transporter_name?: string

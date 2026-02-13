@@ -42,12 +42,10 @@ const BottomNav = () => {
           </NavLink>
         )}
 
-        {role === "generator" && (
-          <NavLink to="/mapa" className={linkClass("/mapa")}>
-            <Map className="w-6 h-6" />
-            <span>Mapa</span>
-          </NavLink>
-        )}
+        <NavLink to="/mapa" className={linkClass("/mapa")}>
+          <Map className="w-6 h-6" />
+          <span>Mapa</span>
+        </NavLink>
 
         <NavLink to="/configuracoes" className={linkClass("/configuracoes")}>
           <User className="w-6 h-6" />

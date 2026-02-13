@@ -23,6 +23,7 @@ const generatorItems = [
 const receiverItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/mercado", label: "Mercado", icon: Store },
+  { to: "/mapa", label: "Mapa", icon: MapPin },
   { to: "/validar-carga", label: "Validar Carga", icon: ClipboardCheck },
   { to: "/configuracoes", label: "Configurações", icon: Settings },
 ];

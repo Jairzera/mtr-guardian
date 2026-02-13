@@ -1,54 +1,50 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { toast } from "sonner";
-import { Loader2, PackageCheck, Scale, AlertTriangle, CheckCircle2, Search } from "lucide-react";
+import {
+  Loader2,
+  PackageCheck,
+  Scale,
+  AlertTriangle,
+  CheckCircle2,
+  Search,
+  ClipboardCheck,
+  ArrowRight,
+} from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { format } from "date-fns";
+import EmptyState from "@/components/EmptyState";
 
 interface Manifest {
   id: string;
   waste_class: string;
   weight_kg: number;
+  received_weight: number | null;
   unit: string;
   transporter_name: string;
   status: string;
   created_at: string;
   destination_type: string;
+  rejection_reason: string | null;
 }
 
 const Recebimento = () => {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [selectedManifest, setSelectedManifest] = useState<Manifest | null>(null);
-  const [pesoReal, setPesoReal] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: manifests = [], isLoading } = useQuery({
-    queryKey: ["receiver-manifests"],
+    queryKey: ["receiver-validation-manifests"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("waste_manifests")
         .select("*")
-        .in("status", ["enviado", "em_transito"])
+        .eq("status", "aguardando_validacao")
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -56,76 +52,42 @@ const Recebimento = () => {
     },
   });
 
-  const validateMutation = useMutation({
-    mutationFn: async ({
-      id,
-      pesoReal,
-      divergente,
-    }: {
-      id: string;
-      pesoReal: number;
-      divergente: boolean;
-    }) => {
+  const approveMutation = useMutation({
+    mutationFn: async (id: string) => {
       const { error } = await supabase
         .from("waste_manifests")
-        .update({
-          status: "received",
-          received_weight: pesoReal,
-          rejection_reason: divergente
-            ? `Divergência: ${pesoReal}${selectedManifest?.unit} recebido vs ${selectedManifest?.weight_kg}${selectedManifest?.unit} declarado`
-            : null,
-        } as any)
+        .update({ status: "completed" } as any)
         .eq("id", id);
 
       if (error) throw error;
     },
-    onSuccess: (_, variables) => {
-      const diff = Math.abs(variables.pesoReal - (selectedManifest?.weight_kg ?? 0));
-      queryClient.invalidateQueries({ queryKey: ["receiver-manifests"] });
-      toast.success(
-        variables.divergente
-          ? `Carga recebida: ${variables.pesoReal}kg (Divergência: ${diff.toFixed(1)}kg)`
-          : `Carga recebida com sucesso: ${variables.pesoReal}kg`
-      );
-      setSelectedManifest(null);
-      setPesoReal("");
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["receiver-validation-manifests"] });
+      queryClient.invalidateQueries({ queryKey: ["achievements-total-weight"] });
+      queryClient.invalidateQueries({ queryKey: ["receiver-dashboard"] });
+      toast.success("Carga validada e concluída com sucesso! ✅");
     },
     onError: () => {
-      toast.error("Erro ao validar carga. Tente novamente.");
+      toast.error("Erro ao validar carga.");
     },
   });
 
-  const handleValidate = () => {
-    if (!selectedManifest || !pesoReal) return;
-
-    const pesoRealNum = parseFloat(pesoReal);
-    const divergente = Math.abs(pesoRealNum - selectedManifest.weight_kg) > 0.5;
-
-    validateMutation.mutate({
-      id: selectedManifest.id,
-      pesoReal: pesoRealNum,
-      divergente,
-    });
-  };
-
-  const statusBadge = (status: string) => {
-    if (status === "em_transito")
-      return <Badge variant="outline" className="border-primary text-primary">Em Trânsito</Badge>;
-    return <Badge variant="secondary">Enviado</Badge>;
-  };
-
-  const filteredManifests = manifests.filter((m) =>
-    m.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    m.waste_class.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    m.transporter_name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredManifests = manifests.filter(
+    (m) =>
+      m.waste_class.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      m.transporter_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      m.id.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Recebimento de Carga</h1>
+        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
+          <ClipboardCheck className="w-6 h-6 text-primary" />
+          Validar Carga
+        </h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Valide as cargas recebidas e gere o CDF automaticamente.
+          Confira os dados cadastrados e aprove para concluir o recebimento.
         </p>
       </div>
 
@@ -133,21 +95,21 @@ const Recebimento = () => {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
-          placeholder="Buscar por nº MTR, resíduo ou transportador..."
+          placeholder="Buscar por resíduo, transportador ou código..."
           className="pl-10"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
       </div>
 
-      {/* KPI summary */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+      {/* KPI */}
+      <div className="grid grid-cols-2 gap-4">
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
             <PackageCheck className="w-8 h-8 text-primary" />
             <div>
               <p className="text-2xl font-bold text-foreground">{filteredManifests.length}</p>
-              <p className="text-xs text-muted-foreground">Aguardando</p>
+              <p className="text-xs text-muted-foreground">Aguardando Validação</p>
             </div>
           </CardContent>
         </Card>
@@ -156,161 +118,117 @@ const Recebimento = () => {
             <Scale className="w-8 h-8 text-primary" />
             <div>
               <p className="text-2xl font-bold text-foreground">
-                {filteredManifests.reduce((sum, m) => sum + Number(m.weight_kg), 0).toLocaleString("pt-BR")}
+                {filteredManifests
+                  .reduce((sum, m) => sum + Number(m.received_weight || m.weight_kg), 0)
+                  .toLocaleString("pt-BR")}
               </p>
-              <p className="text-xs text-muted-foreground">kg Total</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="hidden md:block">
-          <CardContent className="p-4 flex items-center gap-3">
-            <AlertTriangle className="w-8 h-8 text-destructive" />
-            <div>
-              <p className="text-2xl font-bold text-foreground">
-                {filteredManifests.filter((m) => m.status === "em_transito").length}
-              </p>
-              <p className="text-xs text-muted-foreground">Em Trânsito</p>
+              <p className="text-xs text-muted-foreground">kg Pendente</p>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Table */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Cargas Aguardando Aprovação</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center py-12">
-              <Loader2 className="w-6 h-6 text-primary animate-spin" />
-            </div>
-          ) : filteredManifests.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <CheckCircle2 className="w-12 h-12 mx-auto mb-3 opacity-40" />
-              <p className="font-medium">Nenhuma carga pendente</p>
-              <p className="text-xs mt-1">Todas as cargas foram validadas.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto -mx-6">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Resíduo</TableHead>
-                    <TableHead>Peso</TableHead>
-                    <TableHead>Transportador</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Ação</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredManifests.map((m) => (
-                    <TableRow key={m.id}>
-                      <TableCell className="text-xs">
-                        {format(new Date(m.created_at), "dd/MM/yy")}
-                      </TableCell>
-                      <TableCell className="font-medium text-sm">{m.waste_class}</TableCell>
-                      <TableCell className="text-sm">
-                        {Number(m.weight_kg).toLocaleString("pt-BR")} {m.unit}
-                      </TableCell>
-                      <TableCell className="text-sm">{m.transporter_name}</TableCell>
-                      <TableCell>{statusBadge(m.status)}</TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          onClick={() => {
-                            setSelectedManifest(m);
-                            setPesoReal("");
-                          }}
-                        >
-                          Validar
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Cards de validacao */}
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="w-6 h-6 text-primary animate-spin" />
+        </div>
+      ) : filteredManifests.length === 0 ? (
+        <EmptyState
+          icon={CheckCircle2}
+          title="Nenhuma carga pendente de validação"
+          description="As cargas cadastradas em 'Receber Carga' aparecerão aqui para conferência."
+        />
+      ) : (
+        <div className="space-y-4">
+          {filteredManifests.map((m) => {
+            const declaredWeight = Number(m.weight_kg);
+            const receivedWeight = Number(m.received_weight || m.weight_kg);
+            const diff = Math.abs(receivedWeight - declaredWeight);
+            const hasDivergence = diff > 0.5;
 
-      {/* Validation Modal */}
-      <Dialog open={!!selectedManifest} onOpenChange={(open) => !open && setSelectedManifest(null)}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Validar Recebimento</DialogTitle>
-          </DialogHeader>
-          {selectedManifest && (
-            <div className="space-y-4">
-              <div className="rounded-lg border border-border p-3 bg-muted/30 space-y-1 text-sm">
-                <p>
-                  <span className="text-muted-foreground">Resíduo:</span>{" "}
-                  <strong>{selectedManifest.waste_class}</strong>
-                </p>
-                <p>
-                  <span className="text-muted-foreground">Transportador:</span>{" "}
-                  {selectedManifest.transporter_name}
-                </p>
-                <p>
-                  <span className="text-muted-foreground">Destino:</span>{" "}
-                  {selectedManifest.destination_type}
-                </p>
-              </div>
+            return (
+              <Card key={m.id} className="border-border/60">
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-sm font-mono text-muted-foreground">
+                      MTR {m.id.slice(0, 8)}
+                    </CardTitle>
+                    <Badge variant="outline" className="border-primary text-primary text-xs">
+                      Aguardando Validação
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Comparison */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-lg border border-border bg-muted/30 p-3 space-y-2">
+                      <p className="text-xs font-semibold text-muted-foreground">📦 Dados Cadastrados</p>
+                      <div className="space-y-1 text-sm">
+                        <p><span className="text-muted-foreground">Resíduo:</span> <strong className="text-foreground">{m.waste_class}</strong></p>
+                        <p><span className="text-muted-foreground">Peso:</span> <strong className="text-foreground">{receivedWeight.toLocaleString("pt-BR")} {m.unit}</strong></p>
+                        <p><span className="text-muted-foreground">Transportador:</span> <span className="text-foreground">{m.transporter_name}</span></p>
+                        <p><span className="text-muted-foreground">Destino:</span> <span className="text-foreground">{m.destination_type}</span></p>
+                      </div>
+                    </div>
 
-              <div className="rounded-lg border-2 border-primary/30 p-4 text-center bg-primary/5">
-                <p className="text-xs text-muted-foreground mb-1">Peso Declarado pelo Gerador</p>
-                <p className="text-3xl font-bold text-foreground">
-                  {Number(selectedManifest.weight_kg).toLocaleString("pt-BR")}{" "}
-                  <span className="text-base font-normal text-muted-foreground">
-                    {selectedManifest.unit}
-                  </span>
-                </p>
-              </div>
+                    <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 space-y-2">
+                      <p className="text-xs font-semibold text-muted-foreground">📋 Dados do Gerador</p>
+                      <div className="space-y-1 text-sm">
+                        <p><span className="text-muted-foreground">Resíduo:</span> <strong className="text-foreground">{m.waste_class}</strong></p>
+                        <p><span className="text-muted-foreground">Peso:</span> <strong className="text-foreground">{declaredWeight.toLocaleString("pt-BR")} {m.unit}</strong></p>
+                        <p><span className="text-muted-foreground">Transportador:</span> <span className="text-foreground">{m.transporter_name}</span></p>
+                        <p><span className="text-muted-foreground">Destino:</span> <span className="text-foreground">{m.destination_type}</span></p>
+                      </div>
+                    </div>
+                  </div>
 
-              <div>
-                <Label className="text-sm font-medium text-muted-foreground">
-                  Peso Real na Balança de Entrada
-                </Label>
-                <Input
-                  type="number"
-                  step="0.01"
-                  className="mt-1.5 text-lg font-semibold"
-                  placeholder="Ex: 500"
-                  value={pesoReal}
-                  onChange={(e) => setPesoReal(e.target.value)}
-                  autoFocus
-                />
-              </div>
+                  {/* Divergence indicator */}
+                  {hasDivergence ? (
+                    <div className="flex items-center gap-2 text-destructive text-sm p-3 bg-destructive/10 rounded-lg">
+                      <AlertTriangle className="w-4 h-4 shrink-0" />
+                      <span>
+                        Divergência de <strong>{diff.toLocaleString("pt-BR")} {m.unit}</strong>
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-primary text-sm p-3 bg-primary/10 rounded-lg">
+                      <CheckCircle2 className="w-4 h-4 shrink-0" />
+                      <span>Dados conferem — sem divergências.</span>
+                    </div>
+                  )}
 
-              {pesoReal && Math.abs(parseFloat(pesoReal) - selectedManifest.weight_kg) > 0.5 && (
-                <div className="flex items-center gap-2 text-destructive text-xs p-2 bg-destructive/10 rounded-md">
-                  <AlertTriangle className="w-4 h-4 shrink-0" />
-                  <span>
-                    Divergência detectada:{" "}
-                    {(parseFloat(pesoReal) - selectedManifest.weight_kg).toLocaleString("pt-BR")} {selectedManifest.unit}
-                  </span>
-                </div>
-              )}
-            </div>
-          )}
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setSelectedManifest(null)}>
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleValidate}
-              disabled={!pesoReal || validateMutation.isPending}
-            >
-              {validateMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {pesoReal && Math.abs(parseFloat(pesoReal) - (selectedManifest?.weight_kg ?? 0)) > 0.5
-                ? "Confirmar Divergência"
-                : "Aprovar Carga"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+                  {/* Observations */}
+                  {m.rejection_reason && (
+                    <p className="text-xs text-muted-foreground">
+                      <strong>Obs:</strong> {m.rejection_reason}
+                    </p>
+                  )}
+
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">
+                      {format(new Date(m.created_at), "dd/MM/yyyy 'às' HH:mm")}
+                    </p>
+                    <Button
+                      size="sm"
+                      className="gap-1.5"
+                      onClick={() => approveMutation.mutate(m.id)}
+                      disabled={approveMutation.isPending}
+                    >
+                      {approveMutation.isPending ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <CheckCircle2 className="w-4 h-4" />
+                      )}
+                      Aprovar e Concluir
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

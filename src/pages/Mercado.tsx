@@ -166,7 +166,8 @@ const Mercado = () => {
 
   const filteredListings = useMemo(() => {
     if (role === "receiver") {
-      return listings.filter((item) => item.user_id !== user?.id);
+      // Receivers see ALL active listings (including their own for dev testing)
+      return listings;
     }
     return listings.filter((item) => item.user_id === user?.id);
   }, [listings, role, user?.id]);

@@ -1,60 +1,119 @@
 
 
-# Correcao do Motivo da Pendencia - Backend e Frontend
+# Correção RBAC: 3 Fixes Criticos para o Perfil Destinador
 
-## Problema Atual
-- A coluna `rejection_reason` nao existe na tabela `waste_manifests`
-- Os tooltips com motivos sao gerados via hash no frontend (dados ficticios)
-- Tooltips nao funcionam em dispositivos moveis (toque)
+## Resumo
 
-## Plano de Implementacao
+Tres correções para garantir que o Destinador tenha uma experiência focada em compra e recebimento, sem acesso a funcionalidades de Gerador.
 
-### Passo 1 - Migrar banco de dados
-Adicionar coluna `rejection_reason` (text, nullable) na tabela `waste_manifests`.
+---
+
+## 1. Mercado -- Renderização Condicional por Role
+
+**Arquivo:** `src/pages/Mercado.tsx`
+
+- Importar `useUserRole` no componente
+- **Receiver (Destinador):**
+  - Titulo muda para "Mercado de Oportunidades"
+  - Subtitulo: "Encontre residuos disponiveis para compra"
+  - Botao "Anunciar" e Dialog de criacao ficam **ocultos**
+  - KPI "Vendedores" muda label para "Fornecedores"
+  - Empty state mostra mensagem passiva (sem botao de criar anuncio)
+- **Generator (Gerador):**
+  - Mantém tudo como esta (titulo "Receita Verde", botao Anunciar, etc.)
+
+---
+
+## 2. Tela Recebimento -- Adicionar Busca por MTR
+
+**Arquivo:** `src/pages/Recebimento.tsx`
+
+- Adicionar campo de busca no topo: "Buscar por numero do MTR ou residuo"
+- O campo filtra a lista de manifestos pendentes em tempo real (client-side filter no array `manifests`)
+- Adicionar `animate-fade-in` e melhorar skeleton de loading
+- A logica de validacao com pesagem e divergencia ja existe e sera mantida intacta
+
+---
+
+## 3. Bottom Nav -- Botao Central Condicional
+
+**Arquivo:** `src/components/layout/BottomNav.tsx`
+
+O botao central ja alterna entre "Scan" (generator) e "Validar" (receiver) com icones diferentes. Porem, a rota do receiver aponta para `/recebimento`.
+
+- Confirmar que a rota `/recebimento` esta correta no link do botao central para receiver
+- Manter o icone `PackageCheck` e label "Validar" (ja implementado)
+- Nenhuma mudanca necessaria neste arquivo -- ja esta correto
+
+---
+
+## Detalhes Tecnicos
+
+### Mercado.tsx -- Mudancas
 
 ```text
-ALTER TABLE waste_manifests ADD COLUMN rejection_reason text;
++import { useUserRole } from "@/hooks/useUserRole";
+
+ const Mercado = () => {
++  const { role } = useUserRole();
+   const { user } = useAuth();
+   ...
+
+   // Titulo condicional
+-  <h1>Receita Verde</h1>
++  <h1>{role === "receiver" ? "Mercado de Oportunidades" : "Receita Verde"}</h1>
+
+   // Botao Anunciar: so para generator
++  {role === "generator" && (
+     <Dialog ...> ... </Dialog>
++  )}
+
+   // Empty state: sem botao de acao para receiver
+   <EmptyState
+     ...
+-    actionLabel="Anunciar Residuo"
+-    onAction={() => setDialogOpen(true)}
++    actionLabel={role === "generator" ? "Anunciar Residuo" : undefined}
++    onAction={role === "generator" ? () => setDialogOpen(true) : undefined}
+   />
 ```
 
-### Passo 2 - Popular dados de teste
-Atualizar os 2 registros existentes com status "pendente" para incluir motivos reais:
-- Registro `29c7c29a...`: "Falta assinatura do motorista"
-- Registro `6b0c0975...`: "Peso divergente da balanca"
+### Recebimento.tsx -- Mudancas
 
-### Passo 3 - Atualizar MTRList.tsx
+```text
++const [searchQuery, setSearchQuery] = useState("");
 
-**Remover:**
-- Arrays `pendingReasons` e `riskReasons`
-- Funcao `getReasonByHash`
-- Componente `StatusBadgeWithTooltip` com tooltip
-- Imports de `Tooltip`, `TooltipContent`, `TooltipTrigger`
++// Filtro client-side
++const filteredManifests = manifests.filter((m) =>
++  m.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
++  m.waste_class.toLowerCase().includes(searchQuery.toLowerCase()) ||
++  m.transporter_name.toLowerCase().includes(searchQuery.toLowerCase())
++);
 
-**Adicionar:**
-- Import do componente `Dialog` (ja existe em `src/components/ui/dialog.tsx`)
-- Estado `selectedReason` para controlar o modal
-- Novo componente `StatusBadgeClickable` que:
-  - Renderiza o Badge com um icone `Info` (tamanho pequeno) dentro do badge para status "pendente" e "risco"
-  - Ao clicar, abre um Dialog com titulo "Detalhes da Pendencia" e o texto de `rejection_reason`
-  - Para status "conformidade", o badge nao e clicavel
-  - Aplica `cursor-pointer` nos badges clicaveis
+ // Novo campo de busca antes da tabela
++<div className="relative">
++  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
++  <Input
++    placeholder="Buscar por numero MTR, residuo ou transportador..."
++    className="pl-10"
++    value={searchQuery}
++    onChange={(e) => setSearchQuery(e.target.value)}
++  />
++</div>
 
-**Dialog:**
-- Titulo: "Detalhes da Pendencia"
-- Conteudo: texto do `rejection_reason` com destaque visual (fundo amarelo/vermelho sutil)
-- Botao: "Entendi" para fechar
+ // Usar filteredManifests no lugar de manifests na tabela e KPIs
+```
 
-### Passo 4 - Atualizar interface MTRItem
-Adicionar `rejection_reason` ao tipo `MTRItem` e a query do Supabase (no select).
+### BottomNav.tsx
 
-### Passo 5 - Mobile e Desktop
-O componente `StatusBadgeClickable` funciona identicamente em ambas as views (card mobile e tabela desktop), pois usa Dialog em vez de Tooltip.
+Nenhuma alteracao necessaria -- o componente ja implementa a logica condicional correta com `role === "generator"` vs `role === "receiver"`.
 
-### Detalhes Tecnicos
+---
 
-**Arquivos a modificar:**
-- `src/pages/MTRList.tsx` - remover tooltips, adicionar dialog clicavel, atualizar query e tipo
-- Migracao SQL para adicionar coluna
+## Arquivos Modificados
 
-**Arquivos sem alteracao:**
-- `src/components/ui/dialog.tsx` - ja existe e esta pronto para uso
+| Arquivo | Tipo de Mudanca |
+|---|---|
+| `src/pages/Mercado.tsx` | Renderizacao condicional por role |
+| `src/pages/Recebimento.tsx` | Campo de busca + filtro client-side |
 

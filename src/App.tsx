@@ -18,6 +18,7 @@ import Mercado from "./pages/Mercado";
 import Mapa from "./pages/Mapa";
 import ESG from "./pages/ESG";
 import Auth from "./pages/Auth";
+import Pricing from "./pages/Pricing";
 import PublicTracking from "./pages/PublicTracking";
 import Recebimento from "./pages/Recebimento";
 import ReceberCarga from "./pages/ReceberCarga";
@@ -36,6 +37,7 @@ const App = () => (
             <UserRoleProvider>
             <Routes>
               <Route path="/auth" element={<Auth />} />
+              <Route path="/pricing" element={<Pricing />} />
               <Route
                 element={
                   <ProtectedRoute>

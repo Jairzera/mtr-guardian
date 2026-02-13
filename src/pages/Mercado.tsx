@@ -175,12 +175,12 @@ const Mercado = () => {
       <div className="flex items-center justify-between">
         <div>
          <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-           {role === "receiver" ? "Mercado de Oportunidades" : "Receita Verde"}
-         </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {role === "receiver"
-              ? "Encontre resíduos disponíveis para compra"
-              : "Marketplace de resíduos com valor comercial"}
+            {role === "receiver" ? "Mercado de Compras" : "Meus Anúncios de Venda"}
+          </h1>
+           <p className="text-sm text-muted-foreground mt-1">
+             {role === "receiver"
+               ? "Encontre resíduos disponíveis para compra"
+               : "Gerencie seus anúncios de resíduos com valor comercial"}
           </p>
         </div>
         {role === "generator" && (
@@ -273,7 +273,7 @@ const Mercado = () => {
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-          {listings.map((item) => {
+          {listings.filter((item) => role === "receiver" ? item.user_id !== user?.id : item.user_id === user?.id).map((item) => {
             const estimatedValue = formatValue(item.quantity, item.price_per_kg);
             const isOwn = item.user_id === user?.id;
 

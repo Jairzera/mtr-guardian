@@ -34,11 +34,11 @@ const BottomNav = () => {
             <span className="text-xs font-semibold text-primary mt-1">Scan</span>
           </NavLink>
         ) : (
-          <NavLink to="/recebimento" className="flex flex-col items-center -mt-5">
+          <NavLink to="/receber-carga" className="flex flex-col items-center -mt-5">
             <div className="w-14 h-14 rounded-full gradient-primary shadow-primary flex items-center justify-center active:scale-95 transition-transform">
               <PackageCheck className="w-7 h-7 text-primary-foreground" />
             </div>
-            <span className="text-xs font-semibold text-primary mt-1">Validar</span>
+            <span className="text-xs font-semibold text-primary mt-1">Receber</span>
           </NavLink>
         )}
 

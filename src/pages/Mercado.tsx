@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Package, TrendingUp, Users, Plus, MessageCircle, Store, CheckCircle, Trash2 } from "lucide-react";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { Package, TrendingUp, Users, Plus, MessageCircle, Store, CheckCircle, Trash2, Phone, Settings } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ import { Loader2 } from "lucide-react";
 import { formatNumber, formatCurrency } from "@/lib/format";
 import { CardListSkeleton } from "@/components/Skeletons";
 import EmptyState from "@/components/EmptyState";
+import { useNavigate } from "react-router-dom";
 
 interface ListingWithSeller {
   id: string;
@@ -56,6 +58,9 @@ interface ListingWithSeller {
 const Mercado = () => {
   const { role } = useUserRole();
   const { user } = useAuth();
+  const { settings, loading: settingsLoading } = useCompanySettings();
+  const navigate = useNavigate();
+  const hasPhone = Boolean(settings.phone?.replace(/\D/g, "").length >= 10);
   const [listings, setListings] = useState<ListingWithSeller[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -123,6 +128,10 @@ const Mercado = () => {
 
   const handleCreateListing = async () => {
     if (!user) return;
+    if (!hasPhone) {
+      toast.error("Cadastre seu telefone nas Configurações antes de anunciar.");
+      return;
+    }
     if (!newMaterial.trim() || !newQuantity.trim()) {
       toast.error("Preencha material e quantidade ❌");
       return;
@@ -212,6 +221,21 @@ const Mercado = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {role === "generator" && !settingsLoading && !hasPhone && (
+        <Card className="p-4 border-primary/30 bg-primary/5">
+          <div className="flex items-center gap-3">
+            <Phone className="w-5 h-5 text-primary shrink-0" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground">Telefone não cadastrado</p>
+              <p className="text-xs text-muted-foreground">Para anunciar no Mercado, cadastre seu telefone nas Configurações.</p>
+            </div>
+            <Button size="sm" variant="outline" onClick={() => navigate("/configuracoes")} className="gap-1.5 shrink-0">
+              <Settings className="w-4 h-4" />
+              Configurações
+            </Button>
+          </div>
+        </Card>
+      )}
       <div className="flex items-center justify-between">
         <div>
          <h1 className="text-2xl md:text-3xl font-bold text-foreground">
@@ -344,13 +368,21 @@ const Mercado = () => {
                 </div>
 
                 {role === "receiver" && (
-                  <button
-                    className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors pt-1"
-                    onClick={() => handleInterest(item)}
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    Tenho Interesse
-                  </button>
+                  <div className="flex items-center gap-4 pt-1">
+                    <button
+                      className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                      onClick={() => handleInterest(item)}
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Tenho Interesse
+                    </button>
+                    {item.seller_phone && (
+                      <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                        <Phone className="w-3.5 h-3.5" />
+                        {item.seller_phone}
+                      </span>
+                    )}
+                  </div>
                 )}
 
                 {role === "generator" && isOwn && (

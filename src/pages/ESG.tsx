@@ -1,15 +1,29 @@
-import { useMemo } from "react";
-import { Leaf, Download, Award, TrendingUp } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Leaf, Download, Award, TrendingUp, Lock } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAchievements } from "@/hooks/useAchievements";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
+import { generateESGSeal, downloadBlob } from "@/lib/esgSealGenerator";
 
-const CO2_FACTOR_KG = 0.5; // kg CO2 avoided per kg recycled waste
+const CO2_FACTOR_KG = 0.5;
+
+const SEAL_LEVELS = [
+  { minLevel: 1, name: "Bronze Eco", icon: "🥉", label: "1 Tonelada" },
+  { minLevel: 2, name: "Silver Cycle", icon: "🥈", label: "10 Toneladas" },
+  { minLevel: 3, name: "Gold Impact", icon: "🥇", label: "100 Toneladas" },
+  { minLevel: 4, name: "Green Black", icon: "♻️", label: "1.000 Toneladas" },
+];
 
 const ESG = () => {
+  const [generating, setGenerating] = useState(false);
+  const { currentLevel, milestones } = useAchievements();
+  const { settings } = useCompanySettings();
+
   const { data: manifests = [] } = useQuery({
     queryKey: ["esg-manifests"],
     queryFn: async () => {
@@ -39,9 +53,9 @@ const ESG = () => {
       }
     }
 
-    const totalCO2 = (totalDivertedKg * CO2_FACTOR_KG) / 1000; // toneladas
+    const totalCO2 = (totalDivertedKg * CO2_FACTOR_KG) / 1000;
     const monthCO2 = (thisMonthKg * CO2_FACTOR_KG) / 1000;
-    const treesEquiv = Math.round(totalCO2 * 45); // ~45 trees per ton CO2/year
+    const treesEquiv = Math.round(totalCO2 * 45);
 
     return {
       totalDivertedTon: (totalDivertedKg / 1000).toFixed(1),
@@ -54,8 +68,32 @@ const ESG = () => {
     };
   }, [manifests]);
 
-  const handleGenerateSeal = () => {
-    toast.success("Selo ESG gerado! Em breve você poderá baixá-lo.");
+  // Determine which seals are unlocked based on achievement level
+  const availableSeals = SEAL_LEVELS.map((seal) => ({
+    ...seal,
+    unlocked: currentLevel >= seal.minLevel,
+  }));
+
+  const handleDownloadSeal = async (seal: typeof SEAL_LEVELS[0]) => {
+    setGenerating(true);
+    try {
+      const blob = await generateESGSeal({
+        levelName: seal.name,
+        levelLabel: seal.label,
+        icon: seal.icon,
+        gradient: ["#059669", "#34d399"],
+        co2Avoided: stats.totalCO2,
+        treesEquiv: stats.treesEquiv,
+        recycleRate: stats.recycleRate,
+        companyName: settings?.razaoSocial || "Minha Empresa",
+      });
+      downloadBlob(blob, `selo-esg-${seal.name.toLowerCase().replace(/\s/g, "-")}.png`);
+      toast.success(`Selo ${seal.name} baixado com sucesso!`);
+    } catch {
+      toast.error("Erro ao gerar o selo. Tente novamente.");
+    } finally {
+      setGenerating(false);
+    }
   };
 
   return (
@@ -103,24 +141,48 @@ const ESG = () => {
         </Card>
       </div>
 
-      {/* ESG Seal */}
-      <Card className="p-6 shadow-card border-border/60">
-        <div className="flex flex-col sm:flex-row items-center gap-4">
-          <div className="w-24 h-24 rounded-2xl bg-accent flex items-center justify-center shrink-0">
-            <Award className="w-12 h-12 text-primary" />
-          </div>
-          <div className="flex-1 text-center sm:text-left">
-            <h3 className="font-semibold text-foreground">Selo ESG CicloMTR</h3>
-            <p className="text-sm text-muted-foreground mt-1">
-              Gere uma imagem certificada para compartilhar no LinkedIn, Instagram e relatórios de sustentabilidade.
-            </p>
-          </div>
-          <Button onClick={handleGenerateSeal} className="gradient-primary shadow-primary font-semibold gap-2 shrink-0">
-            <Download className="w-4 h-4" />
-            Gerar Selo ESG
-          </Button>
+      {/* ESG Seals by Level */}
+      <div className="space-y-4">
+        <h2 className="text-lg font-semibold text-foreground">Selos ESG por Nível</h2>
+        <p className="text-sm text-muted-foreground">Desbloqueie selos atingindo os marcos de conquistas. Baixe e compartilhe no LinkedIn, Instagram e relatórios.</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {availableSeals.map((seal) => (
+            <Card
+              key={seal.name}
+              className={`p-5 shadow-card border-border/60 flex flex-col items-center text-center gap-3 transition-all ${
+                seal.unlocked ? "opacity-100" : "opacity-50 grayscale"
+              }`}
+            >
+              <div className="w-16 h-16 rounded-2xl bg-accent flex items-center justify-center text-3xl">
+                {seal.unlocked ? seal.icon : <Lock className="w-7 h-7 text-muted-foreground" />}
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground">{seal.name}</h3>
+                <p className="text-xs text-muted-foreground">{seal.label}</p>
+              </div>
+              <Button
+                size="sm"
+                disabled={!seal.unlocked || generating}
+                onClick={() => handleDownloadSeal(seal)}
+                className="gap-2 w-full"
+                variant={seal.unlocked ? "default" : "secondary"}
+              >
+                {seal.unlocked ? (
+                  <>
+                    <Download className="w-4 h-4" />
+                    {generating ? "Gerando..." : "Baixar Selo"}
+                  </>
+                ) : (
+                  <>
+                    <Lock className="w-4 h-4" />
+                    Bloqueado
+                  </>
+                )}
+              </Button>
+            </Card>
+          ))}
         </div>
-      </Card>
+      </div>
     </div>
   );
 };

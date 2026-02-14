@@ -343,7 +343,7 @@ const Mercado = () => {
                   )}
                 </div>
 
-                {role === "receiver" && !isOwn && (
+                {role === "receiver" && (
                   <button
                     className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors pt-1"
                     onClick={() => handleInterest(item)}

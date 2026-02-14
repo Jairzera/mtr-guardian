@@ -17,7 +17,7 @@ export function useReceiverDashboard() {
   const stats = useMemo(() => {
     // Cargas a Receber (em trânsito)
     const pendingLoads = manifests.filter(
-      (m) => m.status === "enviado" || m.status === "em_transito"
+      (m) => m.status === "enviado" || m.status === "em_transito" || m.status === "aguardando_validacao"
     ).length;
 
     // Total Recebido este mês (kg → ton)
@@ -26,7 +26,7 @@ export function useReceiverDashboard() {
     let totalReceivedKg = 0;
     let receivedCount = 0;
     for (const m of manifests) {
-      if (m.status === "received" && new Date(m.created_at) >= monthStart) {
+      if ((m.status === "received" || m.status === "completed") && new Date(m.created_at) >= monthStart) {
         totalReceivedKg += m.received_weight ?? m.weight_kg;
         receivedCount++;
       }
@@ -38,12 +38,12 @@ export function useReceiverDashboard() {
     });
 
     // Certificados emitidos (status "received" = CDF gerado)
-    const certificatesCount = manifests.filter((m) => m.status === "received").length;
+    const certificatesCount = manifests.filter((m) => m.status === "received" || m.status === "completed").length;
 
     // Gráfico: Volume por tipo de resíduo (received only)
     const byClass: Record<string, number> = {};
     for (const m of manifests) {
-      if (m.status === "received") {
+      if (m.status === "received" || m.status === "completed") {
         const cls = m.waste_class || "Outros";
         const short = cls.length > 20 ? cls.substring(0, 18) + "…" : cls;
         byClass[short] = (byClass[short] || 0) + (m.received_weight ?? m.weight_kg);

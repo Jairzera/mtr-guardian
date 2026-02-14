@@ -145,6 +145,7 @@ const MTRList = () => {
     const { data: manifests, error } = await supabase
       .from("waste_manifests")
       .select("id, created_at, waste_class, weight_kg, status, transporter_name, rejection_reason, expiration_date")
+      .not("status", "in", "(received,completed,aguardando_validacao)")
       .order("created_at", { ascending: false });
 
     if (!error && manifests) {

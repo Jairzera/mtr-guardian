@@ -32,19 +32,21 @@ const Dashboard = () => {
     if (role !== "generator") return;
     if (alertShown.current) return;
     const alertasEnabled = localStorage.getItem("alertas_email") !== "false";
-    const total = generatorData.expiringCount + generatorData.expiredCount;
+    const pendingNum = parseInt(generatorData.pendingCount) || 0;
+    const total = generatorData.expiringCount + generatorData.expiredCount + pendingNum;
     if (alertasEnabled && total > 0) {
       alertShown.current = true;
       const email = user?.email || "gestor@empresa.com";
       const parts: string[] = [];
       if (generatorData.expiredCount > 0) parts.push(`${generatorData.expiredCount} vencido(s)`);
       if (generatorData.expiringCount > 0) parts.push(`${generatorData.expiringCount} próximo(s) do vencimento`);
+      if (pendingNum > 0) parts.push(`${pendingNum} pendente(s)`);
       toast.info(
         `📧 Alerta enviado para ${email}: ${parts.join(" e ")} — ${total} MTR(s) requerem atenção.`,
         { duration: 8000 }
       );
     }
-  }, [generatorData.expiringCount, generatorData.expiredCount, user, role]);
+  }, [generatorData.expiringCount, generatorData.expiredCount, generatorData.pendingCount, user, role]);
 
   if (isLoading) {
     return <DashboardSkeleton />;

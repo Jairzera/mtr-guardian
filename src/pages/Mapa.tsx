@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { MapPin, Truck, CheckCircle2, Clock, Copy } from "lucide-react";
+import { useUserRole } from "@/hooks/useUserRole";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -74,6 +75,7 @@ const statusConfig = {
 
 const Mapa = () => {
   const [shipments] = useState<Shipment[]>(mockShipments);
+  const { role } = useUserRole();
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
 
@@ -160,10 +162,12 @@ const Mapa = () => {
                   {s.status === "delivered" ? "Entregue" : `ETA: ${s.eta}`}
                 </p>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={() => handleCopyLink(s.mtrNumber)}>
-                    <Copy className="w-3 h-3" />
-                    <span className="hidden sm:inline">Copiar Link</span>
-                  </Button>
+                  {role !== "receiver" && (
+                    <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={() => handleCopyLink(s.mtrNumber)}>
+                      <Copy className="w-3 h-3" />
+                      <span className="hidden sm:inline">Copiar Link</span>
+                    </Button>
+                  )}
                 </div>
               </div>
             </Card>

@@ -7,6 +7,7 @@ export interface CompanySettings {
   cnpj: string;
   endereco: string;
   responsavel: string;
+  phone: string;
 }
 
 const defaultSettings: CompanySettings = {
@@ -14,6 +15,7 @@ const defaultSettings: CompanySettings = {
   cnpj: "",
   endereco: "",
   responsavel: "",
+  phone: "",
 };
 
 export function useCompanySettings() {
@@ -36,6 +38,7 @@ export function useCompanySettings() {
         cnpj: data.cnpj,
         endereco: data.endereco,
         responsavel: data.responsavel,
+        phone: data.phone || "",
       });
     }
     setLoading(false);
@@ -51,6 +54,7 @@ export function useCompanySettings() {
       cnpj: s.cnpj,
       endereco: s.endereco,
       responsavel: s.responsavel,
+      phone: s.phone,
     };
 
     // Try update first, then insert

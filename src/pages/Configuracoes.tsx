@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Building2, SlidersHorizontal, Loader2 } from "lucide-react";
+import { Building2, SlidersHorizontal, Loader2, Phone } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +9,7 @@ import { toast } from "@/hooks/use-toast";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { useTheme } from "next-themes";
 import { formatCNPJ, isValidCNPJ } from "@/lib/cnpj";
+import { formatPhone, isValidPhone } from "@/lib/phone";
 
 const Configuracoes = () => {
   const { settings, loading, saveSettings } = useCompanySettings();
@@ -19,6 +20,7 @@ const Configuracoes = () => {
     return localStorage.getItem("alertas_email") !== "false";
   });
   const [cnpjError, setCnpjError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
 
   useEffect(() => {
     setForm(settings);
@@ -29,6 +31,10 @@ const Configuracoes = () => {
       const formatted = formatCNPJ(value);
       setForm((prev) => ({ ...prev, [field]: formatted }));
       setCnpjError("");
+    } else if (field === "phone") {
+      const formatted = formatPhone(value);
+      setForm((prev) => ({ ...prev, [field]: formatted }));
+      setPhoneError("");
     } else {
       setForm((prev) => ({ ...prev, [field]: value }));
     }
@@ -40,6 +46,10 @@ const Configuracoes = () => {
       setCnpjError("CNPJ não corresponde ao modelo padrão");
       return;
     }
+    if (form.phone && !isValidPhone(form.phone)) {
+      setPhoneError("Telefone inválido");
+      return;
+    }
 
     setSaving(true);
     const ok = await saveSettings(form);
@@ -47,6 +57,7 @@ const Configuracoes = () => {
     if (ok) {
       toast({ title: "Alterações salvas", description: "Suas configurações foram atualizadas com sucesso." });
       setCnpjError("");
+      setPhoneError("");
     } else {
       toast({ title: "Erro", description: "Não foi possível salvar as configurações.", variant: "destructive" });
     }
@@ -91,6 +102,18 @@ const Configuracoes = () => {
           <div className="space-y-2">
             <Label htmlFor="responsavel">Responsável Técnico</Label>
             <Input id="responsavel" placeholder="Nome completo" value={form.responsavel} onChange={(e) => handleChange("responsavel", e.target.value)} />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="phone">Telefone / WhatsApp</Label>
+            <Input
+              id="phone"
+              placeholder="(11) 99999-9999"
+              value={form.phone}
+              onChange={(e) => handleChange("phone", e.target.value)}
+              className={phoneError ? "border-destructive" : ""}
+            />
+            {phoneError && <p className="text-sm text-destructive font-medium">{phoneError}</p>}
+            <p className="text-xs text-muted-foreground">Obrigatório para anunciar no Mercado</p>
           </div>
           <div className="space-y-2 sm:col-span-2">
             <Label htmlFor="endereco">Endereço da Unidade</Label>

@@ -2,3 +2,6 @@ project_id = "dxsomoutvqqkotadivki"
 
 [functions.analyze-waste]
 verify_jwt = false
+
+[functions.notify-pending-mtrs]
+verify_jwt = false

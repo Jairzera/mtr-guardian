@@ -28,7 +28,7 @@ export function useAchievements() {
       const { data, error } = await supabase
         .from("waste_manifests")
         .select("weight_kg, unit")
-        .in("status", ["conformidade", "received", "completed", "COMPLETED", "Completed"]);
+        .in("status", ["pendente", "conformidade", "received", "completed", "COMPLETED", "Completed", "aguardando_validacao"]);
       if (error) throw error;
       let total = 0;
       for (const m of data || []) {

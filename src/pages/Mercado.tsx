@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Package, TrendingUp, Users, Plus, MessageCircle, Store } from "lucide-react";
+import { Package, TrendingUp, Users, Plus, MessageCircle, Store, CheckCircle, Trash2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -144,19 +155,42 @@ const Mercado = () => {
 
   const handleInterest = (item: ListingWithSeller) => {
     const phone = item.seller_phone?.replace(/\D/g, "");
-
     if (!phone) {
       toast.warning(
         `Contato do vendedor indisponível.${item.seller_name ? ` Empresa: ${item.seller_name}.` : ""} Tente novamente mais tarde.`
       );
       return;
     }
-
     const msg = encodeURIComponent(
       `Olá, vi seu anúncio de ${item.material} no CicloMTR e tenho interesse.`
     );
-    const url = `https://wa.me/55${phone}?text=${msg}`;
-    window.open(url, "_blank", "noopener,noreferrer");
+    window.open(`https://wa.me/55${phone}?text=${msg}`, "_blank", "noopener,noreferrer");
+  };
+
+  const handleMarkSold = async (id: string) => {
+    const { error } = await supabase
+      .from("marketplace_listings")
+      .update({ status: "sold" })
+      .eq("id", id);
+    if (error) {
+      toast.error("Erro ao marcar como vendido ❌");
+    } else {
+      toast.success("Anúncio marcado como vendido ✅");
+      fetchListings();
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase
+      .from("marketplace_listings")
+      .delete()
+      .eq("id", id);
+    if (error) {
+      toast.error("Erro ao excluir anúncio ❌");
+    } else {
+      toast.success("Anúncio excluído com sucesso ✅");
+      fetchListings();
+    }
   };
 
   const formatValue = (qty: number, pricePerKg: number | null) => {
@@ -310,14 +344,50 @@ const Mercado = () => {
                 </div>
 
                 {!isOwn && (
-                  <Button
-                    className="w-full gap-2 font-semibold min-h-[44px]"
-                    variant="default"
+                  <button
+                    className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors pt-1"
                     onClick={() => handleInterest(item)}
                   >
                     <MessageCircle className="w-4 h-4" />
                     Tenho Interesse
-                  </Button>
+                  </button>
+                )}
+
+                {isOwn && (
+                  <div className="flex items-center gap-4 pt-1">
+                    <button
+                      className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
+                      onClick={() => handleMarkSold(item.id)}
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Vendido
+                    </button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <button className="flex items-center gap-1.5 text-sm font-medium text-destructive hover:text-destructive/80 transition-colors">
+                          <Trash2 className="w-4 h-4" />
+                          Excluir
+                        </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Excluir anúncio</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tem certeza que deseja excluir este anúncio? Esta ação não pode ser desfeita.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(item.id)}
+                            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Excluir
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 )}
               </Card>
             );

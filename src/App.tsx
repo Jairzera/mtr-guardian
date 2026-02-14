@@ -10,6 +10,7 @@ import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AppLayout from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import MTRList from "./pages/MTRList";
+import HistoricoCargas from "./pages/HistoricoCargas";
 import NewManifest from "./pages/NewManifest";
 import Certificados from "./pages/Certificados";
 import Configuracoes from "./pages/Configuracoes";
@@ -47,6 +48,7 @@ const App = () => (
               >
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/mtrs" element={<MTRList />} />
+                <Route path="/historico-cargas" element={<HistoricoCargas />} />
                 <Route path="/novo-manifesto" element={<NewManifest />} />
                 <Route path="/certificados" element={<Certificados />} />
                 <Route path="/configuracoes" element={<Configuracoes />} />

@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Loader2, PackageCheck, Scale, Truck, Trash2 } from "lucide-react";
+import { parseNumericInput } from "@/lib/validation";
 
 const ReceberCarga = () => {
   const { user } = useAuth();
@@ -38,12 +39,12 @@ const ReceberCarga = () => {
         user_id: user.id,
         receiver_id: user.id,
         waste_class: wasteClass.trim(),
-        weight_kg: parseFloat(weightKg.replace(",", ".")),
+        weight_kg: parseNumericInput(weightKg) ?? 0,
         unit,
         transporter_name: transporterName.trim(),
         destination_type: destinationType.trim(),
         status: "aguardando_validacao",
-        received_weight: parseFloat(weightKg.replace(",", ".")),
+        received_weight: parseNumericInput(weightKg) ?? 0,
         rejection_reason: observacoes.trim() || null,
       } as any);
 
@@ -62,6 +63,11 @@ const ReceberCarga = () => {
   const handleSubmit = () => {
     if (!wasteClass.trim() || !weightKg.trim() || !transporterName.trim() || !destinationType.trim()) {
       toast.error("Preencha todos os campos obrigatórios.");
+      return;
+    }
+    const parsedWeight = parseNumericInput(weightKg);
+    if (parsedWeight === null) {
+      toast.error("Peso inválido. Informe um valor entre 0 e 1.000.000.");
       return;
     }
     createMutation.mutate();

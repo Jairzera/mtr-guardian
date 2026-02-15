@@ -131,20 +131,9 @@ const PublicTracking = () => {
     if (!id) return;
     setLoading(true);
 
-    const { error } = await supabase
-      .from("waste_manifests")
-      .update({ status: "completed" } as any)
-      .eq("id", id);
-
-    if (error) {
-      toast.error("Erro ao finalizar entrega.");
-      setLoading(false);
-      return;
-    }
-
     stopGeolocation();
     setState("delivered");
-    toast.success("Entrega finalizada com sucesso! 🏁");
+    toast.success("Rastreamento finalizado! A carga chegou ao destino. 🏁");
     setLoading(false);
   };
 
@@ -266,9 +255,9 @@ const PublicTracking = () => {
         {state === "delivered" && (
           <div className="space-y-2 pb-8">
             <CheckCircle2 className="w-16 h-16 text-primary mx-auto" />
-            <p className="text-xl font-bold text-foreground">Entrega Confirmada!</p>
+            <p className="text-xl font-bold text-foreground">Carga chegou ao destino!</p>
             <p className="text-sm text-muted-foreground">
-              O destinador foi notificado. Obrigado!
+              O rastreamento foi encerrado. O gerador irá anexar o CDF para concluir o ciclo.
             </p>
           </div>
         )}

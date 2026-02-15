@@ -7,6 +7,9 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import EmptyState from "@/components/EmptyState";
+import { Package } from "lucide-react";
 
 // Fix default marker icon issue with bundlers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -28,44 +31,13 @@ const truckIcon = new L.Icon({
 
 interface Shipment {
   id: string;
-  mtrNumber: string;
+  mtrCode: string;
   transporter: string;
-  origin: string;
-  destination: string;
   status: "collecting" | "in_transit" | "delivered";
-  progress: number;
-  eta: string;
-  originCoords: [number, number];
-  destCoords: [number, number];
-  currentCoords: [number, number];
+  wasteClass: string;
+  weightKg: number;
+  updatedAt: string;
 }
-
-const mockShipments: Shipment[] = [
-  {
-    id: "1", mtrNumber: "MTR-2026-0042", transporter: "TransEco Ltda",
-    origin: "São Paulo, SP", destination: "Guarulhos, SP",
-    status: "in_transit", progress: 65, eta: "14:30",
-    originCoords: [-23.5505, -46.6333],
-    destCoords: [-23.4356, -46.5330],
-    currentCoords: [-23.4900, -46.5800],
-  },
-  {
-    id: "2", mtrNumber: "MTR-2026-0041", transporter: "Verde Log",
-    origin: "Campinas, SP", destination: "Jundiaí, SP",
-    status: "collecting", progress: 10, eta: "16:00",
-    originCoords: [-22.9099, -47.0626],
-    destCoords: [-23.1857, -46.8978],
-    currentCoords: [-22.9099, -47.0626],
-  },
-  {
-    id: "3", mtrNumber: "MTR-2026-0039", transporter: "ReciclaJá",
-    origin: "Osasco, SP", destination: "Barueri, SP",
-    status: "delivered", progress: 100, eta: "Entregue",
-    originCoords: [-23.5325, -46.7917],
-    destCoords: [-23.5107, -46.8761],
-    currentCoords: [-23.5107, -46.8761],
-  },
-];
 
 const statusConfig = {
   collecting: { label: "Coleta Iniciada", color: "bg-warning/10 text-warning", icon: Clock },
@@ -73,11 +45,45 @@ const statusConfig = {
   delivered: { label: "Recebido", color: "bg-accent text-accent-foreground", icon: CheckCircle2 },
 };
 
+const statusMap: Record<string, "collecting" | "in_transit" | "delivered"> = {
+  enviado: "collecting",
+  em_transito: "in_transit",
+  completed: "delivered",
+  received: "delivered",
+};
+
 const Mapa = () => {
-  const [shipments] = useState<Shipment[]>(mockShipments);
   const { role } = useUserRole();
+  const [shipments, setShipments] = useState<Shipment[]>([]);
+  const [loading, setLoading] = useState(true);
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const fetchShipments = async () => {
+      const { data } = await supabase
+        .from("waste_manifests")
+        .select("id, transporter_name, waste_class, weight_kg, status, updated_at")
+        .in("status", ["enviado", "em_transito", "completed", "received"])
+        .order("updated_at", { ascending: false });
+
+      if (data) {
+        setShipments(
+          data.map((m) => ({
+            id: m.id,
+            mtrCode: m.id.slice(0, 8).toUpperCase(),
+            transporter: m.transporter_name,
+            status: statusMap[m.status] || "collecting",
+            wasteClass: m.waste_class,
+            weightKg: m.weight_kg,
+            updatedAt: new Date(m.updated_at).toLocaleDateString("pt-BR"),
+          }))
+        );
+      }
+      setLoading(false);
+    };
+    fetchShipments();
+  }, []);
 
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
@@ -89,29 +95,25 @@ const Mapa = () => {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
 
-    shipments.forEach((s) => {
-      L.marker(s.currentCoords, { icon: truckIcon })
-        .addTo(map)
-        .bindPopup(`<strong>${s.mtrNumber}</strong><br/>${s.transporter}<br/><em>${statusConfig[s.status].label}</em>`);
-
-      L.polyline([s.originCoords, s.currentCoords, s.destCoords], {
-        color: s.status === "delivered" ? "#22c55e" : "#3b82f6",
-        weight: 3,
-        dashArray: s.status === "collecting" ? "8 8" : undefined,
-      }).addTo(map);
-    });
-
     return () => {
       map.remove();
       mapRef.current = null;
     };
-  }, [shipments]);
+  }, []);
 
-  const handleCopyLink = (mtrNumber: string) => {
-    const link = `${window.location.origin}/tracking/${mtrNumber}`;
+  const handleCopyLink = (mtrCode: string) => {
+    const link = `${window.location.origin}/tracking/${mtrCode}`;
     navigator.clipboard.writeText(link);
     toast.success("Link de rastreio copiado!");
   };
+
+  if (loading) {
+    return (
+      <div className="p-4 md:p-8">
+        <p className="text-muted-foreground">Carregando mapa...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -126,53 +128,55 @@ const Mapa = () => {
 
       <div className="space-y-3">
         <h2 className="text-lg font-semibold text-foreground">Cargas Ativas</h2>
-        {shipments.map((s) => {
-          const cfg = statusConfig[s.status];
-          const StatusIcon = cfg.icon;
-          return (
-            <Card key={s.id} className="p-4 md:p-5 shadow-card border-border/60 space-y-3">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="font-semibold text-foreground">{s.mtrNumber}</p>
-                  <p className="text-sm text-muted-foreground">{s.transporter}</p>
-                </div>
-                <Badge className={`${cfg.color} border-0 gap-1`}>
-                  <StatusIcon className="w-3 h-3" />
-                  {cfg.label}
-                </Badge>
-              </div>
 
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
-                  <MapPin className="w-3 h-3" />{s.origin}
+        {shipments.length === 0 ? (
+          <EmptyState
+            icon={Package}
+            title="Nenhuma carga em andamento"
+            description="Cargas enviadas e em trânsito aparecerão aqui para acompanhamento em tempo real."
+          />
+        ) : (
+          shipments.map((s) => {
+            const cfg = statusConfig[s.status];
+            const StatusIcon = cfg.icon;
+            return (
+              <Card key={s.id} className="p-4 md:p-5 shadow-card border-border/60 space-y-3">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="font-semibold text-foreground">MTR-{s.mtrCode}</p>
+                    <p className="text-sm text-muted-foreground">{s.transporter}</p>
+                  </div>
+                  <Badge className={`${cfg.color} border-0 gap-1`}>
+                    <StatusIcon className="w-3 h-3" />
+                    {cfg.label}
+                  </Badge>
                 </div>
-                <div className="flex-1 h-1.5 bg-muted rounded-full relative">
-                  <div
-                    className="absolute inset-y-0 left-0 rounded-full gradient-primary transition-all"
-                    style={{ width: `${s.progress}%` }}
-                  />
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
-                  <MapPin className="w-3 h-3" />{s.destination}
-                </div>
-              </div>
 
-              <div className="flex items-center justify-between">
-                <p className="text-xs text-muted-foreground">
-                  {s.status === "delivered" ? "Entregue" : `ETA: ${s.eta}`}
-                </p>
-                <div className="flex gap-2">
-                  {role !== "receiver" && (
-                    <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={() => handleCopyLink(s.mtrNumber)}>
-                      <Copy className="w-3 h-3" />
-                      <span className="hidden sm:inline">Copiar Link</span>
-                    </Button>
-                  )}
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  <span>{s.wasteClass}</span>
+                  <span>•</span>
+                  <span>{s.weightKg} kg</span>
+                  <span>•</span>
+                  <span>{s.updatedAt}</span>
                 </div>
-              </div>
-            </Card>
-          );
-        })}
+
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground">
+                    {s.status === "delivered" ? "Entregue" : "Em andamento"}
+                  </p>
+                  <div className="flex gap-2">
+                    {role !== "receiver" && (
+                      <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={() => handleCopyLink(s.mtrCode)}>
+                        <Copy className="w-3 h-3" />
+                        <span className="hidden sm:inline">Copiar Link</span>
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </Card>
+            );
+          })
+        )}
       </div>
     </div>
   );

@@ -41,9 +41,9 @@ interface Shipment {
 }
 
 const statusConfig = {
-  collecting: { label: "Coleta Iniciada", color: "bg-warning/10 text-warning", icon: Clock },
-  in_transit: { label: "Em Trânsito", color: "bg-primary/10 text-primary", icon: Truck },
-  delivered: { label: "Recebido", color: "bg-accent text-accent-foreground", icon: CheckCircle2 },
+  collecting: { label: "Enviado", color: "bg-warning/10 text-warning", icon: Clock },
+  in_transit: { label: "Em Trânsito", color: "bg-warning/10 text-warning", icon: Truck },
+  delivered: { label: "Concluído", color: "bg-accent text-accent-foreground", icon: CheckCircle2 },
 };
 
 const statusMap: Record<string, "collecting" | "in_transit" | "delivered"> = {

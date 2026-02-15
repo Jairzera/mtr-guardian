@@ -33,7 +33,7 @@ interface Shipment {
   id: string;
   mtrCode: string;
   transporter: string;
-  status: "pending" | "collecting" | "in_transit" | "delivered";
+  status: "pending" | "collecting" | "delivered";
   wasteClass: string;
   weightKg: number;
   updatedAt: string;
@@ -42,15 +42,14 @@ interface Shipment {
 
 const statusConfig = {
   pending: { label: "Pendente", color: "bg-destructive/10 text-destructive", icon: Clock },
-  collecting: { label: "Enviado", color: "bg-warning/10 text-warning", icon: Clock },
-  in_transit: { label: "Em Trânsito", color: "bg-warning/10 text-warning", icon: Truck },
+  collecting: { label: "Enviado", color: "bg-warning/10 text-warning", icon: Truck },
   delivered: { label: "Concluído", color: "bg-accent text-accent-foreground", icon: CheckCircle2 },
 };
 
-const statusMap: Record<string, "pending" | "collecting" | "in_transit" | "delivered"> = {
+const statusMap: Record<string, "pending" | "collecting" | "delivered"> = {
   pendente: "pending",
   enviado: "collecting",
-  em_transito: "in_transit",
+  em_transito: "collecting",
   completed: "delivered",
   received: "delivered",
 };
@@ -105,8 +104,27 @@ const Mapa = () => {
     };
   }, []);
 
-  const handleGenerateTrackingLink = (mtrCode: string) => {
-    const link = `${window.location.origin}/tracking/${mtrCode}`;
+  const handleGenerateTrackingLink = async (shipment: Shipment) => {
+    const link = `${window.location.origin}/tracking/${shipment.id}`;
+    
+    // If status is pending, update to enviado
+    if (shipment.status === "pending") {
+      const { error } = await supabase
+        .from("waste_manifests")
+        .update({ status: "enviado" } as any)
+        .eq("id", shipment.id);
+
+      if (error) {
+        toast.error("Erro ao atualizar status do MTR.");
+        return;
+      }
+
+      // Update local state
+      setShipments((prev) =>
+        prev.map((s) => (s.id === shipment.id ? { ...s, status: "collecting" as const } : s))
+      );
+    }
+
     navigator.clipboard.writeText(link);
     toast.success("Link de rastreio copiado! Envie ao motorista para iniciar o rastreio em tempo real.");
   };
@@ -166,16 +184,18 @@ const Mapa = () => {
 
                 <div className="flex items-center justify-between">
                   <p className="text-xs text-muted-foreground">
-                    {s.status === "delivered" ? "Entregue" : "Em andamento"}
+                    {s.status === "delivered" ? "CDF anexado" : s.status === "collecting" ? "Em trânsito" : "Aguardando envio"}
                   </p>
-                  <Button
-                    size="sm"
-                    className="gradient-primary gap-1.5 text-xs"
-                    onClick={() => handleGenerateTrackingLink(s.mtrCode)}
-                  >
-                    <Link className="w-3.5 h-3.5" />
-                    Gerar link de rastreio
-                  </Button>
+                  {s.status !== "delivered" && (
+                    <Button
+                      size="sm"
+                      className="gradient-primary gap-1.5 text-xs"
+                      onClick={() => handleGenerateTrackingLink(s)}
+                    >
+                      <Link className="w-3.5 h-3.5" />
+                      {s.status === "pending" ? "Gerar link de rastreio" : "Copiar link de rastreio"}
+                    </Button>
+                  )}
                 </div>
               </Card>
             );

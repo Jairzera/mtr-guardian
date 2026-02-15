@@ -33,7 +33,7 @@ interface Shipment {
   id: string;
   mtrCode: string;
   transporter: string;
-  status: "collecting" | "in_transit" | "delivered";
+  status: "pending" | "collecting" | "in_transit" | "delivered";
   wasteClass: string;
   weightKg: number;
   updatedAt: string;
@@ -41,12 +41,14 @@ interface Shipment {
 }
 
 const statusConfig = {
+  pending: { label: "Pendente", color: "bg-destructive/10 text-destructive", icon: Clock },
   collecting: { label: "Enviado", color: "bg-warning/10 text-warning", icon: Clock },
   in_transit: { label: "Em Trânsito", color: "bg-warning/10 text-warning", icon: Truck },
   delivered: { label: "Concluído", color: "bg-accent text-accent-foreground", icon: CheckCircle2 },
 };
 
-const statusMap: Record<string, "collecting" | "in_transit" | "delivered"> = {
+const statusMap: Record<string, "pending" | "collecting" | "in_transit" | "delivered"> = {
+  pendente: "pending",
   enviado: "collecting",
   em_transito: "in_transit",
   completed: "delivered",
@@ -65,7 +67,7 @@ const Mapa = () => {
       const { data } = await supabase
         .from("waste_manifests")
         .select("id, transporter_name, waste_class, weight_kg, status, updated_at, origin")
-        .in("status", ["enviado", "em_transito", "completed", "received"])
+        .in("status", ["pendente", "enviado", "em_transito", "completed", "received"])
         .order("updated_at", { ascending: false });
 
       if (data) {
@@ -74,7 +76,7 @@ const Mapa = () => {
             id: m.id,
             mtrCode: m.id.slice(0, 8).toUpperCase(),
             transporter: m.transporter_name,
-            status: statusMap[m.status] || "collecting",
+            status: statusMap[m.status] || "pending",
             wasteClass: m.waste_class,
             weightKg: m.weight_kg,
             updatedAt: new Date(m.updated_at).toLocaleDateString("pt-BR"),

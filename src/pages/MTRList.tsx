@@ -28,7 +28,8 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { ClipboardList, Trash2, Info, AlertTriangle, Plus } from "lucide-react";
+import { ClipboardList, Trash2, Info, AlertTriangle, CheckCircle } from "lucide-react";
+import CloseoutModal from "@/components/manifest/CloseoutModal";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -117,6 +118,7 @@ const MTRList = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
+  const [closeoutId, setCloseoutId] = useState<string | null>(null);
   const { settings: company } = useCompanySettings();
 
   const mtrColumns = [
@@ -209,16 +211,27 @@ const MTRList = () => {
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-semibold text-card-foreground">{item.id.slice(0, 8)}</span>
                 <div className="flex items-center gap-2">
-                  <StatusBadgeClickable item={item} onShowReason={setSelectedReason} />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-11 w-11 min-h-[44px] min-w-[44px] text-muted-foreground hover:text-destructive"
-                    onClick={() => setDeleteId(item.id)}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </div>
+                   <StatusBadgeClickable item={item} onShowReason={setSelectedReason} />
+                   {(item.status === "enviado" || item.status === "em_transito") && (
+                     <Button
+                       variant="outline"
+                       size="icon"
+                       className="h-11 w-11 min-h-[44px] min-w-[44px] text-primary hover:text-primary"
+                       onClick={() => setCloseoutId(item.id)}
+                       title="Registrar Recebimento"
+                     >
+                       <CheckCircle className="w-4 h-4" />
+                     </Button>
+                   )}
+                   <Button
+                     variant="ghost"
+                     size="icon"
+                     className="h-11 w-11 min-h-[44px] min-w-[44px] text-muted-foreground hover:text-destructive"
+                     onClick={() => setDeleteId(item.id)}
+                   >
+                     <Trash2 className="w-4 h-4" />
+                   </Button>
+                 </div>
               </div>
               <p className="text-sm text-muted-foreground">{item.waste_class}</p>
               <div className="flex items-center justify-between mt-2">
@@ -254,14 +267,27 @@ const MTRList = () => {
                     <StatusBadgeClickable item={item} onShowReason={setSelectedReason} />
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      onClick={() => setDeleteId(item.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      {(item.status === "enviado" || item.status === "em_transito") && (
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 text-primary hover:text-primary"
+                          onClick={() => setCloseoutId(item.id)}
+                          title="Registrar Recebimento"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={() => setDeleteId(item.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -269,6 +295,15 @@ const MTRList = () => {
           </Table>
         </Card>
       )}
+
+      <CloseoutModal
+        manifestId={closeoutId}
+        onClose={() => setCloseoutId(null)}
+        onSuccess={() => {
+          setCloseoutId(null);
+          fetchMTRs();
+        }}
+      />
 
       <Dialog open={!!selectedReason} onOpenChange={(open) => !open && setSelectedReason(null)}>
         <DialogContent>

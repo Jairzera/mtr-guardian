@@ -14,6 +14,14 @@ export interface ManifestDraft {
     transporterName: string;
     transporterCnpj: string;
     destinationType: string;
+    physicalState: string;
+    packaging: string;
+    destinationCompanyName: string;
+    destinationCnpj: string;
+    destinationLicense: string;
+    driverName: string;
+    vehiclePlate: string;
+    transportDate: string;
   };
   expirationDate: string | null;
   savedAt: number;

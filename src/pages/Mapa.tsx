@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { MapPin, Truck, CheckCircle2, Clock, Copy } from "lucide-react";
+import { MapPin, Truck, CheckCircle2, Clock, Copy, Link } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -103,10 +103,10 @@ const Mapa = () => {
     };
   }, []);
 
-  const handleCopyLink = (mtrCode: string) => {
+  const handleGenerateTrackingLink = (mtrCode: string) => {
     const link = `${window.location.origin}/tracking/${mtrCode}`;
     navigator.clipboard.writeText(link);
-    toast.success("Link de rastreio copiado!");
+    toast.success("Link de rastreio copiado! Envie ao motorista para iniciar o rastreio em tempo real.");
   };
 
   if (loading) {
@@ -165,24 +165,15 @@ const Mapa = () => {
                 <div className="flex items-center justify-between">
                   <p className="text-xs text-muted-foreground">
                     {s.status === "delivered" ? "Entregue" : "Em andamento"}
-                    {s.origin === "descarte" && (
-                      <Badge variant="secondary" className="ml-2 text-[10px]">Descarte</Badge>
-                    )}
                   </p>
-                  <div className="flex gap-2">
-                    {s.origin === "descarte" && (
-                      <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={() => handleCopyLink(s.mtrCode)}>
-                        <Copy className="w-3 h-3" />
-                        <span className="hidden sm:inline">Link Rastreio</span>
-                      </Button>
-                    )}
-                    {role !== "receiver" && s.origin !== "descarte" && (
-                      <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={() => handleCopyLink(s.mtrCode)}>
-                        <Copy className="w-3 h-3" />
-                        <span className="hidden sm:inline">Copiar Link</span>
-                      </Button>
-                    )}
-                  </div>
+                  <Button
+                    size="sm"
+                    className="gradient-primary gap-1.5 text-xs"
+                    onClick={() => handleGenerateTrackingLink(s.mtrCode)}
+                  >
+                    <Link className="w-3.5 h-3.5" />
+                    Gerar link de rastreio
+                  </Button>
                 </div>
               </Card>
             );

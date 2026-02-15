@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { PackageCheck, Recycle, ShoppingCart, Plus } from "lucide-react";
+import { PackageCheck } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import ExportDropdown from "@/components/ExportDropdown";
@@ -14,7 +13,6 @@ import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { formatDateBR, formatNumber } from "@/lib/format";
 import { TableSkeleton } from "@/components/Skeletons";
 import EmptyState from "@/components/EmptyState";
-import RegisterDisposalModal from "@/components/manifest/RegisterDisposalModal";
 
 interface HistoricoItem {
   id: string;
@@ -33,13 +31,14 @@ const statusLabels: Record<string, string> = {
   received: "Recebido",
   completed: "Validado",
   aguardando_validacao: "Aguardando Validação",
+  enviado: "Enviado",
+  em_transito: "Em Trânsito",
 };
 
 const HistoricoCargas = () => {
   const isMobile = useIsMobile();
   const [data, setData] = useState<HistoricoItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showDisposalModal, setShowDisposalModal] = useState(false);
   const { settings: company } = useCompanySettings();
 
   const columns = [
@@ -82,9 +81,6 @@ const HistoricoCargas = () => {
     fetchData();
   }, []);
 
-  const descarteItems = data.filter((d) => (d.origin || "descarte") === "descarte");
-  const marketplaceItems = data.filter((d) => d.origin === "marketplace");
-
   if (loading) {
     return (
       <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
@@ -97,31 +93,25 @@ const HistoricoCargas = () => {
     );
   }
 
-  const renderSection = (
-    title: string,
-    icon: React.ReactNode,
-    items: HistoricoItem[],
-    emptyTitle: string,
-    emptyDesc: string,
-  ) => (
-    <div className="space-y-3">
-      {title && (
-        <div className="flex items-center gap-2">
-          {icon}
-          <h2 className="text-lg font-semibold text-foreground">{title}</h2>
-          <Badge variant="secondary" className="ml-1">{items.length}</Badge>
+  return (
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 animate-fade-in">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Histórico de Cargas</h1>
+          <p className="text-sm text-muted-foreground mt-1">Cargas validadas e recebidas</p>
         </div>
-      )}
+        {data.length > 0 && <ExportDropdown onExportCSV={handleExportCSV} onExportPDF={handleExportPDF} />}
+      </div>
 
-      {items.length === 0 ? (
+      {data.length === 0 ? (
         <EmptyState
           icon={PackageCheck}
-          title={emptyTitle}
-          description={emptyDesc}
+          title="Nenhuma carga registrada."
+          description="As cargas aparecerão aqui conforme forem processadas."
         />
       ) : isMobile ? (
         <div className="space-y-3">
-          {items.map((item) => (
+          {data.map((item) => (
             <Card key={item.id} className="p-4 shadow-card border-border/60 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-semibold text-card-foreground">{item.id.slice(0, 8)}</span>
@@ -154,7 +144,7 @@ const HistoricoCargas = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {items.map((item) => (
+              {data.map((item) => (
                 <TableRow key={item.id} className="transition-colors hover:bg-muted/30">
                   <TableCell className="text-muted-foreground">{formatDateBR(item.updated_at)}</TableCell>
                   <TableCell className="font-medium">{item.id.slice(0, 8)}</TableCell>
@@ -173,53 +163,6 @@ const HistoricoCargas = () => {
           </Table>
         </Card>
       )}
-    </div>
-  );
-
-  return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Histórico de Cargas</h1>
-          <p className="text-sm text-muted-foreground mt-1">Cargas validadas e recebidas</p>
-        </div>
-        {data.length > 0 && <ExportDropdown onExportCSV={handleExportCSV} onExportPDF={handleExportPDF} />}
-      </div>
-
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Recycle className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold text-foreground">Descarte</h2>
-            <Badge variant="secondary" className="ml-1">{descarteItems.length}</Badge>
-          </div>
-          <Button size="sm" className="gradient-primary gap-1.5" onClick={() => setShowDisposalModal(true)}>
-            <Plus className="w-4 h-4" />
-            Registrar Descarte
-          </Button>
-        </div>
-        {renderSection(
-          "",
-          null,
-          descarteItems,
-          "Nenhuma carga de descarte registrada.",
-          "Registre um descarte para gerar o link de rastreio no mapa."
-        )}
-      </div>
-
-      {renderSection(
-        "Marketplace",
-        <ShoppingCart className="w-5 h-5 text-primary" />,
-        marketplaceItems,
-        "Nenhuma carga do marketplace ainda.",
-        "Cargas negociadas no marketplace aparecerão aqui após conclusão."
-      )}
-
-      <RegisterDisposalModal
-        open={showDisposalModal}
-        onClose={() => setShowDisposalModal(false)}
-        onSuccess={fetchData}
-      />
     </div>
   );
 };

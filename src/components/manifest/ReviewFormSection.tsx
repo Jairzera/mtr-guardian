@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import { CalendarIcon, CheckCircle2, Loader2, Sparkles } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale/pt-BR";
@@ -24,8 +23,6 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { formatCNPJ } from "@/lib/cnpj";
 import { WasteCode } from "@/hooks/useWasteCodes";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 
 export interface ManifestFormData {
   wasteClass: string;
@@ -89,68 +86,8 @@ export default function ReviewFormSection({
   cdfFile,
   onCdfFileChange,
 }: ReviewFormSectionProps) {
-  const { user } = useAuth();
-  const [receiverSearch, setReceiverSearch] = useState("");
-  const [receiverResults, setReceiverResults] = useState<{ user_id: string; razao_social: string; cnpj: string }[]>([]);
-  const [searching, setSearching] = useState(false);
-
   const update = (partial: Partial<ManifestFormData>) => {
     onFormDataChange({ ...formData, ...partial });
-  };
-
-  // Auto-fill from history when waste code changes
-  useEffect(() => {
-    if (!selectedWasteCodeId || !user) return;
-    const fetchHistory = async () => {
-      const { data } = await supabase
-        .from("waste_manifests")
-        .select("physical_state, packaging")
-        .eq("user_id", user.id)
-        .not("physical_state", "is", null)
-        .order("created_at", { ascending: false })
-        .limit(1);
-
-      if (data && data.length > 0) {
-        const prev = data[0];
-        if (!formData.physicalState && prev.physical_state) {
-          update({ physicalState: prev.physical_state });
-          toast.info("Estado físico preenchido pelo histórico", { icon: <Sparkles className="w-4 h-4" /> });
-        }
-        if (!formData.packaging && prev.packaging) {
-          update({ packaging: prev.packaging });
-        }
-      }
-    };
-    fetchHistory();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedWasteCodeId, user]);
-
-  // Search receivers (destinadores)
-  useEffect(() => {
-    if (receiverSearch.length < 3) {
-      setReceiverResults([]);
-      return;
-    }
-    const timeout = setTimeout(async () => {
-      setSearching(true);
-      const { data } = await supabase
-        .from("company_settings")
-        .select("user_id, razao_social, cnpj")
-        .ilike("razao_social", `%${receiverSearch}%`)
-        .limit(5);
-      setReceiverResults(data || []);
-      setSearching(false);
-    }, 400);
-    return () => clearTimeout(timeout);
-  }, [receiverSearch]);
-
-  const selectReceiver = (r: { user_id: string; razao_social: string; cnpj: string }) => {
-    update({
-      destinationCompanyName: r.razao_social,
-      destinationCnpj: formatCNPJ(r.cnpj),
-    });
-    setReceiverSearch("");
-    setReceiverResults([]);
   };
 
   return (
@@ -314,38 +251,25 @@ export default function ReviewFormSection({
       <div className="space-y-4">
         <h3 className="text-sm font-semibold text-foreground border-b border-border/40 pb-1">Destinador Final</h3>
 
-        <div className="relative">
-          <Label className="text-sm font-medium text-muted-foreground">Destinador (Busca)</Label>
+        <div>
+          <Label className="text-sm font-medium text-muted-foreground">Nome do Destinador</Label>
           <Input
             className="mt-1.5"
-            placeholder="Buscar empresa destinadora..."
-            value={formData.destinationCompanyName || receiverSearch}
-            onChange={(e) => {
-              setReceiverSearch(e.target.value);
-              if (formData.destinationCompanyName) update({ destinationCompanyName: "", destinationCnpj: "" });
-            }}
+            placeholder="Razão social do destinador"
+            value={formData.destinationCompanyName}
+            onChange={(e) => update({ destinationCompanyName: e.target.value })}
           />
-          {receiverResults.length > 0 && (
-            <div className="absolute z-10 w-full mt-1 bg-popover border border-border rounded-md shadow-lg max-h-48 overflow-y-auto">
-              {receiverResults.map((r) => (
-                <button
-                  key={r.user_id}
-                  type="button"
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-accent transition-colors"
-                  onClick={() => selectReceiver(r)}
-                >
-                  <span className="font-medium text-foreground">{r.razao_social}</span>
-                  <span className="text-muted-foreground ml-2 text-xs">{formatCNPJ(r.cnpj)}</span>
-                </button>
-              ))}
-            </div>
-          )}
-          {searching && <p className="text-xs text-muted-foreground mt-1">Buscando...</p>}
         </div>
 
         <div>
           <Label className="text-sm font-medium text-muted-foreground">CNPJ do Destinador</Label>
-          <Input className="mt-1.5" value={formData.destinationCnpj} readOnly placeholder="Preenchido automaticamente" />
+          <Input
+            className="mt-1.5"
+            placeholder="00.000.000/0000-00"
+            inputMode="numeric"
+            value={formData.destinationCnpj}
+            onChange={(e) => update({ destinationCnpj: formatCNPJ(e.target.value) })}
+          />
         </div>
 
         <div>

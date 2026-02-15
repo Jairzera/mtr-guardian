@@ -33,7 +33,7 @@ interface Shipment {
   id: string;
   mtrCode: string;
   transporter: string;
-  status: "pending" | "collecting" | "delivered";
+  status: "pending" | "collecting" | "awaiting_cdf" | "delivered";
   wasteClass: string;
   weightKg: number;
   updatedAt: string;
@@ -43,13 +43,15 @@ interface Shipment {
 const statusConfig = {
   pending: { label: "Pendente", color: "bg-destructive/10 text-destructive", icon: Clock },
   collecting: { label: "Enviado", color: "bg-warning/10 text-warning", icon: Truck },
+  awaiting_cdf: { label: "Aguardando CDF", color: "bg-warning/10 text-warning", icon: Clock },
   delivered: { label: "Concluído", color: "bg-accent text-accent-foreground", icon: CheckCircle2 },
 };
 
-const statusMap: Record<string, "pending" | "collecting" | "delivered"> = {
+const statusMap: Record<string, "pending" | "collecting" | "awaiting_cdf" | "delivered"> = {
   pendente: "pending",
   enviado: "collecting",
   em_transito: "collecting",
+  aguardando_validacao: "awaiting_cdf",
   completed: "delivered",
   received: "delivered",
 };
@@ -66,7 +68,7 @@ const Mapa = () => {
       const { data } = await supabase
         .from("waste_manifests")
         .select("id, transporter_name, waste_class, weight_kg, status, updated_at, origin")
-        .in("status", ["pendente", "enviado", "em_transito", "completed", "received"])
+        .in("status", ["pendente", "enviado", "em_transito", "aguardando_validacao", "completed", "received"])
         .order("updated_at", { ascending: false });
 
       if (data) {
@@ -184,7 +186,7 @@ const Mapa = () => {
 
                 <div className="flex items-center justify-between">
                   <p className="text-xs text-muted-foreground">
-                    {s.status === "delivered" ? "CDF anexado" : s.status === "collecting" ? "Em trânsito" : "Aguardando envio"}
+                    {s.status === "delivered" ? "CDF anexado" : s.status === "awaiting_cdf" ? "Entregue — aguardando CDF" : s.status === "collecting" ? "Em trânsito" : "Aguardando envio"}
                   </p>
                   {s.status !== "delivered" && (
                     <Button

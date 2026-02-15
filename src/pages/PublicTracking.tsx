@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Truck, MapPin, Flag, CheckCircle2, Navigation } from "lucide-react";
+import { Truck, MapPin, Flag, CheckCircle2, Navigation, ShieldAlert } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -15,35 +15,51 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-type TrackingState = "idle" | "transit" | "delivered";
+type TrackingState = "idle" | "transit" | "delivered" | "invalid";
 
 const PublicTracking = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token");
   const [state, setState] = useState<TrackingState>("idle");
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [validating, setValidating] = useState(true);
   const mapRef = useRef<L.Map | null>(null);
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const markerRef = useRef<L.Marker | null>(null);
   const watchIdRef = useRef<number | null>(null);
 
-  // Load current status from DB
+  // Validate token and load current status
   useEffect(() => {
-    const loadStatus = async () => {
-      if (!id) return;
+    const validate = async () => {
+      if (!id || !token) {
+        setState("invalid");
+        setValidating(false);
+        return;
+      }
+
       const { data } = await supabase
         .from("waste_manifests")
         .select("status")
         .eq("id", id)
         .maybeSingle();
 
-      if (data) {
-        if (data.status === "em_transito") setState("transit");
-        else if (data.status === "completed" || data.status === "received") setState("delivered");
+      if (!data) {
+        setState("invalid");
+        setValidating(false);
+        return;
       }
+
+      // Set state based on current DB status
+      if (data.status === "em_transito") setState("transit");
+      else if (data.status === "completed" || data.status === "received" || data.status === "aguardando_validacao") setState("delivered");
+      // else stays "idle" (enviado)
+
+      setValidating(false);
     };
-    loadStatus();
-  }, [id]);
+    validate();
+  }, [id, token]);
 
   // Initialize map
   useEffect(() => {
@@ -83,11 +99,10 @@ const PublicTracking = () => {
 
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
-        const newCoords = {
+        setCoords({
           lat: position.coords.latitude,
           lng: position.coords.longitude,
-        };
-        setCoords(newCoords);
+        });
       },
       (err) => {
         console.error("Geolocation error:", err);
@@ -105,17 +120,34 @@ const PublicTracking = () => {
     }
   };
 
-  const handleStart = async () => {
-    if (!id) return;
-    setLoading(true);
-
-    // Update status to em_transito
-    const { error } = await supabase
-      .from("waste_manifests")
-      .update({ status: "em_transito" } as any)
-      .eq("id", id);
+  const updateStatusViaEdgeFunction = async (newStatus: string) => {
+    const { data, error } = await supabase.functions.invoke("update-tracking-status", {
+      body: {
+        manifest_id: id,
+        tracking_token: token,
+        new_status: newStatus,
+      },
+    });
 
     if (error) {
+      console.error("Edge function error:", error);
+      return { error: true };
+    }
+
+    if (data?.error) {
+      console.error("Status update error:", data.error);
+      return { error: true };
+    }
+
+    return { error: false };
+  };
+
+  const handleStart = async () => {
+    if (!id || !token) return;
+    setLoading(true);
+
+    const result = await updateStatusViaEdgeFunction("em_transito");
+    if (result.error) {
       toast.error("Erro ao iniciar viagem. Tente novamente.");
       setLoading(false);
       return;
@@ -128,15 +160,11 @@ const PublicTracking = () => {
   };
 
   const handleFinish = async () => {
-    if (!id) return;
+    if (!id || !token) return;
     setLoading(true);
 
-    const { error } = await supabase
-      .from("waste_manifests")
-      .update({ status: "aguardando_validacao" } as any)
-      .eq("id", id);
-
-    if (error) {
+    const result = await updateStatusViaEdgeFunction("aguardando_validacao");
+    if (result.error) {
       toast.error("Erro ao finalizar entrega.");
       setLoading(false);
       return;
@@ -152,6 +180,26 @@ const PublicTracking = () => {
   useEffect(() => {
     return () => stopGeolocation();
   }, []);
+
+  if (validating) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-muted-foreground">Validando acesso...</p>
+      </div>
+    );
+  }
+
+  if (state === "invalid") {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 text-center space-y-4">
+        <ShieldAlert className="w-16 h-16 text-destructive" />
+        <h1 className="text-2xl font-bold text-foreground">Acesso Negado</h1>
+        <p className="text-muted-foreground max-w-md">
+          Este link de rastreio é inválido ou expirou. Solicite um novo link ao gerador da carga.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -170,7 +218,7 @@ const PublicTracking = () => {
           <p className="text-muted-foreground mt-1 text-sm">MTR #{id?.slice(0, 8)}</p>
         </div>
 
-        {/* Map - always visible */}
+        {/* Map */}
         <div className="rounded-2xl overflow-hidden border border-border shadow-sm">
           <div ref={mapContainerRef} className="w-full h-[250px] z-0" />
         </div>

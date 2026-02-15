@@ -202,6 +202,7 @@ export type Database = {
           receiver_id: string | null
           rejection_reason: string | null
           status: string
+          tracking_token: string | null
           transport_date: string | null
           transporter_name: string
           unit: string
@@ -228,6 +229,7 @@ export type Database = {
           receiver_id?: string | null
           rejection_reason?: string | null
           status?: string
+          tracking_token?: string | null
           transport_date?: string | null
           transporter_name: string
           unit?: string
@@ -254,6 +256,7 @@ export type Database = {
           receiver_id?: string | null
           rejection_reason?: string | null
           status?: string
+          tracking_token?: string | null
           transport_date?: string | null
           transporter_name?: string
           unit?: string

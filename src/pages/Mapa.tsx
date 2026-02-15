@@ -107,13 +107,14 @@ const Mapa = () => {
   }, []);
 
   const handleGenerateTrackingLink = async (shipment: Shipment) => {
-    const link = `${window.location.origin}/tracking/${shipment.id}`;
+    // Generate a secure tracking token
+    const token = crypto.randomUUID();
     
-    // If status is pending, update to enviado
+    // If status is pending, update to enviado and set tracking token
     if (shipment.status === "pending") {
       const { error } = await supabase
         .from("waste_manifests")
-        .update({ status: "enviado" } as any)
+        .update({ status: "enviado", tracking_token: token } as any)
         .eq("id", shipment.id);
 
       if (error) {
@@ -125,9 +126,34 @@ const Mapa = () => {
       setShipments((prev) =>
         prev.map((s) => (s.id === shipment.id ? { ...s, status: "collecting" as const } : s))
       );
+    } else {
+      // For already-sent manifests, fetch existing token
+      const { data } = await supabase
+        .from("waste_manifests")
+        .select("tracking_token")
+        .eq("id", shipment.id)
+        .maybeSingle();
+      
+      if (!data?.tracking_token) {
+        toast.error("Token de rastreio não encontrado.");
+        return;
+      }
     }
 
-    navigator.clipboard.writeText(link);
+    // Build link with token - for pending we use the new token, for others fetch it
+    if (shipment.status === "pending") {
+      const link = `${window.location.origin}/tracking/${shipment.id}?token=${token}`;
+      navigator.clipboard.writeText(link);
+    } else {
+      const { data } = await supabase
+        .from("waste_manifests")
+        .select("tracking_token")
+        .eq("id", shipment.id)
+        .maybeSingle();
+      const link = `${window.location.origin}/tracking/${shipment.id}?token=${data?.tracking_token}`;
+      navigator.clipboard.writeText(link);
+    }
+    
     toast.success("Link de rastreio copiado! Envie ao motorista para iniciar o rastreio em tempo real.");
   };
 

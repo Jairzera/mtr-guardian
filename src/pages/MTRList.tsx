@@ -28,8 +28,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { ClipboardList, Trash2, Info, AlertTriangle, CheckCircle } from "lucide-react";
+import { ClipboardList, Trash2, Info, AlertTriangle, CheckCircle, Upload, Loader2 } from "lucide-react";
 import CloseoutModal from "@/components/manifest/CloseoutModal";
+import { useAuth } from "@/contexts/AuthContext";
+import { format } from "date-fns";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -115,13 +117,50 @@ const StatusBadgeClickable = ({
 const MTRList = () => {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { user } = useAuth();
   const [data, setData] = useState<MTRItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [selectedReason, setSelectedReason] = useState<string | null>(null);
   const [closeoutId, setCloseoutId] = useState<string | null>(null);
+  const [uploadingCdfId, setUploadingCdfId] = useState<string | null>(null);
   const { settings: company } = useCompanySettings();
+
+  const handleCdfUpload = async (manifestId: string, file: File) => {
+    if (!user) return;
+    setUploadingCdfId(manifestId);
+    try {
+      const ext = file.name.split(".").pop() || "bin";
+      const cdfPath = `${user.id}/${manifestId}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from("cdf-files").upload(cdfPath, file, { upsert: true });
+      if (uploadError) throw uploadError;
+
+      const { error: statusError } = await supabase
+        .from("waste_manifests")
+        .update({ status: "enviado" } as any)
+        .eq("id", manifestId);
+      if (statusError) throw statusError;
+
+      // Get manifest weight for certificate
+      const manifest = data.find((m) => m.id === manifestId);
+      await supabase.from("certificates").insert({
+        manifest_id: manifestId,
+        user_id: user.id,
+        file_url: cdfPath,
+        received_date: format(new Date(), "yyyy-MM-dd"),
+        received_weight: manifest?.weight_kg || 0,
+      } as any);
+
+      toast.success("CDF anexado! Status alterado para Enviado ✅");
+      fetchMTRs();
+    } catch (err: any) {
+      console.error("Erro ao anexar CDF:", err);
+      toast.error(err.message || "Erro ao anexar CDF.");
+    } finally {
+      setUploadingCdfId(null);
+    }
+  };
 
   const mtrColumns = [
     { header: "Data", key: "date" },
@@ -214,6 +253,30 @@ const MTRList = () => {
                 <span className="text-sm font-semibold text-card-foreground">{item.id.slice(0, 8)}</span>
                 <div className="flex items-center gap-2">
                    <StatusBadgeClickable item={item} onShowReason={setSelectedReason} />
+                   {item.status === "pendente" && (
+                     <label className="cursor-pointer">
+                       <input
+                         type="file"
+                         accept="image/*,.pdf"
+                         className="hidden"
+                         onChange={(e) => {
+                           const file = e.target.files?.[0];
+                           if (file) handleCdfUpload(item.id, file);
+                         }}
+                       />
+                       <Button
+                         variant="outline"
+                         size="icon"
+                         className="h-11 w-11 min-h-[44px] min-w-[44px] text-primary hover:text-primary"
+                         asChild
+                         disabled={uploadingCdfId === item.id}
+                       >
+                         <span>
+                           {uploadingCdfId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                         </span>
+                       </Button>
+                     </label>
+                   )}
                    {(item.status === "enviado" || item.status === "em_transito") && (
                      <Button
                        variant="outline"
@@ -270,6 +333,31 @@ const MTRList = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
+                      {item.status === "pendente" && (
+                        <label className="cursor-pointer">
+                          <input
+                            type="file"
+                            accept="image/*,.pdf"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) handleCdfUpload(item.id, file);
+                            }}
+                          />
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            className="h-8 w-8 text-primary hover:text-primary"
+                            asChild
+                            disabled={uploadingCdfId === item.id}
+                            title="Anexar CDF"
+                          >
+                            <span>
+                              {uploadingCdfId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                            </span>
+                          </Button>
+                        </label>
+                      )}
                       {(item.status === "enviado" || item.status === "em_transito") && (
                         <Button
                           variant="outline"

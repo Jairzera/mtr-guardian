@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { PackageCheck, Recycle, ShoppingCart } from "lucide-react";
+import { PackageCheck, Recycle, ShoppingCart, Plus } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import ExportDropdown from "@/components/ExportDropdown";
@@ -13,6 +14,7 @@ import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { formatDateBR, formatNumber } from "@/lib/format";
 import { TableSkeleton } from "@/components/Skeletons";
 import EmptyState from "@/components/EmptyState";
+import RegisterDisposalModal from "@/components/manifest/RegisterDisposalModal";
 
 interface HistoricoItem {
   id: string;
@@ -37,6 +39,7 @@ const HistoricoCargas = () => {
   const isMobile = useIsMobile();
   const [data, setData] = useState<HistoricoItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showDisposalModal, setShowDisposalModal] = useState(false);
   const { settings: company } = useCompanySettings();
 
   const columns = [
@@ -63,19 +66,20 @@ const HistoricoCargas = () => {
   const handleExportCSV = () => exportCSV({ title: "Historico_Cargas", columns, rows: makeExportRows(data) });
   const handleExportPDF = () => exportPDF({ title: "Histórico de Cargas", columns, rows: makeExportRows(data), company });
 
-  useEffect(() => {
-    const fetch = async () => {
-      setLoading(true);
-      const { data: manifests } = await supabase
-        .from("waste_manifests")
-        .select("id, created_at, updated_at, waste_class, weight_kg, received_weight, status, transporter_name, unit, origin")
-        .in("status", ["received", "completed", "aguardando_validacao"])
-        .order("updated_at", { ascending: false });
+  const fetchData = async () => {
+    setLoading(true);
+    const { data: manifests } = await supabase
+      .from("waste_manifests")
+      .select("id, created_at, updated_at, waste_class, weight_kg, received_weight, status, transporter_name, unit, origin")
+      .in("status", ["received", "completed", "aguardando_validacao", "enviado", "em_transito"])
+      .order("updated_at", { ascending: false });
 
-      if (manifests) setData(manifests as HistoricoItem[]);
-      setLoading(false);
-    };
-    fetch();
+    if (manifests) setData(manifests as HistoricoItem[]);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchData();
   }, []);
 
   const descarteItems = data.filter((d) => (d.origin || "descarte") === "descarte");
@@ -101,11 +105,13 @@ const HistoricoCargas = () => {
     emptyDesc: string,
   ) => (
     <div className="space-y-3">
-      <div className="flex items-center gap-2">
-        {icon}
-        <h2 className="text-lg font-semibold text-foreground">{title}</h2>
-        <Badge variant="secondary" className="ml-1">{items.length}</Badge>
-      </div>
+      {title && (
+        <div className="flex items-center gap-2">
+          {icon}
+          <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+          <Badge variant="secondary" className="ml-1">{items.length}</Badge>
+        </div>
+      )}
 
       {items.length === 0 ? (
         <EmptyState
@@ -180,13 +186,26 @@ const HistoricoCargas = () => {
         {data.length > 0 && <ExportDropdown onExportCSV={handleExportCSV} onExportPDF={handleExportPDF} />}
       </div>
 
-      {renderSection(
-        "Descarte",
-        <Recycle className="w-5 h-5 text-primary" />,
-        descarteItems,
-        "Nenhuma carga de descarte validada.",
-        "Cargas registradas para descarte aparecerão aqui após validação."
-      )}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Recycle className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-semibold text-foreground">Descarte</h2>
+            <Badge variant="secondary" className="ml-1">{descarteItems.length}</Badge>
+          </div>
+          <Button size="sm" className="gradient-primary gap-1.5" onClick={() => setShowDisposalModal(true)}>
+            <Plus className="w-4 h-4" />
+            Registrar Descarte
+          </Button>
+        </div>
+        {renderSection(
+          "",
+          null,
+          descarteItems,
+          "Nenhuma carga de descarte registrada.",
+          "Registre um descarte para gerar o link de rastreio no mapa."
+        )}
+      </div>
 
       {renderSection(
         "Marketplace",
@@ -195,6 +214,12 @@ const HistoricoCargas = () => {
         "Nenhuma carga do marketplace ainda.",
         "Cargas negociadas no marketplace aparecerão aqui após conclusão."
       )}
+
+      <RegisterDisposalModal
+        open={showDisposalModal}
+        onClose={() => setShowDisposalModal(false)}
+        onSuccess={fetchData}
+      />
     </div>
   );
 };

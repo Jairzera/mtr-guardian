@@ -194,6 +194,7 @@ export type Database = {
           driver_name: string | null
           expiration_date: string | null
           id: string
+          origin: string
           packaging: string | null
           photo_url: string | null
           physical_state: string | null
@@ -219,6 +220,7 @@ export type Database = {
           driver_name?: string | null
           expiration_date?: string | null
           id?: string
+          origin?: string
           packaging?: string | null
           photo_url?: string | null
           physical_state?: string | null
@@ -244,6 +246,7 @@ export type Database = {
           driver_name?: string | null
           expiration_date?: string | null
           id?: string
+          origin?: string
           packaging?: string | null
           photo_url?: string | null
           physical_state?: string | null

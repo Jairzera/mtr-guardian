@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { PackageCheck } from "lucide-react";
+import { PackageCheck, Recycle, ShoppingCart } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import ExportDropdown from "@/components/ExportDropdown";
@@ -24,6 +24,7 @@ interface HistoricoItem {
   status: string;
   transporter_name: string;
   unit: string;
+  origin: string;
 }
 
 const statusLabels: Record<string, string> = {
@@ -48,33 +49,37 @@ const HistoricoCargas = () => {
     { header: "Status", key: "statusLabel" },
   ];
 
-  const exportRows = data.map((item) => ({
-    validationDate: formatDateBR(item.updated_at, false),
-    shortId: item.id.slice(0, 8),
-    waste_class: item.waste_class,
-    weight_kg: `${formatNumber(item.weight_kg)} ${item.unit}`,
-    received_weight: item.received_weight ? `${formatNumber(item.received_weight)} ${item.unit}` : "—",
-    transporter_name: item.transporter_name,
-    statusLabel: statusLabels[item.status] ?? item.status,
-  }));
+  const makeExportRows = (items: HistoricoItem[]) =>
+    items.map((item) => ({
+      validationDate: formatDateBR(item.updated_at, false),
+      shortId: item.id.slice(0, 8),
+      waste_class: item.waste_class,
+      weight_kg: `${formatNumber(item.weight_kg)} ${item.unit}`,
+      received_weight: item.received_weight ? `${formatNumber(item.received_weight)} ${item.unit}` : "—",
+      transporter_name: item.transporter_name,
+      statusLabel: statusLabels[item.status] ?? item.status,
+    }));
 
-  const handleExportCSV = () => exportCSV({ title: "Historico_Cargas", columns, rows: exportRows });
-  const handleExportPDF = () => exportPDF({ title: "Histórico de Cargas", columns, rows: exportRows, company });
+  const handleExportCSV = () => exportCSV({ title: "Historico_Cargas", columns, rows: makeExportRows(data) });
+  const handleExportPDF = () => exportPDF({ title: "Histórico de Cargas", columns, rows: makeExportRows(data), company });
 
   useEffect(() => {
     const fetch = async () => {
       setLoading(true);
       const { data: manifests } = await supabase
         .from("waste_manifests")
-        .select("id, created_at, updated_at, waste_class, weight_kg, received_weight, status, transporter_name, unit")
+        .select("id, created_at, updated_at, waste_class, weight_kg, received_weight, status, transporter_name, unit, origin")
         .in("status", ["received", "completed", "aguardando_validacao"])
         .order("updated_at", { ascending: false });
 
-      if (manifests) setData(manifests);
+      if (manifests) setData(manifests as HistoricoItem[]);
       setLoading(false);
     };
     fetch();
   }, []);
+
+  const descarteItems = data.filter((d) => (d.origin || "descarte") === "descarte");
+  const marketplaceItems = data.filter((d) => d.origin === "marketplace");
 
   if (loading) {
     return (
@@ -88,25 +93,29 @@ const HistoricoCargas = () => {
     );
   }
 
-  return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 animate-fade-in">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Histórico de Cargas</h1>
-          <p className="text-sm text-muted-foreground mt-1">Cargas validadas e recebidas</p>
-        </div>
-        {data.length > 0 && <ExportDropdown onExportCSV={handleExportCSV} onExportPDF={handleExportPDF} />}
+  const renderSection = (
+    title: string,
+    icon: React.ReactNode,
+    items: HistoricoItem[],
+    emptyTitle: string,
+    emptyDesc: string,
+  ) => (
+    <div className="space-y-3">
+      <div className="flex items-center gap-2">
+        {icon}
+        <h2 className="text-lg font-semibold text-foreground">{title}</h2>
+        <Badge variant="secondary" className="ml-1">{items.length}</Badge>
       </div>
 
-      {data.length === 0 ? (
+      {items.length === 0 ? (
         <EmptyState
           icon={PackageCheck}
-          title="Nenhuma carga validada ainda."
-          description="As cargas aparecerão aqui após serem validadas pelo destinador."
+          title={emptyTitle}
+          description={emptyDesc}
         />
       ) : isMobile ? (
         <div className="space-y-3">
-          {data.map((item) => (
+          {items.map((item) => (
             <Card key={item.id} className="p-4 shadow-card border-border/60 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-semibold text-card-foreground">{item.id.slice(0, 8)}</span>
@@ -139,7 +148,7 @@ const HistoricoCargas = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.map((item) => (
+              {items.map((item) => (
                 <TableRow key={item.id} className="transition-colors hover:bg-muted/30">
                   <TableCell className="text-muted-foreground">{formatDateBR(item.updated_at)}</TableCell>
                   <TableCell className="font-medium">{item.id.slice(0, 8)}</TableCell>
@@ -157,6 +166,34 @@ const HistoricoCargas = () => {
             </TableBody>
           </Table>
         </Card>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 animate-fade-in">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Histórico de Cargas</h1>
+          <p className="text-sm text-muted-foreground mt-1">Cargas validadas e recebidas</p>
+        </div>
+        {data.length > 0 && <ExportDropdown onExportCSV={handleExportCSV} onExportPDF={handleExportPDF} />}
+      </div>
+
+      {renderSection(
+        "Descarte",
+        <Recycle className="w-5 h-5 text-primary" />,
+        descarteItems,
+        "Nenhuma carga de descarte validada.",
+        "Cargas registradas para descarte aparecerão aqui após validação."
+      )}
+
+      {renderSection(
+        "Marketplace",
+        <ShoppingCart className="w-5 h-5 text-primary" />,
+        marketplaceItems,
+        "Nenhuma carga do marketplace ainda.",
+        "Cargas negociadas no marketplace aparecerão aqui após conclusão."
       )}
     </div>
   );

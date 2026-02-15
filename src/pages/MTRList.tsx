@@ -69,6 +69,8 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   pendente: { label: "Pendente", className: "bg-warning/15 text-warning border-0" },
   risco: { label: "Risco", className: "bg-risk/15 text-risk border-0" },
   vencido: { label: "Vencido", className: "bg-destructive/15 text-destructive border-0" },
+  enviado: { label: "Enviado", className: "bg-primary/15 text-primary border-0" },
+  em_transito: { label: "Em Trânsito", className: "bg-primary/15 text-primary border-0" },
 };
 
 const getEffectiveStatus = (item: MTRItem): string => {

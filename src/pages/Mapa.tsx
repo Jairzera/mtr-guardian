@@ -37,6 +37,7 @@ interface Shipment {
   wasteClass: string;
   weightKg: number;
   updatedAt: string;
+  origin: string;
 }
 
 const statusConfig = {
@@ -63,13 +64,13 @@ const Mapa = () => {
     const fetchShipments = async () => {
       const { data } = await supabase
         .from("waste_manifests")
-        .select("id, transporter_name, waste_class, weight_kg, status, updated_at")
+        .select("id, transporter_name, waste_class, weight_kg, status, updated_at, origin")
         .in("status", ["enviado", "em_transito", "completed", "received"])
         .order("updated_at", { ascending: false });
 
       if (data) {
         setShipments(
-          data.map((m) => ({
+          data.map((m: any) => ({
             id: m.id,
             mtrCode: m.id.slice(0, 8).toUpperCase(),
             transporter: m.transporter_name,
@@ -77,6 +78,7 @@ const Mapa = () => {
             wasteClass: m.waste_class,
             weightKg: m.weight_kg,
             updatedAt: new Date(m.updated_at).toLocaleDateString("pt-BR"),
+            origin: m.origin || "descarte",
           }))
         );
       }
@@ -163,9 +165,18 @@ const Mapa = () => {
                 <div className="flex items-center justify-between">
                   <p className="text-xs text-muted-foreground">
                     {s.status === "delivered" ? "Entregue" : "Em andamento"}
+                    {s.origin === "descarte" && (
+                      <Badge variant="secondary" className="ml-2 text-[10px]">Descarte</Badge>
+                    )}
                   </p>
                   <div className="flex gap-2">
-                    {role !== "receiver" && (
+                    {s.origin === "descarte" && (
+                      <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={() => handleCopyLink(s.mtrCode)}>
+                        <Copy className="w-3 h-3" />
+                        <span className="hidden sm:inline">Link Rastreio</span>
+                      </Button>
+                    )}
+                    {role !== "receiver" && s.origin !== "descarte" && (
                       <Button size="sm" variant="outline" className="gap-1 text-xs" onClick={() => handleCopyLink(s.mtrCode)}>
                         <Copy className="w-3 h-3" />
                         <span className="hidden sm:inline">Copiar Link</span>

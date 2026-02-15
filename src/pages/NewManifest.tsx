@@ -50,6 +50,7 @@ const NewManifest = () => {
   const [expirationDate, setExpirationDate] = useState<Date | undefined>(undefined);
   const [transportDate, setTransportDate] = useState<Date | undefined>(undefined);
   const [formData, setFormData] = useState<ManifestFormData>(defaultFormData);
+  const [cdfFile, setCdfFile] = useState<File | null>(null);
 
   // Restore draft on mount
   useEffect(() => {
@@ -185,7 +186,11 @@ const NewManifest = () => {
         return;
       }
 
-      const { error: insertError } = await supabase.from("waste_manifests").insert({
+      // Determine status based on CDF upload
+      const hasCdf = !!cdfFile;
+      const initialStatus = hasCdf ? "enviado" : "pendente";
+
+      const { data: insertedManifest, error: insertError } = await supabase.from("waste_manifests").insert({
         user_id: user.id,
         waste_class: formData.wasteClass || "Não classificado",
         weight_kg: quantityNum,
@@ -193,7 +198,7 @@ const NewManifest = () => {
         transporter_name: formData.transporterName,
         destination_type: formData.destinationType,
         photo_url: uploadedPhotoUrl,
-        status: "pendente",
+        status: initialStatus,
         expiration_date: format(expirationDate, "yyyy-MM-dd"),
         physical_state: formData.physicalState || null,
         packaging: formData.packaging || null,
@@ -203,12 +208,28 @@ const NewManifest = () => {
         driver_name: formData.driverName || null,
         vehicle_plate: formData.vehiclePlate || null,
         transport_date: transportDate ? format(transportDate, "yyyy-MM-dd") : null,
-      });
+        origin: "descarte",
+      } as any).select("id").single();
 
       if (insertError) throw insertError;
+
+      // If CDF uploaded, store it in cdf-files bucket and create certificate
+      if (hasCdf && insertedManifest) {
+        const ext = cdfFile!.name.split(".").pop() || "bin";
+        const cdfPath = `${user.id}/${insertedManifest.id}.${ext}`;
+        await supabase.storage.from("cdf-files").upload(cdfPath, cdfFile!, { upsert: true });
+        await supabase.from("certificates").insert({
+          manifest_id: insertedManifest.id,
+          user_id: user.id,
+          file_url: cdfPath,
+          received_date: format(new Date(), "yyyy-MM-dd"),
+          received_weight: quantityNum,
+        } as any);
+      }
+
       setStep(3);
       clearDraft();
-      toast.success("Manifesto registrado com sucesso!");
+      toast.success(hasCdf ? "MTR registrado como Enviado com CDF anexado! ✅" : "Manifesto registrado como Pendente.");
     } catch (err: any) {
       console.error("Erro ao salvar MTR:", err);
       toast.error(err.message || "Erro ao salvar o manifesto.");
@@ -227,6 +248,7 @@ const NewManifest = () => {
     setExpirationDate(undefined);
     setTransportDate(undefined);
     setFormData(defaultFormData);
+    setCdfFile(null);
     clearDraft();
   };
 
@@ -301,6 +323,8 @@ const NewManifest = () => {
           onTransportDateChange={setTransportDate}
           saving={saving}
           onConfirm={handleConfirm}
+          cdfFile={cdfFile}
+          onCdfFileChange={setCdfFile}
         />
       )}
 

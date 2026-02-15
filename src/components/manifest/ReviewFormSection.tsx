@@ -44,7 +44,12 @@ export interface ManifestFormData {
   transportDate: string;
 }
 
-interface ReviewFormSectionProps {
+export interface ReviewFormSectionExtraProps {
+  cdfFile: File | null;
+  onCdfFileChange: (file: File | null) => void;
+}
+
+interface ReviewFormSectionProps extends ReviewFormSectionExtraProps {
   photoUrl: string | null;
   selectedWasteCodeId: string;
   onWasteCodeChange: (id: string) => void;
@@ -81,6 +86,8 @@ export default function ReviewFormSection({
   onTransportDateChange,
   saving,
   onConfirm,
+  cdfFile,
+  onCdfFileChange,
 }: ReviewFormSectionProps) {
   const { user } = useAuth();
   const [receiverSearch, setReceiverSearch] = useState("");
@@ -385,7 +392,30 @@ export default function ReviewFormSection({
               <Calendar mode="single" selected={transportDateValue} onSelect={onTransportDateChange} initialFocus className="p-3 pointer-events-auto" />
             </PopoverContent>
           </Popover>
+      </div>
+
+      {/* === SEÇÃO: CDF (Certificado de Destinação Final) === */}
+      <div className="space-y-4">
+        <h3 className="text-sm font-semibold text-foreground border-b border-border/40 pb-1">
+          CDF – Certificado de Destinação Final
+        </h3>
+        <p className="text-xs text-muted-foreground">
+          Anexe o PDF do CDF para que o MTR seja registrado como <strong>Enviado</strong>. Sem o CDF, o status ficará como <strong>Pendente</strong>.
+        </p>
+        <div>
+          <Label htmlFor="cdf-upload" className="text-sm font-medium text-muted-foreground">Arquivo CDF (PDF ou imagem)</Label>
+          <Input
+            id="cdf-upload"
+            type="file"
+            accept="image/*,.pdf"
+            className="mt-1.5 file:mr-2 file:rounded file:border-0 file:bg-primary/10 file:px-3 file:py-1 file:text-sm file:text-primary"
+            onChange={(e) => onCdfFileChange(e.target.files?.[0] || null)}
+          />
+          {cdfFile && (
+            <p className="text-xs text-muted-foreground mt-1 truncate">📎 {cdfFile.name}</p>
+          )}
         </div>
+      </div>
       </div>
 
       <Button onClick={onConfirm} disabled={saving} className="w-full h-14 text-base font-semibold gradient-primary shadow-primary gap-2">

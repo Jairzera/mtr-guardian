@@ -149,52 +149,76 @@ export type Database = {
       waste_manifests: {
         Row: {
           created_at: string
+          destination_cnpj: string | null
+          destination_company_name: string | null
+          destination_license: string | null
           destination_type: string
+          driver_name: string | null
           expiration_date: string | null
           id: string
+          packaging: string | null
           photo_url: string | null
+          physical_state: string | null
           received_weight: number | null
           receiver_id: string | null
           rejection_reason: string | null
           status: string
+          transport_date: string | null
           transporter_name: string
           unit: string
           updated_at: string
           user_id: string
+          vehicle_plate: string | null
           waste_class: string
           weight_kg: number
         }
         Insert: {
           created_at?: string
+          destination_cnpj?: string | null
+          destination_company_name?: string | null
+          destination_license?: string | null
           destination_type: string
+          driver_name?: string | null
           expiration_date?: string | null
           id?: string
+          packaging?: string | null
           photo_url?: string | null
+          physical_state?: string | null
           received_weight?: number | null
           receiver_id?: string | null
           rejection_reason?: string | null
           status?: string
+          transport_date?: string | null
           transporter_name: string
           unit?: string
           updated_at?: string
           user_id: string
+          vehicle_plate?: string | null
           waste_class: string
           weight_kg: number
         }
         Update: {
           created_at?: string
+          destination_cnpj?: string | null
+          destination_company_name?: string | null
+          destination_license?: string | null
           destination_type?: string
+          driver_name?: string | null
           expiration_date?: string | null
           id?: string
+          packaging?: string | null
           photo_url?: string | null
+          physical_state?: string | null
           received_weight?: number | null
           receiver_id?: string | null
           rejection_reason?: string | null
           status?: string
+          transport_date?: string | null
           transporter_name?: string
           unit?: string
           updated_at?: string
           user_id?: string
+          vehicle_plate?: string | null
           waste_class?: string
           weight_kg?: number
         }

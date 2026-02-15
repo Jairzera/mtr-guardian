@@ -131,9 +131,20 @@ const PublicTracking = () => {
     if (!id) return;
     setLoading(true);
 
+    const { error } = await supabase
+      .from("waste_manifests")
+      .update({ status: "aguardando_validacao" } as any)
+      .eq("id", id);
+
+    if (error) {
+      toast.error("Erro ao finalizar entrega.");
+      setLoading(false);
+      return;
+    }
+
     stopGeolocation();
     setState("delivered");
-    toast.success("Rastreamento finalizado! A carga chegou ao destino. 🏁");
+    toast.success("Entrega finalizada! Aguardando anexo do CDF pelo gerador. 🏁");
     setLoading(false);
   };
 

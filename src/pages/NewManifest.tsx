@@ -11,6 +11,7 @@ import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { useWasteCodes } from "@/hooks/useWasteCodes";
 import { useManifestDraft } from "@/hooks/useManifestDraft";
 import { formatCNPJ } from "@/lib/cnpj";
+import { parseNumericInput } from "@/lib/validation";
 import ReviewFormSection, { ManifestFormData } from "@/components/manifest/ReviewFormSection";
 
 const steps = ["Captura", "Análise IA", "Conferência", "Conclusão"];
@@ -177,12 +178,17 @@ const NewManifest = () => {
         uploadedPhotoUrl = signedUrlData.signedUrl;
       }
 
-      const quantityNum = parseFloat(formData.quantity.replace(/\./g, "").replace(",", "."));
+      const quantityNum = parseNumericInput(formData.quantity);
+      if (quantityNum === null) {
+        toast.error("Quantidade inválida. Informe um valor entre 0 e 1.000.000.");
+        setSaving(false);
+        return;
+      }
 
       const { error: insertError } = await supabase.from("waste_manifests").insert({
         user_id: user.id,
         waste_class: formData.wasteClass || "Não classificado",
-        weight_kg: isNaN(quantityNum) ? 0 : quantityNum,
+        weight_kg: quantityNum,
         unit: formData.unit,
         transporter_name: formData.transporterName,
         destination_type: formData.destinationType,

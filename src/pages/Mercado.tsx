@@ -37,6 +37,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { formatNumber, formatCurrency } from "@/lib/format";
+import { parseNumericInput } from "@/lib/validation";
 import { CardListSkeleton } from "@/components/Skeletons";
 import EmptyState from "@/components/EmptyState";
 import { useNavigate } from "react-router-dom";
@@ -137,13 +138,25 @@ const Mercado = () => {
       return;
     }
 
+    const parsedQuantity = parseNumericInput(newQuantity);
+    if (parsedQuantity === null) {
+      toast.error("Quantidade inválida. Informe um valor entre 0 e 1.000.000.");
+      return;
+    }
+
+    const parsedPrice = newPricePerKg ? parseNumericInput(newPricePerKg, { max: 100_000 }) : null;
+    if (newPricePerKg && parsedPrice === null) {
+      toast.error("Preço inválido. Informe um valor entre 0 e 100.000.");
+      return;
+    }
+
     setSubmitting(true);
     const { error } = await supabase.from("marketplace_listings").insert({
       user_id: user.id,
       material: newMaterial.trim(),
-      quantity: parseFloat(newQuantity.replace(",", ".")),
+      quantity: parsedQuantity,
       unit: newUnit,
-      price_per_kg: newPricePerKg ? parseFloat(newPricePerKg.replace(",", ".")) : null,
+      price_per_kg: parsedPrice,
       region: newRegion.trim(),
     });
 

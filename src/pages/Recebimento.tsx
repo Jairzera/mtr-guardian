@@ -41,9 +41,11 @@ const Recebimento = () => {
   const { data: manifests = [], isLoading } = useQuery({
     queryKey: ["receiver-validation-manifests"],
     queryFn: async () => {
+      if (!user) return [];
       const { data, error } = await supabase
         .from("waste_manifests")
         .select("*")
+        .eq("receiver_id", user.id)
         .eq("status", "aguardando_validacao")
         .order("created_at", { ascending: false });
 

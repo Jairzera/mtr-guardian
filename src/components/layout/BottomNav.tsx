@@ -16,7 +16,7 @@ const BottomNav = () => {
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-border px-2 pb-[env(safe-area-inset-bottom)]">
       <div className="flex items-end justify-around h-16">
-        <NavLink to="/" className={linkClass("/")}>
+        <NavLink to="/dashboard" className={linkClass("/dashboard")}>
           <LayoutDashboard className="w-6 h-6" />
           <span>Home</span>
         </NavLink>

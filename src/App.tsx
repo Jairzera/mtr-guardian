@@ -19,7 +19,7 @@ import Mercado from "./pages/Mercado";
 import Mapa from "./pages/Mapa";
 import ESG from "./pages/ESG";
 import Auth from "./pages/Auth";
-import Pricing from "./pages/Pricing";
+import Index from "./pages/Index";
 import PublicTracking from "./pages/PublicTracking";
 import Recebimento from "./pages/Recebimento";
 import ReceberCarga from "./pages/ReceberCarga";
@@ -37,8 +37,8 @@ const App = () => (
           <AuthProvider>
             <UserRoleProvider>
             <Routes>
+              <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/pricing" element={<Pricing />} />
               <Route
                 element={
                   <ProtectedRoute>
@@ -46,7 +46,7 @@ const App = () => (
                   </ProtectedRoute>
                 }
               >
-                <Route path="/" element={<Dashboard />} />
+                <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/mtrs" element={<MTRList />} />
                 <Route path="/historico-cargas" element={<HistoricoCargas />} />
                 <Route path="/novo-manifesto" element={<NewManifest />} />

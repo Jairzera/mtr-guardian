@@ -39,22 +39,28 @@ const PublicTracking = () => {
         return;
       }
 
-      const { data } = await supabase
-        .from("waste_manifests")
-        .select("status")
-        .eq("id", id)
-        .maybeSingle();
+      try {
+        const { data, error } = await supabase.functions.invoke("update-tracking-status", {
+          body: {
+            manifest_id: id,
+            tracking_token: token,
+            action: "validate",
+          },
+        });
 
-      if (!data) {
+        if (error || !data?.success) {
+          setState("invalid");
+          setValidating(false);
+          return;
+        }
+
+        // Set state based on current DB status
+        if (data.status === "em_transito") setState("transit");
+        else if (data.status === "completed" || data.status === "received" || data.status === "aguardando_validacao") setState("delivered");
+        // else stays "idle" (enviado)
+      } catch {
         setState("invalid");
-        setValidating(false);
-        return;
       }
-
-      // Set state based on current DB status
-      if (data.status === "em_transito") setState("transit");
-      else if (data.status === "completed" || data.status === "received" || data.status === "aguardando_validacao") setState("delivered");
-      // else stays "idle" (enviado)
 
       setValidating(false);
     };

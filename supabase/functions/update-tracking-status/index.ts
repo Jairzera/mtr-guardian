@@ -18,21 +18,12 @@ serve(async (req) => {
   }
 
   try {
-    const { manifest_id, tracking_token, new_status } = await req.json();
+    const { manifest_id, tracking_token, new_status, action } = await req.json();
 
     // Input validation
-    if (!manifest_id || !tracking_token || !new_status) {
+    if (!manifest_id || !tracking_token) {
       return new Response(
         JSON.stringify({ error: "Missing required fields" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Validate new_status is an allowed value
-    const allowedStatuses = ["em_transito", "aguardando_validacao"];
-    if (!allowedStatuses.includes(new_status)) {
-      return new Response(
-        JSON.stringify({ error: "Invalid status transition" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -62,6 +53,30 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Invalid tracking token" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // If action is "validate", just return the current status
+    if (action === "validate") {
+      return new Response(
+        JSON.stringify({ success: true, status: manifest.status }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!new_status) {
+      return new Response(
+        JSON.stringify({ error: "Missing new_status" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Validate new_status is an allowed value
+    const allowedStatuses = ["em_transito", "aguardando_validacao"];
+    if (!allowedStatuses.includes(new_status)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid status transition" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 

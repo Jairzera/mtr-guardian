@@ -73,6 +73,7 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   vencido: { label: "Vencido", className: "bg-destructive/15 text-destructive border-0" },
   enviado: { label: "Enviado", className: "bg-warning/15 text-warning border-0" },
   em_transito: { label: "Em Trânsito", className: "bg-warning/15 text-warning border-0" },
+  aguardando_validacao: { label: "Aguardando CDF", className: "bg-warning/15 text-warning border-0" },
   completed: { label: "Concluído", className: "bg-accent text-accent-foreground border-0" },
   received: { label: "Recebido", className: "bg-accent text-accent-foreground border-0" },
 };
@@ -140,7 +141,7 @@ const MTRList = () => {
 
       const { error: statusError } = await supabase
         .from("waste_manifests")
-        .update({ status: "enviado" } as any)
+        .update({ status: "completed" } as any)
         .eq("id", manifestId);
       if (statusError) throw statusError;
 
@@ -154,7 +155,7 @@ const MTRList = () => {
         received_weight: manifest?.weight_kg || 0,
       } as any);
 
-      toast.success("CDF anexado! Status alterado para Enviado ✅");
+      toast.success("CDF anexado! Manifesto concluído ✅");
       fetchMTRs();
     } catch (err: any) {
       console.error("Erro ao anexar CDF:", err);
@@ -190,7 +191,7 @@ const MTRList = () => {
     const { data: manifests, error } = await supabase
       .from("waste_manifests")
       .select("id, created_at, waste_class, weight_kg, status, transporter_name, rejection_reason, expiration_date")
-      .not("status", "in", "(received,completed,aguardando_validacao)")
+      .not("status", "in", "(received,completed)")
       .order("created_at", { ascending: false });
 
     if (!error && manifests) {
@@ -255,7 +256,7 @@ const MTRList = () => {
                 <span className="text-sm font-semibold text-card-foreground">{item.id.slice(0, 8)}</span>
                 <div className="flex items-center gap-2">
                    <StatusBadgeClickable item={item} onShowReason={setSelectedReason} />
-                   {item.status === "pendente" && (
+                   {(item.status === "pendente" || item.status === "aguardando_validacao") && (
                      <label className="cursor-pointer">
                        <input
                          type="file"
@@ -335,7 +336,7 @@ const MTRList = () => {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1">
-                      {item.status === "pendente" && (
+                      {(item.status === "pendente" || item.status === "aguardando_validacao") && (
                         <label className="cursor-pointer">
                           <input
                             type="file"

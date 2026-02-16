@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import logo from "@/assets/logo.gif";
+import logo from "@/assets/logo.png";
 
 const generatorItems = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },

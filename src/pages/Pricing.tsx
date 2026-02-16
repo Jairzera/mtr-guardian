@@ -2,7 +2,7 @@ import { Check, ArrowRight, MessageCircle, Building2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import logo from "@/assets/logo.gif";
+import logo from "@/assets/logo.png";
 import { useNavigate } from "react-router-dom";
 
 const plans = [

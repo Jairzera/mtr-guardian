@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { Loader2, Building2, Recycle, ArrowLeft } from "lucide-react";
 import { formatCNPJ, isValidCNPJ } from "@/lib/cnpj";
 import { formatPhone, isValidPhone } from "@/lib/phone";
-import logo from "@/assets/logo.gif";
+import logo from "@/assets/logo.png";
 
 type AppRole = "generator" | "receiver";
 type Step = "role" | "form";

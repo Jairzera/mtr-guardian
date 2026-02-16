@@ -48,7 +48,7 @@ const Auth = () => {
         toast.error(error.message);
         setLoading(false);
       } else {
-        navigate("/");
+        navigate("/dashboard");
       }
       return;
     }

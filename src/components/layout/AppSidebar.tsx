@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/logo.png";
 
 const generatorItems = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/mtrs", label: "MTRs", icon: FileText },
   { to: "/historico-cargas", label: "Histórico de Cargas", icon: History },
   { to: "/auditoria", label: "Auditoria", icon: ShieldAlert },
@@ -22,7 +22,7 @@ const generatorItems = [
 ];
 
 const receiverItems = [
-  { to: "/", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/mercado", label: "Mercado", icon: Store },
   { to: "/mapa", label: "Mapa", icon: MapPin },
   { to: "/validar-carga", label: "Validar Carga", icon: ClipboardCheck },

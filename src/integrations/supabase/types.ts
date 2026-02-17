@@ -57,6 +57,7 @@ export type Database = {
           cnpj: string
           created_at: string
           endereco: string
+          gov_token: string | null
           id: string
           phone: string
           plan: string
@@ -71,6 +72,7 @@ export type Database = {
           cnpj?: string
           created_at?: string
           endereco?: string
+          gov_token?: string | null
           id?: string
           phone?: string
           plan?: string
@@ -85,6 +87,7 @@ export type Database = {
           cnpj?: string
           created_at?: string
           endereco?: string
+          gov_token?: string | null
           id?: string
           phone?: string
           plan?: string
@@ -194,8 +197,10 @@ export type Database = {
           driver_name: string | null
           expiration_date: string | null
           id: string
+          mtr_number: string | null
           origin: string
           packaging: string | null
+          pdf_url: string | null
           photo_url: string | null
           physical_state: string | null
           received_weight: number | null
@@ -221,8 +226,10 @@ export type Database = {
           driver_name?: string | null
           expiration_date?: string | null
           id?: string
+          mtr_number?: string | null
           origin?: string
           packaging?: string | null
+          pdf_url?: string | null
           photo_url?: string | null
           physical_state?: string | null
           received_weight?: number | null
@@ -248,8 +255,10 @@ export type Database = {
           driver_name?: string | null
           expiration_date?: string | null
           id?: string
+          mtr_number?: string | null
           origin?: string
           packaging?: string | null
+          pdf_url?: string | null
           photo_url?: string | null
           physical_state?: string | null
           received_weight?: number | null

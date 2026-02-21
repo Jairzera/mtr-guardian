@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      cdfs: {
+        Row: {
+          cdf_number: string
+          created_at: string
+          generator_id: string
+          id: string
+          issue_date: string
+          pdf_url: string | null
+          receiver_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          cdf_number: string
+          created_at?: string
+          generator_id: string
+          id?: string
+          issue_date: string
+          pdf_url?: string | null
+          receiver_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          cdf_number?: string
+          created_at?: string
+          generator_id?: string
+          id?: string
+          issue_date?: string
+          pdf_url?: string | null
+          receiver_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       certificates: {
         Row: {
           created_at: string
@@ -189,6 +225,7 @@ export type Database = {
       }
       waste_manifests: {
         Row: {
+          cdf_id: string | null
           created_at: string
           destination_cnpj: string | null
           destination_company_name: string | null
@@ -218,6 +255,7 @@ export type Database = {
           weight_kg: number
         }
         Insert: {
+          cdf_id?: string | null
           created_at?: string
           destination_cnpj?: string | null
           destination_company_name?: string | null
@@ -247,6 +285,7 @@ export type Database = {
           weight_kg: number
         }
         Update: {
+          cdf_id?: string | null
           created_at?: string
           destination_cnpj?: string | null
           destination_company_name?: string | null
@@ -275,7 +314,15 @@ export type Database = {
           waste_class?: string
           weight_kg?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "waste_manifests_cdf_id_fkey"
+            columns: ["cdf_id"]
+            isOneToOne: false
+            referencedRelation: "cdfs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

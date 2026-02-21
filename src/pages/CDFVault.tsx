@@ -90,7 +90,7 @@ const CDFVault = () => {
       const { count } = await supabase
         .from("waste_manifests")
         .select("id", { count: "exact", head: true })
-        .eq("status", "completed")
+        .in("status", ["completed", "received"])
         .is("cdf_id", null);
 
       return count || 0;
@@ -105,16 +105,16 @@ const CDFVault = () => {
       // Mock: simulate finding a new CDF from the government
       await new Promise((r) => setTimeout(r, 1500));
 
-      // Get completed manifests without CDF to link
+      // Get only completed/received manifests without CDF to link
       const { data: unlinkedMtrs } = await supabase
         .from("waste_manifests")
         .select("id, transporter_name")
-        .eq("status", "completed")
+        .in("status", ["completed", "received"])
         .is("cdf_id", null)
         .limit(3);
 
       if (!unlinkedMtrs || unlinkedMtrs.length === 0) {
-        toast({ title: "Nenhum CDF novo encontrado", description: "Todos os MTRs já possuem CDF vinculado." });
+        toast({ title: "Nenhum novo CDF encontrado no momento.", description: "Não há MTRs concluídos/recebidos sem CDF vinculado." });
         setSyncing(false);
         return;
       }

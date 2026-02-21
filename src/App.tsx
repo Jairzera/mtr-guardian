@@ -13,6 +13,7 @@ import MTRList from "./pages/MTRList";
 import HistoricoCargas from "./pages/HistoricoCargas";
 import NewManifest from "./pages/NewManifest";
 import Certificados from "./pages/Certificados";
+import CDFVault from "./pages/CDFVault";
 import Configuracoes from "./pages/Configuracoes";
 import Auditoria from "./pages/Auditoria";
 import Mercado from "./pages/Mercado";
@@ -51,6 +52,7 @@ const App = () => (
                 <Route path="/historico-cargas" element={<HistoricoCargas />} />
                 <Route path="/novo-manifesto" element={<NewManifest />} />
                 <Route path="/certificados" element={<Certificados />} />
+                <Route path="/cofre-cdf" element={<CDFVault />} />
                 <Route path="/configuracoes" element={<Configuracoes />} />
                 <Route path="/auditoria" element={<Auditoria />} />
                 <Route path="/mercado" element={<Mercado />} />

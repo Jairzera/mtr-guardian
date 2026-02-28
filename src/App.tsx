@@ -25,6 +25,7 @@ import PublicTracking from "./pages/PublicTracking";
 import Recebimento from "./pages/Recebimento";
 import ReceberCarga from "./pages/ReceberCarga";
 import NotFound from "./pages/NotFound";
+import SuccessIntegration from "./pages/SuccessIntegration";
 
 const queryClient = new QueryClient();
 
@@ -40,6 +41,7 @@ const App = () => (
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/sucesso" element={<SuccessIntegration />} />
               <Route
                 element={
                   <ProtectedRoute>

@@ -1,49 +1,90 @@
+import { useState } from "react";
 import { Check, Shield, Zap, TrendingUp, ArrowRight, FileText, Truck, Award, Factory, Building2, MessageCircle, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import heroMockup from "@/assets/hero-mockup.jpg";
 
+type Period = "mensal" | "semestral" | "anual";
+
 const plans = [
   {
-    name: "Standard",
-    subtitle: "Para Geradores",
-    price: "R$ 497",
-    period: "/mês",
-    focus: "PMEs e Fábricas",
+    name: "Inicial",
+    price: { mensal: "R$ 197,90", semestral: "R$ 1.187,90", anual: "R$ 2.374,80" },
+    periodLabel: { mensal: "/mês", semestral: "/semestre", anual: "/ano" },
     features: [
-      "Gestão de MTRs ilimitada",
-      "App para Operadores",
+      "Gestão de MTRs",
+      "Painel Web completo",
       "Auditoria de Compliance",
-      "Validade Jurídica completa",
       "Suporte por e-mail",
     ],
-    cta: "Começar Teste Grátis",
+    links: {
+      mensal: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=69RHPA1",
+      semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=5XJI0DQ",
+      anual: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=KB2DO1Q",
+    },
     highlight: false,
-    href: "/auth",
+    badge: null,
   },
   {
-    name: "Corporate",
-    subtitle: "Para Destinadores",
-    price: "R$ 1.997",
-    period: "/mês",
-    focus: "Aterros, Recicladoras e Indústrias",
+    name: "Crescimento",
+    price: { mensal: "R$ 237,90", semestral: "R$ 1.427,40", anual: "R$ 2.854,80" },
+    periodLabel: { mensal: "/mês", semestral: "/semestre", anual: "/ano" },
     features: [
-      "Tudo do Standard +",
-      "Painel de Recebimento",
+      "Tudo do Inicial +",
+      "App para Operadores",
+      "Validade Jurídica completa",
+      "Rastreio em tempo real",
+    ],
+    links: {
+      mensal: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=HN1H9A1",
+      semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=UYJIT1M",
+      anual: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=0D7EFOI",
+    },
+    highlight: false,
+    badge: null,
+  },
+  {
+    name: "Avançado",
+    price: { mensal: "R$ 797,90", semestral: "R$ 4.787,40", anual: "R$ 9.574,80" },
+    periodLabel: { mensal: "/mês", semestral: "/semestre", anual: "/ano" },
+    features: [
+      "Tudo do Crescimento +",
       "Emissão Automática de CDF",
       "Gestão de Clientes",
-      "Integração com Balança",
       "Multi-usuários",
-      "API dedicada",
       "Suporte prioritário",
     ],
-    cta: "Falar com Especialista",
+    links: {
+      mensal: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=QZMTVR0",
+      semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=WKEZ3Y5",
+      anual: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=WI87DD5",
+    },
     highlight: true,
-    href: "https://wa.me/5511999999999?text=Olá!%20Tenho%20interesse%20no%20plano%20Corporate%20do%20CicloMTR.",
+    badge: "Mais Popular",
+  },
+  {
+    name: "Ilimitado",
+    price: { mensal: "R$ 837,90", semestral: "R$ 5.027,40", anual: "R$ 10.054,80" },
+    periodLabel: { mensal: "/mês", semestral: "/semestre", anual: "/ano" },
+    features: [
+      "Tudo do Avançado +",
+      "API dedicada",
+      "Integração com Balança",
+      "SLA de suporte 2h",
+      "Customização",
+    ],
+    links: {
+      mensal: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=90SZL93",
+      semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=2V20XDP",
+      anual: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=98ZG7MD",
+    },
+    highlight: false,
+    badge: null,
   },
 ];
 
@@ -76,7 +117,7 @@ const faqs = [
 
 const Index = () => {
   const navigate = useNavigate();
-
+  const [selectedPeriods, setSelectedPeriods] = useState<Record<string, Period>>({});
   const handleCta = (href: string) => {
     if (href.startsWith("http")) {
       window.open(href, "_blank");
@@ -347,63 +388,77 @@ const Index = () => {
 
       {/* ───── PLANOS ───── */}
       <section id="planos" className="py-20 md:py-28 bg-muted/40">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16 max-w-2xl mx-auto">
             <Badge variant="secondary" className="mb-4 text-xs font-medium">Planos</Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Investimento que se paga na <span className="text-primary">primeira multa evitada</span>
             </h2>
             <p className="text-muted-foreground text-lg">
-              Teste 14 dias sem compromisso. Sem cartão de crédito. Cancele quando quiser.
+              Escolha o plano ideal e o período de pagamento.
             </p>
           </div>
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            {plans.map((plan) => (
-              <Card
-                key={plan.name}
-                className={`relative flex flex-col p-8 border-2 transition-shadow hover:shadow-lg ${
-                  plan.highlight ? "border-primary shadow-primary" : "border-border"
-                }`}
-              >
-                {plan.highlight && (
-                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs gradient-primary text-primary-foreground border-0">
-                    Mais Popular
-                  </Badge>
-                )}
-                <div className="mb-6">
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{plan.subtitle}</p>
-                  <h3 className="text-2xl font-bold text-foreground mt-1">{plan.name}</h3>
-                  <p className="text-sm text-muted-foreground mt-1">{plan.focus}</p>
-                </div>
-                <div className="mb-6">
-                  <span className="text-4xl font-extrabold text-foreground">{plan.price}</span>
-                  <span className="text-sm text-muted-foreground ml-1">{plan.period}</span>
-                </div>
-                <ul className="space-y-3 mb-8 flex-1">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-start gap-2 text-sm text-foreground">
-                      <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  variant={plan.highlight ? "default" : "outline"}
-                  className={`w-full h-12 font-semibold ${
-                    plan.highlight ? "gradient-primary shadow-primary text-primary-foreground" : ""
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {plans.map((plan) => {
+              const period = selectedPeriods[plan.name] || "mensal";
+              return (
+                <Card
+                  key={plan.name}
+                  className={`relative flex flex-col p-6 border-2 transition-shadow hover:shadow-lg ${
+                    plan.highlight ? "border-primary shadow-primary" : "border-border"
                   }`}
-                  onClick={() => handleCta(plan.href)}
                 >
-                  {plan.highlight && <MessageCircle className="w-4 h-4 mr-1" />}
-                  {!plan.highlight && <ArrowRight className="w-4 h-4 mr-1" />}
-                  {plan.cta}
-                </Button>
-              </Card>
-            ))}
+                  {plan.badge && (
+                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs gradient-primary text-primary-foreground border-0">
+                      {plan.badge}
+                    </Badge>
+                  )}
+                  <div className="mb-4">
+                    <h3 className="text-xl font-bold text-foreground">{plan.name}</h3>
+                  </div>
+                  <div className="mb-4">
+                    <span className="text-3xl font-extrabold text-foreground">{plan.price[period]}</span>
+                    <span className="text-sm text-muted-foreground ml-1">{plan.periodLabel[period]}</span>
+                  </div>
+                  <div className="mb-6">
+                    <Select
+                      value={period}
+                      onValueChange={(v) =>
+                        setSelectedPeriods((prev) => ({ ...prev, [plan.name]: v as Period }))
+                      }
+                    >
+                      <SelectTrigger className="w-full">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="mensal">Mensal</SelectItem>
+                        <SelectItem value="semestral">Semestral</SelectItem>
+                        <SelectItem value="anual">Anual</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <ul className="space-y-3 mb-6 flex-1">
+                    {plan.features.map((f) => (
+                      <li key={f} className="flex items-start gap-2 text-sm text-foreground">
+                        <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    variant={plan.highlight ? "default" : "outline"}
+                    className={`w-full h-12 font-semibold ${
+                      plan.highlight ? "gradient-primary shadow-primary text-primary-foreground" : ""
+                    }`}
+                    onClick={() => window.open(plan.links[period], "_blank")}
+                  >
+                    <ArrowRight className="w-4 h-4 mr-1" />
+                    Assinar Agora
+                  </Button>
+                </Card>
+              );
+            })}
           </div>
-          <p className="text-center text-xs text-muted-foreground mt-8">
-            Precisa de algo maior? <button onClick={() => handleCta("https://wa.me/5511999999999?text=Olá!%20Gostaria%20de%20cotar%20o%20plano%20Enterprise%20do%20CicloMTR.")} className="text-primary font-medium hover:underline">Fale conosco sobre o plano Enterprise.</button>
-          </p>
         </div>
       </section>
 

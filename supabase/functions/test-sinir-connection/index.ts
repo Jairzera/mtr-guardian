@@ -37,12 +37,46 @@ Deno.serve(async (req) => {
 
     const userId = claims.claims.sub as string;
 
-    // Fetch gov_api_token using service role to bypass RLS
+    // Parse body for optional token to save
+    let newToken: string | null = null;
+    try {
+      const body = await req.json();
+      if (body?.gov_api_token && typeof body.gov_api_token === "string") {
+        newToken = body.gov_api_token.trim();
+        if (newToken.length === 0 || newToken.length > 500) {
+          return new Response(
+            JSON.stringify({ error: "Token inválido." }),
+            { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+      }
+    } catch {
+      // No body or invalid JSON — proceed without saving
+    }
+
+    // Use service role to read/write gov_api_token (never exposed to client)
     const serviceClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // Save token if provided
+    if (newToken) {
+      const { error: saveError } = await serviceClient
+        .from("company_settings")
+        .update({ gov_api_token: newToken })
+        .eq("user_id", userId);
+
+      if (saveError) {
+        console.error("Save error:", saveError);
+        return new Response(
+          JSON.stringify({ error: "Erro ao salvar o token." }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
+    // Fetch token
     const { data: settings, error: dbError } = await serviceClient
       .from("company_settings")
       .select("gov_api_token")

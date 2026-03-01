@@ -93,7 +93,7 @@ export type Database = {
           cnpj: string
           created_at: string
           endereco: string
-          gov_token: string | null
+          gov_api_token: string | null
           id: string
           phone: string
           plan: string
@@ -108,7 +108,7 @@ export type Database = {
           cnpj?: string
           created_at?: string
           endereco?: string
-          gov_token?: string | null
+          gov_api_token?: string | null
           id?: string
           phone?: string
           plan?: string
@@ -123,7 +123,7 @@ export type Database = {
           cnpj?: string
           created_at?: string
           endereco?: string
-          gov_token?: string | null
+          gov_api_token?: string | null
           id?: string
           phone?: string
           plan?: string

@@ -1,0 +1,1 @@
+ALTER TABLE public.company_settings RENAME COLUMN gov_token TO gov_api_token;

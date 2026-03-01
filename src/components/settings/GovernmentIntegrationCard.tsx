@@ -30,28 +30,14 @@ const GovernmentIntegrationCard = () => {
   const handleSaveAndTest = async () => {
     if (!token || !user) return;
 
-    // Step 1: Save token
     setStatus("saving");
     setErrorMessage("");
 
-    const { error: saveError } = await supabase
-      .from("company_settings")
-      .update({ gov_api_token: token } as any)
-      .eq("user_id", user.id);
-
-    if (saveError) {
-      setStatus("error");
-      setErrorMessage("Erro ao salvar o token.");
-      toast({ title: "Erro", description: "Não foi possível salvar o token.", variant: "destructive" });
-      return;
-    }
-
-    // Step 2: Test connection
-    setStatus("testing");
-
     try {
+      // Save token AND test connection via edge function (token never touches client DB calls)
+      setStatus("testing");
       const { data, error } = await supabase.functions.invoke("test-sinir-connection", {
-        method: "POST",
+        body: { gov_api_token: token },
       });
 
       if (error) {

@@ -28,7 +28,7 @@ export function useCompanySettings() {
     setLoading(true);
     const { data, error } = await supabase
       .from("company_settings")
-      .select("*")
+      .select("razao_social, cnpj, endereco, responsavel, phone")
       .eq("user_id", user.id)
       .maybeSingle();
 

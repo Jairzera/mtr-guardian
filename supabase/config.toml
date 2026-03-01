@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.update-tracking-status]
 verify_jwt = false
+
+[functions.test-sinir-connection]
+verify_jwt = false

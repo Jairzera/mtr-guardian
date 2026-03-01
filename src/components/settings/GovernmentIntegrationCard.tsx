@@ -3,47 +3,78 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Eye, EyeOff, CheckCircle2, XCircle, Link2, HelpCircle, ExternalLink } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
+import sinirLogin from "@/assets/sinir-login.png";
+import sinirMenuConfig from "@/assets/sinir-menu-config.png";
+import sinirUsuarioApiMenu from "@/assets/sinir-usuario-api-menu.png";
+import sinirUsuarioApi from "@/assets/sinir-usuario-api.png";
+import sinirAdicionar from "@/assets/sinir-adicionar.png";
+import sinirPerfil from "@/assets/sinir-perfil.png";
 
-const SYSTEMS = [
-  { value: "sinir", label: "SINIR (Nacional)" },
-  { value: "mtr-mg", label: "MTR-MG (Feam)" },
-  { value: "sigor", label: "SIGOR (SP)" },
-  { value: "inea", label: "INEA (RJ)" },
-];
-
-type ConnectionStatus = "idle" | "testing" | "success" | "error";
+type ConnectionStatus = "idle" | "saving" | "testing" | "success" | "error";
 
 const GovernmentIntegrationCard = () => {
-  const [system, setSystem] = useState("");
+  const { user } = useAuth();
   const [token, setToken] = useState("");
   const [showToken, setShowToken] = useState(false);
   const [status, setStatus] = useState<ConnectionStatus>("idle");
-  const [connectedName, setConnectedName] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [tutorialOpen, setTutorialOpen] = useState(false);
 
-  const handleTestConnection = async () => {
-    if (!system || !token) return;
+  const handleSaveAndTest = async () => {
+    if (!token || !user) return;
+
+    // Step 1: Save token
+    setStatus("saving");
+    setErrorMessage("");
+
+    const { error: saveError } = await supabase
+      .from("company_settings")
+      .update({ gov_api_token: token } as any)
+      .eq("user_id", user.id);
+
+    if (saveError) {
+      setStatus("error");
+      setErrorMessage("Erro ao salvar o token.");
+      toast({ title: "Erro", description: "Não foi possível salvar o token.", variant: "destructive" });
+      return;
+    }
+
+    // Step 2: Test connection
     setStatus("testing");
 
-    // Simulate API ping (replace with real edge function call)
-    await new Promise((r) => setTimeout(r, 1800));
+    try {
+      const { data, error } = await supabase.functions.invoke("test-sinir-connection", {
+        method: "POST",
+      });
 
-    // Mock response: success if token length > 10
-    if (token.length > 10) {
-      setStatus("success");
-      setConnectedName("Empresa Demonstração LTDA");
-    } else {
+      if (error) {
+        setStatus("error");
+        setErrorMessage("Erro ao testar a conexão.");
+        toast({ title: "Erro", description: "Erro ao testar a conexão com o SINIR.", variant: "destructive" });
+        return;
+      }
+
+      if (data?.success) {
+        setStatus("success");
+        toast({ title: "Sucesso!", description: "Conexão com o SINIR estabelecida com sucesso!" });
+      } else {
+        setStatus("error");
+        setErrorMessage(data?.error || "Token inválido ou expirado.");
+        toast({ title: "Falha na conexão", description: data?.error || "Token inválido ou expirado.", variant: "destructive" });
+      }
+    } catch {
       setStatus("error");
-      setConnectedName("");
+      setErrorMessage("Não foi possível conectar à API.");
+      toast({ title: "Erro", description: "Erro inesperado ao testar conexão.", variant: "destructive" });
     }
   };
-
-  const selectedLabel = SYSTEMS.find((s) => s.value === system)?.label ?? "";
 
   return (
     <>
@@ -51,35 +82,18 @@ const GovernmentIntegrationCard = () => {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Link2 className="w-5 h-5 text-primary" />
-            <CardTitle className="text-lg">Conexão com Órgão Ambiental</CardTitle>
+            <CardTitle className="text-lg">Conexão com o SINIR</CardTitle>
           </div>
           <CardDescription>
-            Integre sua conta ao sistema governamental de MTR para emissão automática.
+            Cole seu Token API do SINIR para habilitar a emissão automática de MTRs.
           </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-5">
-          {/* Sistema */}
-          <div className="space-y-2">
-            <Label htmlFor="gov-system">Sistema</Label>
-            <Select value={system} onValueChange={(v) => { setSystem(v); setStatus("idle"); }}>
-              <SelectTrigger id="gov-system">
-                <SelectValue placeholder="Selecione o sistema" />
-              </SelectTrigger>
-              <SelectContent>
-                {SYSTEMS.map((s) => (
-                  <SelectItem key={s.value} value={s.value}>
-                    {s.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           {/* Token */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <Label htmlFor="gov-token">Chave de Acesso (Token API)</Label>
+              <Label htmlFor="gov-token">Token API SINIR</Label>
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -116,15 +130,14 @@ const GovernmentIntegrationCard = () => {
             </div>
           </div>
 
-          {/* Test Button */}
+          {/* Save & Test Button */}
           <Button
-            onClick={handleTestConnection}
-            disabled={!system || !token || status === "testing"}
-            variant="outline"
+            onClick={handleSaveAndTest}
+            disabled={!token || status === "saving" || status === "testing"}
             className="gap-2"
           >
-            {status === "testing" && <Loader2 className="w-4 h-4 animate-spin" />}
-            Testar Conexão
+            {(status === "saving" || status === "testing") && <Loader2 className="w-4 h-4 animate-spin" />}
+            {status === "saving" ? "Salvando token..." : status === "testing" ? "Testando conexão..." : "Salvar e Testar Conexão"}
           </Button>
 
           {/* Status feedback */}
@@ -132,10 +145,10 @@ const GovernmentIntegrationCard = () => {
             <div className="flex items-center gap-2 p-3 rounded-lg bg-accent text-accent-foreground border border-primary/20">
               <CheckCircle2 className="w-5 h-5 text-primary shrink-0" />
               <span className="text-sm font-medium">
-                Conectado: <span className="font-bold">{connectedName}</span>
+                Conexão com o SINIR estabelecida com sucesso!
               </span>
               <Badge variant="outline" className="ml-auto text-xs border-primary/30 text-primary">
-                {selectedLabel}
+                SINIR
               </Badge>
             </div>
           )}
@@ -143,9 +156,7 @@ const GovernmentIntegrationCard = () => {
           {status === "error" && (
             <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive border border-destructive/20">
               <XCircle className="w-5 h-5 shrink-0" />
-              <span className="text-sm font-medium">
-                Token Inválido. Verifique no site do MTR.
-              </span>
+              <span className="text-sm font-medium">{errorMessage}</span>
             </div>
           )}
         </CardContent>
@@ -153,35 +164,21 @@ const GovernmentIntegrationCard = () => {
 
       {/* Tutorial Modal */}
       <Dialog open={tutorialOpen} onOpenChange={setTutorialOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-lg max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Como obter seu Token de Integração</DialogTitle>
             <DialogDescription>
-              Siga os passos abaixo no site do órgão ambiental.
+              Siga os passos abaixo no portal do SINIR.
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-2">
-            <div className="space-y-3">
-              <Step number={1} text='Acesse o portal do sistema governamental (ex: mtr.sinir.gov.br) e faça login com suas credenciais.' />
-              <Step number={2} text='Navegue até o menu "Minha Conta" ou "Configurações de API".' />
-              <Step number={3} text='Clique em "Gerar Chave de Acesso" ou "Token de Integração".' />
-              <Step number={4} text="Copie o token gerado e cole no campo acima." />
-            </div>
-
-            {/* Fictitious screenshot placeholder */}
-            <div className="rounded-lg border border-border bg-muted/50 p-4 text-center space-y-2">
-              <div className="mx-auto w-full max-w-[280px] h-32 rounded-md bg-muted flex items-center justify-center">
-                <div className="text-center space-y-1">
-                  <ExternalLink className="w-6 h-6 mx-auto text-muted-foreground" />
-                  <p className="text-xs text-muted-foreground">Tela do portal governamental</p>
-                  <p className="text-[10px] text-muted-foreground/60">Menu → Configurações → Gerar Token</p>
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Exemplo ilustrativo do fluxo de geração de token
-              </p>
-            </div>
+          <div className="space-y-5 py-2">
+            <Step number={1} text='Acesse o portal mtr.sinir.gov.br e faça login com suas credenciais.' image={sinirLogin} />
+            <Step number={2} text='No menu superior, clique em "Configurações".' image={sinirMenuConfig} />
+            <Step number={3} text='Selecione "Usuário API" no submenu.' image={sinirUsuarioApiMenu} />
+            <Step number={4} text='Na tela de Usuário API, localize ou gere seu token de acesso.' image={sinirUsuarioApi} />
+            <Step number={5} text='Clique em "Adicionar" para confirmar a permissão.' image={sinirAdicionar} />
+            <Step number={6} text='Verifique seu perfil para confirmar que a integração está ativa.' image={sinirPerfil} />
           </div>
         </DialogContent>
       </Dialog>
@@ -189,12 +186,19 @@ const GovernmentIntegrationCard = () => {
   );
 };
 
-const Step = ({ number, text }: { number: number; text: string }) => (
-  <div className="flex items-start gap-3">
-    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold shrink-0 mt-0.5">
-      {number}
-    </span>
-    <p className="text-sm text-foreground leading-relaxed">{text}</p>
+const Step = ({ number, text, image }: { number: number; text: string; image?: string }) => (
+  <div className="space-y-2">
+    <div className="flex items-start gap-3">
+      <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold shrink-0 mt-0.5">
+        {number}
+      </span>
+      <p className="text-sm text-foreground leading-relaxed">{text}</p>
+    </div>
+    {image && (
+      <div className="ml-9">
+        <img src={image} alt={`Passo ${number}`} className="rounded-lg border border-border w-full" />
+      </div>
+    )}
   </div>
 );
 

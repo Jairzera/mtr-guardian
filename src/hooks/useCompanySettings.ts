@@ -55,7 +55,7 @@ export function useCompanySettings() {
       endereco: s.endereco,
       responsavel: s.responsavel,
       phone: s.phone,
-    };
+    } as any;
 
     // Try update first, then insert
     const { data: existing } = await supabase

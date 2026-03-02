@@ -13,6 +13,7 @@ import { useManifestDraft } from "@/hooks/useManifestDraft";
 import { formatCNPJ } from "@/lib/cnpj";
 import { parseNumericInput } from "@/lib/validation";
 import ReviewFormSection, { ManifestFormData } from "@/components/manifest/ReviewFormSection";
+import MtrPreviewModal from "@/components/manifest/MtrPreviewModal";
 
 const steps = ["Captura", "Análise IA", "Conferência", "Conclusão"];
 
@@ -51,7 +52,7 @@ const NewManifest = () => {
   const [transportDate, setTransportDate] = useState<Date | undefined>(undefined);
   const [formData, setFormData] = useState<ManifestFormData>(defaultFormData);
   const [cdfFile, setCdfFile] = useState<File | null>(null);
-
+  const [showPreview, setShowPreview] = useState(false);
   // Restore draft on mount
   useEffect(() => {
     if (draftLoaded.current) return;
@@ -161,10 +162,17 @@ const NewManifest = () => {
     [analyzeWithAI, wasteCodes]
   );
 
+  const handleShowPreview = () => {
+    if (!expirationDate) { toast.error("Informe a data de vencimento da licença ambiental."); return; }
+    if (!formData.destinationLicense) { toast.error("Informe o Nº da Licença Ambiental do Destinador."); return; }
+    setShowPreview(true);
+  };
+
   const handleConfirm = async () => {
     if (!user) { toast.error("Você precisa estar logado para registrar um MTR."); return; }
     if (!expirationDate) { toast.error("Informe a data de vencimento da licença ambiental."); return; }
     if (!formData.destinationLicense) { toast.error("Informe o Nº da Licença Ambiental do Destinador."); return; }
+    setShowPreview(false);
 
     setSaving(true);
     try {
@@ -322,7 +330,7 @@ const NewManifest = () => {
           transportDateValue={transportDate}
           onTransportDateChange={setTransportDate}
           saving={saving}
-          onConfirm={handleConfirm}
+          onConfirm={handleShowPreview}
           cdfFile={cdfFile}
           onCdfFileChange={setCdfFile}
         />
@@ -346,6 +354,34 @@ const NewManifest = () => {
           </div>
         </Card>
       )}
+
+      {/* MTR Preview Modal */}
+      <MtrPreviewModal
+        open={showPreview}
+        onClose={() => setShowPreview(false)}
+        onConfirm={handleConfirm}
+        saving={saving}
+        data={{
+          wasteClass: formData.wasteClass,
+          quantity: formData.quantity,
+          unit: formData.unit,
+          transporterName: formData.transporterName,
+          transporterCnpj: formData.transporterCnpj,
+          destinationType: formData.destinationType,
+          destinationCompanyName: formData.destinationCompanyName,
+          destinationCnpj: formData.destinationCnpj,
+          destinationLicense: formData.destinationLicense,
+          driverName: formData.driverName,
+          vehiclePlate: formData.vehiclePlate,
+          transportDate: transportDate?.toISOString(),
+          physicalState: formData.physicalState,
+          packaging: formData.packaging,
+          expirationDate: expirationDate?.toISOString(),
+          generatorName: settings.razaoSocial,
+          generatorCnpj: settings.cnpj,
+          generatorAddress: settings.endereco,
+        }}
+      />
     </div>
   );
 };

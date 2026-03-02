@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { RefreshCw, ExternalLink, ShieldCheck, AlertTriangle, FileCheck } from "lucide-react";
+import { RefreshCw, ExternalLink, ShieldCheck, AlertTriangle, FileCheck, FileDown } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,8 @@ import { toast } from "@/hooks/use-toast";
 import EmptyState from "@/components/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { generateCDFPdf } from "@/lib/cdfPdfUtils";
+import { useCompanySettings } from "@/hooks/useCompanySettings";
 
 interface CDFRow {
   id: string;
@@ -22,11 +24,13 @@ interface CDFRow {
   status: string;
   mtr_count: number;
   receiver_name: string | null;
+  linked_mtrs: string[];
 }
 
 const CDFVault = () => {
   const isMobile = useIsMobile();
   const { user } = useAuth();
+  const { settings } = useCompanySettings();
   const queryClient = useQueryClient();
   const [syncing, setSyncing] = useState(false);
 
@@ -41,25 +45,26 @@ const CDFVault = () => {
 
       if (error) throw error;
 
-      // Get MTR counts per CDF
       const cdfIds = (data || []).map((c) => c.id);
       let mtrCounts: Record<string, number> = {};
+      let mtrNumbers: Record<string, string[]> = {};
       if (cdfIds.length > 0) {
         const { data: manifests } = await supabase
           .from("waste_manifests")
-          .select("cdf_id")
+          .select("cdf_id, mtr_number")
           .in("cdf_id", cdfIds);
 
         if (manifests) {
           manifests.forEach((m) => {
             if (m.cdf_id) {
               mtrCounts[m.cdf_id] = (mtrCounts[m.cdf_id] || 0) + 1;
+              if (!mtrNumbers[m.cdf_id]) mtrNumbers[m.cdf_id] = [];
+              if (m.mtr_number) mtrNumbers[m.cdf_id].push(m.mtr_number);
             }
           });
         }
       }
 
-      // Get receiver names from company_settings
       const receiverIds = [...new Set((data || []).map((c) => c.receiver_id))];
       let receiverNames: Record<string, string> = {};
       if (receiverIds.length > 0) {
@@ -79,6 +84,7 @@ const CDFVault = () => {
         ...c,
         mtr_count: mtrCounts[c.id] || 0,
         receiver_name: receiverNames[c.receiver_id] || "Destinador",
+        linked_mtrs: mtrNumbers[c.id] || [],
       })) as CDFRow[];
     },
   });
@@ -102,62 +108,59 @@ const CDFVault = () => {
     setSyncing(true);
 
     try {
-      // Mock: simulate finding a new CDF from the government
-      await new Promise((r) => setTimeout(r, 1500));
+      // Call the real SINIR sync edge function
+      const { data, error } = await supabase.functions.invoke("sync-sinir");
 
-      // Get only completed/received manifests without CDF to link
-      const { data: unlinkedMtrs } = await supabase
-        .from("waste_manifests")
-        .select("id, transporter_name")
-        .in("status", ["completed", "received"])
-        .is("cdf_id", null)
-        .limit(3);
+      if (error) throw error;
 
-      if (!unlinkedMtrs || unlinkedMtrs.length === 0) {
-        toast({ title: "Nenhum novo CDF encontrado no momento.", description: "Não há MTRs concluídos/recebidos sem CDF vinculado." });
-        setSyncing(false);
-        return;
+      if (data?.error) {
+        toast({
+          title: "Erro na sincronização",
+          description: data.error,
+          variant: "destructive",
+        });
+      } else {
+        const msg = data?.message || "Sincronização concluída.";
+        const mtrsCount = data?.mtrs_synced || 0;
+        const cdfsCount = data?.cdfs_synced || 0;
+        const errors = data?.errors || [];
+
+        toast({
+          title: mtrsCount + cdfsCount > 0 ? "Sincronização concluída!" : "Nenhum dado novo",
+          description: msg + (errors.length > 0 ? ` (${errors.length} erro(s))` : ""),
+          variant: errors.length > 0 && mtrsCount + cdfsCount === 0 ? "destructive" : "default",
+        });
+
+        // Invalidate all relevant queries to propagate data
+        queryClient.invalidateQueries({ queryKey: ["cdfs"] });
+        queryClient.invalidateQueries({ queryKey: ["mtrs-pending-cdf"] });
+        queryClient.invalidateQueries({ queryKey: ["waste-manifests"] });
+        queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+        queryClient.invalidateQueries({ queryKey: ["audit-manifests"] });
+        queryClient.invalidateQueries({ queryKey: ["historico"] });
       }
-
-      // Create a mock CDF
-      const cdfNumber = `CDF-MG-${new Date().getFullYear()}/${String(Math.floor(Math.random() * 9000) + 1000)}`;
-
-      const { data: newCdf, error: insertErr } = await supabase
-        .from("cdfs")
-        .insert({
-          cdf_number: cdfNumber,
-          generator_id: user.id,
-          receiver_id: user.id, // mock: same user for demo
-          issue_date: new Date().toISOString().split("T")[0],
-          status: "VALID",
-        })
-        .select()
-        .single();
-
-      if (insertErr) throw insertErr;
-
-      // Link MTRs to the new CDF and set status to finalized
-      const mtrIds = unlinkedMtrs.map((m) => m.id);
-      const { error: updateErr } = await supabase
-        .from("waste_manifests")
-        .update({ cdf_id: newCdf.id, status: "finalized" })
-        .in("id", mtrIds);
-
-      if (updateErr) throw updateErr;
-
-      toast({
-        title: "CDF sincronizado com sucesso!",
-        description: `${cdfNumber} vinculado a ${mtrIds.length} MTR(s).`,
-      });
-
-      queryClient.invalidateQueries({ queryKey: ["cdfs"] });
-      queryClient.invalidateQueries({ queryKey: ["mtrs-pending-cdf"] });
-    } catch (err) {
+    } catch (err: any) {
       console.error("Sync error:", err);
-      toast({ title: "Erro na sincronização", description: "Tente novamente mais tarde.", variant: "destructive" });
+      toast({
+        title: "Erro na sincronização",
+        description: err.message || "Tente novamente mais tarde.",
+        variant: "destructive",
+      });
     } finally {
       setSyncing(false);
     }
+  };
+
+  const handleDownloadCdfPdf = (cdf: CDFRow) => {
+    generateCDFPdf(
+      {
+        certNumber: cdf.cdf_number,
+        date: new Date(cdf.issue_date).toLocaleDateString("pt-BR"),
+        linkedMTR: cdf.linked_mtrs.length > 0 ? cdf.linked_mtrs.join(", ") : `${cdf.mtr_count} MTR(s) vinculados`,
+        destinador: cdf.receiver_name || "Destinador",
+      },
+      settings
+    );
   };
 
   if (isLoading) {
@@ -182,7 +185,7 @@ const CDFVault = () => {
           className="gap-2 gradient-primary shadow-primary font-semibold"
         >
           <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
-          {syncing ? "Sincronizando..." : "Sincronizar com Órgão Ambiental"}
+          {syncing ? "Sincronizando SINIR..." : "Sincronizar com Órgão Ambiental"}
         </Button>
       </div>
 
@@ -214,7 +217,7 @@ const CDFVault = () => {
         <EmptyState
           icon={ShieldCheck}
           title="Nenhum CDF recebido"
-          description="Clique em 'Sincronizar com Órgão Ambiental' para buscar certificados disponíveis."
+          description="Clique em 'Sincronizar com Órgão Ambiental' para buscar certificados disponíveis do SINIR."
         />
       ) : isMobile ? (
         <div className="space-y-3">
@@ -231,13 +234,18 @@ const CDFVault = () => {
                 <span className="text-xs text-muted-foreground">
                   {new Date(cdf.issue_date).toLocaleDateString("pt-BR")} · {cdf.mtr_count} MTR(s)
                 </span>
-                {cdf.pdf_url && (
-                  <Button variant="ghost" size="sm" asChild>
-                    <a href={cdf.pdf_url} target="_blank" rel="noopener noreferrer" className="gap-1">
-                      <ExternalLink className="w-4 h-4" /> PDF
-                    </a>
+                <div className="flex gap-1">
+                  <Button variant="ghost" size="sm" onClick={() => handleDownloadCdfPdf(cdf)} className="gap-1">
+                    <FileDown className="w-4 h-4" /> PDF
                   </Button>
-                )}
+                  {cdf.pdf_url && (
+                    <Button variant="ghost" size="sm" asChild>
+                      <a href={cdf.pdf_url} target="_blank" rel="noopener noreferrer" className="gap-1">
+                        <ExternalLink className="w-4 h-4" /> Original
+                      </a>
+                    </Button>
+                  )}
+                </div>
               </div>
             </Card>
           ))}
@@ -252,7 +260,7 @@ const CDFVault = () => {
                 <TableHead>Data de Emissão</TableHead>
                 <TableHead className="text-center">MTRs Vinculados</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead className="text-right">Ação</TableHead>
+                <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -272,15 +280,18 @@ const CDFVault = () => {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    {cdf.pdf_url ? (
-                      <Button variant="ghost" size="icon" asChild>
-                        <a href={cdf.pdf_url} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="w-4 h-4" />
-                        </a>
+                    <div className="flex justify-end gap-1">
+                      <Button variant="ghost" size="icon" onClick={() => handleDownloadCdfPdf(cdf)} title="Baixar PDF">
+                        <FileDown className="w-4 h-4" />
                       </Button>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    )}
+                      {cdf.pdf_url && (
+                        <Button variant="ghost" size="icon" asChild>
+                          <a href={cdf.pdf_url} target="_blank" rel="noopener noreferrer" title="PDF Original">
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        </Button>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

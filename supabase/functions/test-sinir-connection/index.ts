@@ -60,12 +60,14 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Save token if provided
+    // Save token if provided (upsert to handle users without existing settings)
     if (newToken) {
       const { error: saveError } = await serviceClient
         .from("company_settings")
-        .update({ gov_api_token: newToken })
-        .eq("user_id", userId);
+        .upsert(
+          { user_id: userId, gov_api_token: newToken },
+          { onConflict: "user_id" }
+        );
 
       if (saveError) {
         console.error("Save error:", saveError);

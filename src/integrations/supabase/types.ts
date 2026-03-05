@@ -136,6 +136,36 @@ export type Database = {
         }
         Relationships: []
       }
+      managed_companies: {
+        Row: {
+          cnpj: string
+          created_at: string
+          id: string
+          is_active: boolean
+          last_activity_at: string | null
+          owner_user_id: string
+          razao_social: string
+        }
+        Insert: {
+          cnpj?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_activity_at?: string | null
+          owner_user_id: string
+          razao_social?: string
+        }
+        Update: {
+          cnpj?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_activity_at?: string | null
+          owner_user_id?: string
+          razao_social?: string
+        }
+        Relationships: []
+      }
       marketplace_listings: {
         Row: {
           created_at: string
@@ -174,6 +204,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      usage_metrics: {
+        Row: {
+          active_cnpjs: number
+          api_calls: number
+          created_at: string
+          id: string
+          managed_company_id: string | null
+          mtrs_emitted: number
+          period: string
+          user_id: string
+        }
+        Insert: {
+          active_cnpjs?: number
+          api_calls?: number
+          created_at?: string
+          id?: string
+          managed_company_id?: string | null
+          mtrs_emitted?: number
+          period: string
+          user_id: string
+        }
+        Update: {
+          active_cnpjs?: number
+          api_calls?: number
+          created_at?: string
+          id?: string
+          managed_company_id?: string | null
+          mtrs_emitted?: number
+          period?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usage_metrics_managed_company_id_fkey"
+            columns: ["managed_company_id"]
+            isOneToOne: false
+            referencedRelation: "managed_companies"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -223,12 +294,46 @@ export type Database = {
         }
         Relationships: []
       }
+      waste_costs: {
+        Row: {
+          contract_reference: string | null
+          cost_per_kg: number
+          created_at: string
+          id: string
+          transport_cost: number
+          updated_at: string
+          user_id: string
+          waste_class: string
+        }
+        Insert: {
+          contract_reference?: string | null
+          cost_per_kg?: number
+          created_at?: string
+          id?: string
+          transport_cost?: number
+          updated_at?: string
+          user_id: string
+          waste_class: string
+        }
+        Update: {
+          contract_reference?: string | null
+          cost_per_kg?: number
+          created_at?: string
+          id?: string
+          transport_cost?: number
+          updated_at?: string
+          user_id?: string
+          waste_class?: string
+        }
+        Relationships: []
+      }
       waste_manifests: {
         Row: {
           cdf_id: string | null
           created_at: string
           destination_cnpj: string | null
           destination_company_name: string | null
+          destination_cost: number | null
           destination_license: string | null
           destination_type: string
           driver_name: string | null
@@ -259,6 +364,7 @@ export type Database = {
           created_at?: string
           destination_cnpj?: string | null
           destination_company_name?: string | null
+          destination_cost?: number | null
           destination_license?: string | null
           destination_type: string
           driver_name?: string | null
@@ -289,6 +395,7 @@ export type Database = {
           created_at?: string
           destination_cnpj?: string | null
           destination_company_name?: string | null
+          destination_cost?: number | null
           destination_license?: string | null
           destination_type?: string
           driver_name?: string | null

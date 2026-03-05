@@ -33,6 +33,7 @@ const defaultFormData: ManifestFormData = {
   driverName: "",
   vehiclePlate: "",
   transportDate: "",
+  destinationCost: "",
 };
 
 const NewManifest = () => {
@@ -269,6 +270,7 @@ const NewManifest = () => {
         origin: "ciclomtr",
         mtr_number: mtrNumber,
         pdf_url: pdfUrl,
+        destination_cost: formData.destinationCost ? Number(formData.destinationCost) : null,
       } as any).select("id").single();
 
       if (insertError) throw insertError;

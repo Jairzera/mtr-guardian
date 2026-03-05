@@ -39,6 +39,7 @@ export interface ManifestFormData {
   driverName: string;
   vehiclePlate: string;
   transportDate: string;
+  destinationCost: string;
 }
 
 export interface ReviewFormSectionExtraProps {
@@ -223,6 +224,18 @@ export default function ReviewFormSection({
               <SelectItem value="Incineração">Incineração</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+
+        <div>
+          <Label className="text-sm font-medium text-muted-foreground">Custo de Destinação (R$) <span className="text-xs">(opcional)</span></Label>
+          <Input
+            className="mt-1.5"
+            type="number"
+            step="0.01"
+            placeholder="0.00"
+            value={formData.destinationCost}
+            onChange={(e) => update({ destinationCost: e.target.value })}
+          />
         </div>
       </div>
 

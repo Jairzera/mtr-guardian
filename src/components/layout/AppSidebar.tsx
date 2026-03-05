@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, FileText, ShieldCheck, Settings, Plus, LogOut,
-  ShieldAlert, Store, MapPin, Leaf, ArrowLeftRight, PackageCheck, ClipboardCheck, History, FileCheck,
+  ShieldAlert, Store, MapPin, Leaf, ArrowLeftRight, PackageCheck, ClipboardCheck, History, FileCheck, BarChart3,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -14,6 +14,7 @@ const generatorItems = [
   { to: "/mtrs", label: "MTRs", icon: FileText },
   { to: "/historico-cargas", label: "Histórico de Cargas", icon: History },
   { to: "/auditoria", label: "Auditoria", icon: ShieldAlert },
+  { to: "/controle-abc", label: "Controle ABC", icon: BarChart3 },
   { to: "/mercado", label: "Mercado", icon: Store },
   { to: "/mapa", label: "Mapa", icon: MapPin },
   { to: "/esg", label: "ESG", icon: Leaf },

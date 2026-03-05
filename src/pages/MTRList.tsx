@@ -52,6 +52,7 @@ interface MTRItem {
   transporter_name: string;
   rejection_reason: string | null;
   expiration_date: string | null;
+  mtr_number: string | null;
 }
 
 type ExpirationState = "expired" | "expiring_soon" | "ok";
@@ -190,7 +191,7 @@ const MTRList = () => {
     setLoading(true);
     const { data: manifests, error } = await supabase
       .from("waste_manifests")
-      .select("id, created_at, waste_class, weight_kg, status, transporter_name, rejection_reason, expiration_date")
+      .select("id, created_at, waste_class, weight_kg, status, transporter_name, rejection_reason, expiration_date, mtr_number")
       .not("status", "in", "(received,completed)")
       .order("created_at", { ascending: false });
 
@@ -420,6 +421,21 @@ const MTRList = () => {
               Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          {data.find((m) => m.id === deleteId)?.mtr_number && (
+            <div className="rounded-md bg-warning/10 border border-warning/20 p-4 flex gap-2 items-start">
+              <AlertTriangle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
+              <div className="text-sm text-foreground">
+                <p className="font-semibold">Este MTR foi emitido no SINIR.</p>
+                <p className="mt-1 text-muted-foreground">
+                  A exclusão aqui remove apenas o registro local. O documento continua existindo no portal do governo.
+                  Para cancelar oficialmente, acesse{" "}
+                  <a href="https://mtr.sinir.gov.br" target="_blank" rel="noopener noreferrer" className="underline text-primary font-medium">
+                    mtr.sinir.gov.br
+                  </a>.
+                </p>
+              </div>
+            </div>
+          )}
           <AlertDialogFooter>
             <AlertDialogCancel disabled={deleting} className="min-h-[44px]">Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 min-h-[44px]">

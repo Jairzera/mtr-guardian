@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
-  LayoutDashboard, FileText, ShieldCheck, Settings, Plus, LogOut,
+  LayoutDashboard, FileText, Settings, Plus, LogOut,
   ShieldAlert, Store, MapPin, Leaf, ArrowLeftRight, PackageCheck, ClipboardCheck, History, FileCheck, BarChart3,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,7 +18,6 @@ const generatorItems = [
   { to: "/mercado", label: "Mercado", icon: Store },
   { to: "/mapa", label: "Mapa", icon: MapPin },
   { to: "/esg", label: "ESG", icon: Leaf },
-  { to: "/certificados", label: "Certificados", icon: ShieldCheck },
   { to: "/cofre-cdf", label: "Cofre de CDFs", icon: FileCheck },
   { to: "/configuracoes", label: "Configurações", icon: Settings },
 ];

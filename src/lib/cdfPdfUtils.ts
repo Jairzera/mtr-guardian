@@ -24,13 +24,24 @@ export function generateCDFPdf(cdf: CDFData, company?: CompanySettings) {
 
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
-  doc.text("Certificado de Destinação Final", 14, y);
+  doc.text("Comprovante Interno de Destinação", 14, y);
   y += 8;
+
+  // Disclaimer banner
+  doc.setFillColor(255, 243, 205);
+  doc.rect(14, y, pageWidth - 28, 12, "F");
+  doc.setFontSize(8);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(180, 100, 0);
+  doc.text("⚠ COMPROVANTE INTERNO — Este documento NÃO substitui o CDF oficial emitido pelo órgão ambiental.", 18, y + 5);
+  doc.text("O CDF oficial deve ser obtido no portal do SINIR: mtr.sinir.gov.br", 18, y + 9);
+  doc.setTextColor(0, 0, 0);
+  y += 16;
 
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100, 100, 100);
-  doc.text(`Nº ${cdf.certNumber}`, 14, y);
+  doc.text(`Ref. ${cdf.certNumber}`, 14, y);
   y += 10;
 
   // Separator
@@ -64,14 +75,14 @@ export function generateCDFPdf(cdf: CDFData, company?: CompanySettings) {
   // Certificate details table
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
-  doc.text("Detalhes do Certificado", 14, y);
+  doc.text("Detalhes do Comprovante", 14, y);
   y += 6;
 
   autoTable(doc, {
     startY: y,
     head: [["Campo", "Valor"]],
     body: [
-      ["Nº do Certificado", cdf.certNumber],
+      ["Referência Interna", cdf.certNumber],
       ["Data de Emissão", cdf.date],
       ["MTR Vinculado", cdf.linkedMTR],
       ["Destinador Final", cdf.destinador],
@@ -90,13 +101,19 @@ export function generateCDFPdf(cdf: CDFData, company?: CompanySettings) {
   const now = new Date().toLocaleString("pt-BR");
 
   doc.setDrawColor(200, 200, 200);
-  doc.line(14, pageHeight - 25, pageWidth - 14, pageHeight - 25);
+  doc.line(14, pageHeight - 30, pageWidth - 14, pageHeight - 30);
+
+  doc.setFillColor(255, 243, 205);
+  doc.rect(14, pageHeight - 28, pageWidth - 28, 8, "F");
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(180, 100, 0);
+  doc.text("DOCUMENTO INTERNO — NÃO SUBSTITUI O CDF OFICIAL DO ÓRGÃO AMBIENTAL", pageWidth / 2, pageHeight - 24, { align: "center" });
 
   doc.setFontSize(8);
   doc.setFont("helvetica", "italic");
   doc.setTextColor(100, 100, 100);
-  doc.text("Documento assinado digitalmente", 14, pageHeight - 18);
-  doc.text(`Gerado em ${now} — CicloMTR Compliance`, 14, pageHeight - 13);
+  doc.text(`Gerado em ${now} — CicloMTR (comprovante interno)`, 14, pageHeight - 13);
   doc.text("Página 1 de 1", pageWidth - 14, pageHeight - 13, { align: "right" });
 
   doc.save(`${cdf.certNumber}.pdf`);

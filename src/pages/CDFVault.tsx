@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { RefreshCw, ExternalLink, ShieldCheck, AlertTriangle, FileCheck, FileDown } from "lucide-react";
+import { Upload, ExternalLink, ShieldCheck, AlertTriangle, FileCheck, FileDown, Info, RefreshCw } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -12,7 +13,6 @@ import { toast } from "@/hooks/use-toast";
 import EmptyState from "@/components/EmptyState";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { generateCDFPdf } from "@/lib/cdfPdfUtils";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 
 interface CDFRow {
@@ -32,7 +32,9 @@ const CDFVault = () => {
   const { user } = useAuth();
   const { settings } = useCompanySettings();
   const queryClient = useQueryClient();
+  const [uploading, setUploading] = useState(false);
   const [syncing, setSyncing] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch CDFs with linked MTR count
   const { data: cdfs = [], isLoading } = useQuery({
@@ -103,64 +105,67 @@ const CDFVault = () => {
     },
   });
 
-  const handleSync = async () => {
+  const handleSyncPdfs = async () => {
     if (!user) return;
     setSyncing(true);
-
     try {
-      // Call the real SINIR sync edge function
       const { data, error } = await supabase.functions.invoke("sync-sinir");
-
       if (error) throw error;
 
       if (data?.error) {
-        toast({
-          title: "Erro na sincronização",
-          description: data.error,
-          variant: "destructive",
-        });
+        toast({ title: "Erro", description: data.error, variant: "destructive" });
       } else {
-        const msg = data?.message || "Sincronização concluída.";
-        const mtrsCount = data?.mtrs_synced || 0;
-        const cdfsCount = data?.cdfs_synced || 0;
-        const errors = data?.errors || [];
-
+        const downloaded = data?.pdfs_downloaded || 0;
         toast({
-          title: mtrsCount + cdfsCount > 0 ? "Sincronização concluída!" : "Nenhum dado novo",
-          description: msg + (errors.length > 0 ? ` (${errors.length} erro(s))` : ""),
-          variant: errors.length > 0 && mtrsCount + cdfsCount === 0 ? "destructive" : "default",
+          title: downloaded > 0 ? "PDFs baixados!" : "Nenhum PDF pendente",
+          description: data?.message || "Sincronização concluída.",
         });
-
-        // Invalidate all relevant queries to propagate data
-        queryClient.invalidateQueries({ queryKey: ["cdfs"] });
-        queryClient.invalidateQueries({ queryKey: ["mtrs-pending-cdf"] });
         queryClient.invalidateQueries({ queryKey: ["waste-manifests"] });
-        queryClient.invalidateQueries({ queryKey: ["dashboard"] });
-        queryClient.invalidateQueries({ queryKey: ["audit-manifests"] });
-        queryClient.invalidateQueries({ queryKey: ["historico"] });
       }
     } catch (err: any) {
-      console.error("Sync error:", err);
-      toast({
-        title: "Erro na sincronização",
-        description: err.message || "Tente novamente mais tarde.",
-        variant: "destructive",
-      });
+      toast({ title: "Erro", description: err.message || "Tente novamente.", variant: "destructive" });
     } finally {
       setSyncing(false);
     }
   };
 
-  const handleDownloadCdfPdf = (cdf: CDFRow) => {
-    generateCDFPdf(
-      {
-        certNumber: cdf.cdf_number,
-        date: new Date(cdf.issue_date).toLocaleDateString("pt-BR"),
-        linkedMTR: cdf.linked_mtrs.length > 0 ? cdf.linked_mtrs.join(", ") : `${cdf.mtr_count} MTR(s) vinculados`,
-        destinador: cdf.receiver_name || "Destinador",
-      },
-      settings
-    );
+  const handleUploadCdf = async (file: File) => {
+    if (!user) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "pdf";
+      const fileName = `${user.id}/${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage
+        .from("cdf-files")
+        .upload(fileName, file, { upsert: true });
+
+      if (uploadError) throw uploadError;
+
+      const { data: signedUrl } = await supabase.storage
+        .from("cdf-files")
+        .createSignedUrl(fileName, 365 * 24 * 60 * 60);
+
+      // Create a CDF record
+      const cdfNumber = `CDF-UPLOAD-${Date.now().toString(36).toUpperCase()}`;
+      const { error: insertError } = await supabase.from("cdfs").insert({
+        cdf_number: cdfNumber,
+        generator_id: user.id,
+        receiver_id: user.id,
+        issue_date: new Date().toISOString().split("T")[0],
+        pdf_url: signedUrl?.signedUrl || fileName,
+        status: "VALID",
+      });
+
+      if (insertError) throw insertError;
+
+      toast({ title: "CDF enviado com sucesso!", description: "O documento foi armazenado no cofre jurídico." });
+      queryClient.invalidateQueries({ queryKey: ["cdfs"] });
+    } catch (err: any) {
+      console.error("Upload error:", err);
+      toast({ title: "Erro no upload", description: err.message || "Tente novamente.", variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
   };
 
   if (isLoading) {
@@ -176,18 +181,51 @@ const CDFVault = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Certificados de Destinação Final (CDF)</h1>
-          <p className="text-sm text-muted-foreground mt-1">Cofre jurídico — documentos oficiais do órgão ambiental</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Cofre de CDFs</h1>
+          <p className="text-sm text-muted-foreground mt-1">Repositório jurídico de Certificados de Destinação Final</p>
         </div>
-        <Button
-          onClick={handleSync}
-          disabled={syncing}
-          className="gap-2 gradient-primary shadow-primary font-semibold"
-        >
-          <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
-          {syncing ? "Sincronizando SINIR..." : "Sincronizar com Órgão Ambiental"}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleSyncPdfs}
+            disabled={syncing}
+            className="gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`} />
+            {syncing ? "Baixando..." : "Baixar PDFs de MTRs"}
+          </Button>
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="gap-2 gradient-primary shadow-primary font-semibold"
+          >
+            <Upload className="w-4 h-4" />
+            {uploading ? "Enviando..." : "Upload de CDF Oficial"}
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,image/*"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) handleUploadCdf(file);
+            }}
+          />
+        </div>
       </div>
+
+      {/* Informational Banner */}
+      <Alert className="border-primary/30 bg-primary/5">
+        <Info className="h-4 w-4 text-primary" />
+        <AlertDescription className="text-sm">
+          O CDF oficial deve ser emitido e baixado no{" "}
+          <a href="https://mtr.sinir.gov.br" target="_blank" rel="noopener noreferrer" className="font-semibold underline text-primary">
+            portal do SINIR
+          </a>
+          . Faça o upload aqui para manter seu cofre jurídico organizado. A API do governo não permite emissão automática de CDFs.
+        </AlertDescription>
+      </Alert>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -197,7 +235,7 @@ const CDFVault = () => {
           </div>
           <div>
             <p className="text-2xl font-bold text-foreground">{cdfs.length}</p>
-            <p className="text-sm text-muted-foreground">CDFs recebidos</p>
+            <p className="text-sm text-muted-foreground">CDFs armazenados</p>
           </div>
         </Card>
 
@@ -216,8 +254,8 @@ const CDFVault = () => {
       {cdfs.length === 0 ? (
         <EmptyState
           icon={ShieldCheck}
-          title="Nenhum CDF recebido"
-          description="Clique em 'Sincronizar com Órgão Ambiental' para buscar certificados disponíveis do SINIR."
+          title="Nenhum CDF armazenado"
+          description="Faça upload dos CDFs oficiais que você baixou do portal do SINIR para manter seu cofre jurídico organizado."
         />
       ) : isMobile ? (
         <div className="space-y-3">
@@ -235,13 +273,10 @@ const CDFVault = () => {
                   {new Date(cdf.issue_date).toLocaleDateString("pt-BR")} · {cdf.mtr_count} MTR(s)
                 </span>
                 <div className="flex gap-1">
-                  <Button variant="ghost" size="sm" onClick={() => handleDownloadCdfPdf(cdf)} className="gap-1">
-                    <FileDown className="w-4 h-4" /> PDF
-                  </Button>
                   {cdf.pdf_url && (
                     <Button variant="ghost" size="sm" asChild>
                       <a href={cdf.pdf_url} target="_blank" rel="noopener noreferrer" className="gap-1">
-                        <ExternalLink className="w-4 h-4" /> Original
+                        <FileDown className="w-4 h-4" /> PDF
                       </a>
                     </Button>
                   )}
@@ -281,12 +316,9 @@ const CDFVault = () => {
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-end gap-1">
-                      <Button variant="ghost" size="icon" onClick={() => handleDownloadCdfPdf(cdf)} title="Baixar PDF">
-                        <FileDown className="w-4 h-4" />
-                      </Button>
                       {cdf.pdf_url && (
                         <Button variant="ghost" size="icon" asChild>
-                          <a href={cdf.pdf_url} target="_blank" rel="noopener noreferrer" title="PDF Original">
+                          <a href={cdf.pdf_url} target="_blank" rel="noopener noreferrer" title="Abrir PDF">
                             <ExternalLink className="w-4 h-4" />
                           </a>
                         </Button>

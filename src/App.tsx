@@ -16,6 +16,7 @@ import Certificados from "./pages/Certificados";
 import CDFVault from "./pages/CDFVault";
 import Configuracoes from "./pages/Configuracoes";
 import Auditoria from "./pages/Auditoria";
+import ControleABC from "./pages/ControleABC";
 import Mercado from "./pages/Mercado";
 import Mapa from "./pages/Mapa";
 import ESG from "./pages/ESG";
@@ -57,6 +58,7 @@ const App = () => (
                 <Route path="/cofre-cdf" element={<CDFVault />} />
                 <Route path="/configuracoes" element={<Configuracoes />} />
                 <Route path="/auditoria" element={<Auditoria />} />
+                <Route path="/controle-abc" element={<ControleABC />} />
                 <Route path="/mercado" element={<Mercado />} />
                 <Route path="/mapa" element={<Mapa />} />
                 <Route path="/esg" element={<ESG />} />

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Building2, SlidersHorizontal, Loader2 } from "lucide-react";
+import { Building2, SlidersHorizontal, Loader2, Building } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,6 +13,7 @@ import { useTheme } from "next-themes";
 import { formatCNPJ, isValidCNPJ } from "@/lib/cnpj";
 import { formatPhone, isValidPhone } from "@/lib/phone";
 import GovernmentIntegrationCard from "@/components/settings/GovernmentIntegrationCard";
+import ManagedCompaniesTab from "@/components/settings/ManagedCompaniesTab";
 
 const Configuracoes = () => {
   const { settings, loading, saveSettings } = useCompanySettings();
@@ -84,6 +85,7 @@ const Configuracoes = () => {
         <Tabs defaultValue="empresa" className="space-y-6">
           <TabsList>
             <TabsTrigger value="empresa">Empresa</TabsTrigger>
+            <TabsTrigger value="filiais">Filiais / CNPJs</TabsTrigger>
             <TabsTrigger value="integracoes">Integrações</TabsTrigger>
           </TabsList>
 
@@ -91,6 +93,10 @@ const Configuracoes = () => {
             <CompanyCard form={form} handleChange={handleChange} cnpjError={cnpjError} phoneError={phoneError} />
             <PreferencesCard theme={theme} setTheme={setTheme} alertasEmail={alertasEmail} setAlertasEmail={setAlertasEmail} />
             <SaveButton saving={saving} onSave={handleSave} />
+          </TabsContent>
+
+          <TabsContent value="filiais" className="space-y-6">
+            <ManagedCompaniesTab />
           </TabsContent>
 
           <TabsContent value="integracoes" className="space-y-6">

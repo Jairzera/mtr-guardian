@@ -1,117 +1,72 @@
 
 
-# Plano: Auditoria Inteligente ABC + Modelo Elástico Pay-per-CNPJ
+# Auditoria: Funcionalidades Impossíveis por Limitação da API SINIR
 
-Dois diferenciais competitivos para o pré-lançamento do CicloMTR.
+## Problemas Identificados
 
----
+### 1. Cofre de CDFs (`/cofre-cdf`) — Sincronização Automática de CDFs
+**Problema**: O botao "Sincronizar com Orgao Ambiental" sugere que o sistema puxa CDFs do SINIR. A API **nao disponibiliza** endpoint para emitir ou descarregar CDFs. O destinador deve gerar o CDF manualmente no portal do governo.
 
-## Funcionalidade 1: Controle Econômico ABC (Curva ABC Fiscal-Financeira)
+**Acao**: Reformular a pagina. Remover o botao de sincronizacao com SINIR. Transformar o Cofre de CDFs num repositorio de upload manual onde o destinador faz upload do PDF do CDF que ele baixou do portal do governo. O sistema vincula esse PDF aos MTRs correspondentes.
 
-### Conceito
-Permitir que o analista cadastre custos por tipo de resíduo (custo/kg de destinação, taxa de transporte) nos manifestos. A plataforma cruza automaticamente esses dados com os volumes, gerando uma Curva ABC que revela quais resíduos concentram custo desproporcional ao volume.
+### 2. Pagina Certificados (`/certificados`) — CDFs Falsos Gerados Localmente
+**Problema**: A pagina gera numeros de CDF fictícios (`CDF-2026/0001`) a partir de manifestos completed. Esses NAO sao certificados oficiais do governo. Isso pode confundir o usuario e gerar problemas de compliance.
 
-### Mudanças no Banco de Dados
-Nova tabela `waste_costs` para armazenar dados contratuais:
+**Acao**: Remover a pagina `/certificados` e consolidar tudo no Cofre de CDFs reformulado. Ou transformar em "Comprovantes Internos" com nomenclatura clara que nao simule um documento oficial.
 
-```text
-waste_costs
-├── id (uuid, PK)
-├── user_id (uuid, FK auth.users)
-├── waste_class (text)           -- Classe do resíduo
-├── cost_per_kg (numeric)        -- Custo unitário destinação (R$/kg)
-├── transport_cost (numeric)     -- Taxa transporte (R$/viagem ou R$/kg)
-├── contract_reference (text)    -- Referência contrato (opcional)
-├── created_at / updated_at
-```
+### 3. `sync-sinir` Edge Function — Referencia a `cdfs_synced`
+**Problema**: A UI do CDFVault referencia `data?.cdfs_synced` mas a funcao `sync-sinir` atual ja nao sincroniza CDFs (so baixa PDFs de MTRs). Inconsistencia menor, mas o botao ainda dá a entender que busca CDFs do governo.
 
-Adição de coluna `destination_cost` (numeric, nullable) na tabela `waste_manifests` para registrar custo efetivo por MTR.
+**Acao**: Renomear a acao de sync para "Baixar PDFs de MTRs pendentes" em vez de "Sincronizar com Orgao Ambiental".
 
-RLS: cada usuário gerencia apenas seus próprios registros.
+### 4. MTRList — Botao "Excluir" Manifesto
+**Problema**: O botao de exclusao deleta o manifesto do banco local, mas nao cancela no SINIR (endpoint indisponível). Se o MTR ja foi emitido no governo, ele continuara existindo la. O usuario pode pensar que cancelou o MTR oficial.
 
-### Nova Página: `/controle-abc`
-- **KPIs no topo**: Custo total no período, Custo médio por tonelada, Nº classes de resíduo
-- **Gráfico Curva ABC**: Gráfico de barras + linha acumulada (Recharts). Eixo X = classes de resíduo ordenadas por custo. Barras = % do custo total. Linha = % acumulada.
-- **Tabela resumo**: Classe | Volume (ton) | % Volume | Custo Total (R$) | % Custo | Classificação (A/B/C)
-- **Insight automático**: Card destacando resíduos Classe A (ex: "Lâmpadas industriais: 2% do volume, 45% do custo")
-- **Filtro por período** (mês/trimestre/ano)
+**Acao**: Adicionar aviso claro de que a exclusao e apenas local. Se o MTR tiver `mtr_number` (foi emitido no SINIR), mostrar alerta explicando que o cancelamento oficial deve ser feito no portal do governo, com link direto.
 
-### Formulário de Custos
-- Modal acessível na página ABC para cadastrar custo/kg por classe de resíduo
-- Campo opcional `destination_cost` adicionado ao formulário de Novo Manifesto (ReviewFormSection)
+### 5. `generateCDFPdf` (`cdfPdfUtils.ts`) — Gera PDFs com aparencia oficial
+**Problema**: A funcao gera PDFs formatados como se fossem CDFs oficiais. Pode induzir o usuario a pensar que e um documento valido.
 
-### Integração
-- Hook `useABCAnalysis` que busca manifestos + custos e calcula a curva
-- Rota no sidebar do gerador entre "Auditoria" e "Mercado"
-- Exportação PDF/CSV do relatório ABC
+**Acao**: Renomear para "Comprovante Interno CicloMTR" e adicionar marca d'agua/disclaimer no PDF: "Este documento NAO substitui o CDF oficial emitido pelo orgao ambiental."
 
 ---
 
-## Funcionalidade 2: Modelo Elástico Pay-per-CNPJ
+## Plano de Implementacao
 
-### Conceito
-Expandir a estrutura de billing para que consultorias/engenharias possam gerenciar múltiplos CNPJs (filiais de clientes) com cobrança elástica baseada no uso real.
+### Arquivo: `src/pages/CDFVault.tsx`
+- Remover botao "Sincronizar com Orgao Ambiental" que chama `sync-sinir`
+- Adicionar botao "Upload de CDF Oficial" para o usuario fazer upload do PDF que baixou do portal
+- Adicionar banner informativo: "O CDF oficial deve ser emitido e baixado no portal do SINIR. Faca o upload aqui para manter seu cofre juridico organizado."
+- Manter a listagem de CDFs existentes (os que foram uploaded manualmente)
 
-### Mudanças no Banco de Dados
-Nova tabela `managed_companies` (multi-CNPJ):
+### Arquivo: `src/pages/Certificados.tsx`
+- Remover a pagina ou renomear para "Comprovantes Internos"
+- Adicionar disclaimer claro de que nao sao documentos oficiais
+- Alternativa: redirecionar `/certificados` para `/cofre-cdf`
 
-```text
-managed_companies
-├── id (uuid, PK)
-├── owner_user_id (uuid)       -- Consultoria/gestor principal
-├── cnpj (text)
-├── razao_social (text)
-├── is_active (boolean, default true)
-├── last_activity_at (timestamptz)
-├── created_at
-```
+### Arquivo: `src/pages/MTRList.tsx`
+- No dialog de exclusao, se o MTR tiver sido emitido no SINIR (`mtr_number` existe), adicionar aviso: "Este MTR foi emitido no SINIR. A exclusao aqui nao cancela o documento no portal do governo. Para cancelar oficialmente, acesse mtr.sinir.gov.br."
 
-Nova tabela `usage_metrics` (metering):
+### Arquivo: `src/lib/cdfPdfUtils.ts`
+- Adicionar texto "COMPROVANTE INTERNO — Nao substitui o CDF oficial" no cabecalho/rodape do PDF
 
-```text
-usage_metrics
-├── id (uuid, PK)
-├── user_id (uuid)
-├── managed_company_id (uuid, nullable)
-├── period (date)              -- Primeiro dia do mês
-├── active_cnpjs (integer)     -- CNPJs com atividade no mês
-├── mtrs_emitted (integer)
-├── api_calls (integer)
-├── created_at
-```
+### Arquivo: `supabase/functions/sync-sinir/index.ts`
+- Manter a funcionalidade de baixar PDFs de MTRs pendentes (isso e valido via `/downloadManifesto`)
+- Renomear contexto de uso na UI para "Baixar PDFs pendentes"
 
-### Atualização na Página de Pricing
-- Adicionar seção "Para Consultorias" com o modelo elástico
-- Mostrar faixas de preço por CNPJ ativo (ex: 1-5 CNPJs: R$X/CNPJ, 6-20: R$Y/CNPJ)
-- Badge "Pague apenas pelos CNPJs ativos" como diferencial
+### Arquivo: `src/components/layout/AppSidebar.tsx`
+- Avaliar se manter ambas as entradas "Certificados" e "Cofre de CDFs" ou consolidar em uma so
 
-### Painel Multi-CNPJ (Configurações)
-- Nova aba "Filiais / CNPJs" nas Configurações (visível para planos Avançado+)
-- Lista de CNPJs gerenciados com status ativo/inativo
-- Botão adicionar novo CNPJ
-- Indicador de uso mensal por CNPJ
+### Resumo de Remocoes/Ajustes
 
-### Dashboard de Uso
-- Seção no Dashboard mostrando "CNPJs ativos este mês" e "consumo da faixa"
-- Barra de progresso visual da faixa elástica
-
----
-
-## Resumo Técnico
-
-| Item | Tipo | Escopo |
-|------|------|--------|
-| Tabela `waste_costs` | Migration | Nova tabela + RLS |
-| Coluna `destination_cost` em `waste_manifests` | Migration | ALTER TABLE |
-| Tabela `managed_companies` | Migration | Nova tabela + RLS |
-| Tabela `usage_metrics` | Migration | Nova tabela + RLS |
-| Página `/controle-abc` | Frontend | Nova página + rota + sidebar |
-| Hook `useABCAnalysis` | Frontend | Lógica de cálculo da curva |
-| Modal cadastro custos | Frontend | Componente |
-| Campo custo no NewManifest | Frontend | Edição ReviewFormSection |
-| Aba Multi-CNPJ em Configurações | Frontend | Nova aba |
-| Seção elástica em Pricing | Frontend | Edição |
-| KPI CNPJs ativos no Dashboard | Frontend | Edição |
-
-Prioridade de implementação: Controle ABC primeiro (diferencial imediato com dados que já existem), depois Multi-CNPJ (requer mais infraestrutura de billing).
+| Funcionalidade | Status Atual | Acao |
+|---|---|---|
+| Sync CDFs do SINIR | Impossível (API bloqueada) | Remover sync, converter para upload manual |
+| Gerar CDFs automaticos | Impossível (API bloqueada) | Remover geracao, adicionar disclaimer |
+| Cancelar MTR via API | Impossível (endpoint indisponível) | Adicionar aviso no dialog de exclusao |
+| Baixar PDF de MTR emitido | Funcional (`/downloadManifesto`) | Manter |
+| Emitir MTR (`/salvarManifestoLote`) | Funcional | Manter |
+| Receber MTR (`/receberManifestoLote`) | Funcional | Manter |
+| Listas oficiais (residuos, classes) | Funcional | Manter |
+| Consultar historico retroativo | Impossível | Ja tratado na arquitetura atual |
 

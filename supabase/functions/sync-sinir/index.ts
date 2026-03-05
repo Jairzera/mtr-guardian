@@ -6,32 +6,18 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// SINIR WebService base URLs
-const SINIR_WS_BASE = "https://mtr.sinir.gov.br/ws/rest/v1";
-const SINIR_API_BASE = "https://mtr.sinir.gov.br/api/v1";
+/**
+ * sync-sinir — NEW ARCHITECTURE
+ * 
+ * CicloMTR is the source of truth. The SINIR API does NOT provide a "list all MTRs" endpoint.
+ * This function now handles:
+ * 1. Downloading PDFs for MTRs created by CicloMTR that don't have a PDF yet
+ * 2. Validating the SINIR connection is active
+ * 
+ * MTRs are only created via /salvarManifestoLote through the sinir-api edge function.
+ */
 
-interface SinirMTR {
-  manNumero: string;
-  manData: string;
-  manQtde: number;
-  manUnidade: string;
-  resDescricao: string;
-  resCodigo: string;
-  parRazaoSocialGerador: string;
-  parRazaoSocialTransportador: string;
-  parRazaoSocialDestinador: string;
-  parCnpjDestinador: string;
-  manSituacao: string;
-  manTratamento: string;
-}
-
-interface SinirCDF {
-  cdfNumero: string;
-  cdfDataEmissao: string;
-  cdfSituacao: string;
-  mtrsVinculados: string[];
-  parRazaoSocialDestinador: string;
-}
+const SINIR_BASE = "https://mtr.sinir.gov.br";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -69,14 +55,14 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Fetch user's SINIR API token
-    const { data: settings, error: dbError } = await serviceClient
+    // Get gov token
+    const { data: settings } = await serviceClient
       .from("company_settings")
-      .select("gov_api_token, razao_social, cnpj")
+      .select("gov_api_token")
       .eq("user_id", userId)
       .maybeSingle();
 
-    if (dbError || !settings?.gov_api_token) {
+    if (!settings?.gov_api_token) {
       return new Response(
         JSON.stringify({ error: "Token SINIR não configurado. Vá em Configurações > Integrações." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -84,171 +70,74 @@ Deno.serve(async (req) => {
     }
 
     const govToken = settings.gov_api_token;
-    const sinirAuth = `Bearer ${govToken}`;
+    const results = { pdfs_downloaded: 0, errors: [] as string[] };
 
-    const results = {
-      mtrs_synced: 0,
-      cdfs_synced: 0,
-      errors: [] as string[],
-      mtrs: [] as any[],
-      cdfs: [] as any[],
-    };
+    // Find MTRs created by CicloMTR that have an mtr_number but no pdf_url
+    const { data: mtrsWithoutPdf } = await serviceClient
+      .from("waste_manifests")
+      .select("id, mtr_number")
+      .eq("user_id", userId)
+      .eq("origin", "ciclomtr")
+      .not("mtr_number", "is", null)
+      .is("pdf_url", null)
+      .limit(50);
 
-    // 1. Try fetching MTRs from SINIR
-    try {
-      const mtrsResponse = await fetch(`${SINIR_WS_BASE}/consultar/mtrs`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: sinirAuth,
-        },
-      });
+    if (mtrsWithoutPdf?.length) {
+      for (const mtr of mtrsWithoutPdf) {
+        try {
+          const res = await fetch(`${SINIR_BASE}/downloadManifesto`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${govToken}`,
+            },
+            body: JSON.stringify({ manNumero: mtr.mtr_number }),
+          });
 
-      if (mtrsResponse.ok) {
-        const mtrsBody = await mtrsResponse.json();
-        const sinirMtrs: SinirMTR[] = mtrsBody?.objetoResposta || mtrsBody?.data || [];
+          if (res.ok) {
+            const pdfBuffer = await res.arrayBuffer();
+            const filePath = `sinir-pdfs/${userId}/${mtr.mtr_number}.pdf`;
 
-        for (const mtr of sinirMtrs) {
-          try {
-            // Check if MTR already exists
-            const { data: existing } = await serviceClient
-              .from("waste_manifests")
-              .select("id")
-              .eq("user_id", userId)
-              .eq("mtr_number", mtr.manNumero)
-              .maybeSingle();
+            await serviceClient.storage
+              .from("mtr_documents")
+              .upload(filePath, new Uint8Array(pdfBuffer), {
+                contentType: "application/pdf",
+                upsert: true,
+              });
 
-            if (!existing) {
-              // Map SINIR status to internal status
-              const statusMap: Record<string, string> = {
-                "EMITIDO": "pendente",
-                "EM_TRANSPORTE": "em_transito",
-                "RECEBIDO": "received",
-                "DESTINADO": "completed",
-                "CANCELADO": "pendente",
-              };
+            const { data: signedUrl } = await serviceClient.storage
+              .from("mtr_documents")
+              .createSignedUrl(filePath, 365 * 24 * 60 * 60); // 1 year
 
-              const { data: inserted, error: insertErr } = await serviceClient
+            if (signedUrl?.signedUrl) {
+              await serviceClient
                 .from("waste_manifests")
-                .insert({
-                  user_id: userId,
-                  mtr_number: mtr.manNumero,
-                  waste_class: mtr.resDescricao || mtr.resCodigo || "Não classificado",
-                  weight_kg: mtr.manQtde || 0,
-                  unit: mtr.manUnidade?.toLowerCase() === "litros" ? "L" : "kg",
-                  transporter_name: mtr.parRazaoSocialTransportador || settings.razao_social || "",
-                  destination_type: mtr.manTratamento || "Reciclagem",
-                  destination_company_name: mtr.parRazaoSocialDestinador || null,
-                  destination_cnpj: mtr.parCnpjDestinador || null,
-                  status: statusMap[mtr.manSituacao] || "pendente",
-                  origin: "sinir_sync",
-                  transport_date: mtr.manData || null,
-                })
-                .select("id")
-                .single();
-
-              if (!insertErr && inserted) {
-                results.mtrs_synced++;
-                results.mtrs.push({
-                  id: inserted.id,
-                  mtr_number: mtr.manNumero,
-                  status: mtr.manSituacao,
-                });
-              }
+                .update({ pdf_url: signedUrl.signedUrl })
+                .eq("id", mtr.id);
+              results.pdfs_downloaded++;
             }
-          } catch (e) {
-            results.errors.push(`MTR ${mtr.manNumero}: ${e.message}`);
+          } else {
+            const body = await res.text();
+            console.error(`PDF download failed for ${mtr.mtr_number}:`, res.status, body.substring(0, 200));
+            results.errors.push(`PDF ${mtr.mtr_number}: erro ${res.status}`);
           }
+        } catch (e) {
+          results.errors.push(`PDF ${mtr.mtr_number}: ${e.message}`);
         }
-      } else {
-        const body = await mtrsResponse.text();
-        console.error("SINIR MTRs response:", mtrsResponse.status, body);
-        results.errors.push(`Erro ao buscar MTRs do SINIR (${mtrsResponse.status})`);
       }
-    } catch (e) {
-      console.error("MTR fetch error:", e);
-      results.errors.push(`Falha na conexão com SINIR para MTRs: ${e.message}`);
     }
 
-    // 2. Try fetching CDFs from SINIR
-    try {
-      const cdfsResponse = await fetch(`${SINIR_WS_BASE}/consultar/cdfs`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: sinirAuth,
-        },
-      });
-
-      if (cdfsResponse.ok) {
-        const cdfsBody = await cdfsResponse.json();
-        const sinirCdfs: SinirCDF[] = cdfsBody?.objetoResposta || cdfsBody?.data || [];
-
-        for (const cdf of sinirCdfs) {
-          try {
-            // Check if CDF already exists
-            const { data: existing } = await serviceClient
-              .from("cdfs")
-              .select("id")
-              .eq("cdf_number", cdf.cdfNumero)
-              .eq("generator_id", userId)
-              .maybeSingle();
-
-            if (!existing) {
-              const { data: inserted, error: insertErr } = await serviceClient
-                .from("cdfs")
-                .insert({
-                  cdf_number: cdf.cdfNumero,
-                  generator_id: userId,
-                  receiver_id: userId,
-                  issue_date: cdf.cdfDataEmissao || new Date().toISOString().split("T")[0],
-                  status: cdf.cdfSituacao === "CANCELADO" ? "CANCELLED" : "VALID",
-                })
-                .select("id")
-                .single();
-
-              if (!insertErr && inserted) {
-                results.cdfs_synced++;
-                results.cdfs.push({
-                  id: inserted.id,
-                  cdf_number: cdf.cdfNumero,
-                });
-
-                // Link MTRs to this CDF
-                if (cdf.mtrsVinculados?.length) {
-                  for (const mtrNum of cdf.mtrsVinculados) {
-                    await serviceClient
-                      .from("waste_manifests")
-                      .update({ cdf_id: inserted.id, status: "completed" })
-                      .eq("mtr_number", mtrNum)
-                      .eq("user_id", userId);
-                  }
-                }
-              }
-            }
-          } catch (e) {
-            results.errors.push(`CDF ${cdf.cdfNumero}: ${e.message}`);
-          }
-        }
-      } else {
-        const body = await cdfsResponse.text();
-        console.error("SINIR CDFs response:", cdfsResponse.status, body);
-        results.errors.push(`Erro ao buscar CDFs do SINIR (${cdfsResponse.status})`);
-      }
-    } catch (e) {
-      console.error("CDF fetch error:", e);
-      results.errors.push(`Falha na conexão com SINIR para CDFs: ${e.message}`);
-    }
-
-    // 3. Also try the general status endpoint to verify connection
+    // Test connection
     let connectionOk = false;
     try {
-      const statusRes = await fetch(`${SINIR_API_BASE}/status`, {
-        method: "GET",
-        headers: { Authorization: sinirAuth, Accept: "application/json" },
+      const res = await fetch(`${SINIR_BASE}/retornaListaUnidade`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${govToken}`,
+        },
       });
-      connectionOk = statusRes.ok;
-      await statusRes.text(); // consume body
+      connectionOk = res.ok;
+      await res.text();
     } catch {
       connectionOk = false;
     }
@@ -257,16 +146,14 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         connection_ok: connectionOk,
-        mtrs_synced: results.mtrs_synced,
-        cdfs_synced: results.cdfs_synced,
-        mtrs: results.mtrs,
-        cdfs: results.cdfs,
+        pdfs_downloaded: results.pdfs_downloaded,
         errors: results.errors,
-        message: results.mtrs_synced + results.cdfs_synced > 0
-          ? `Sincronização concluída: ${results.mtrs_synced} MTR(s) e ${results.cdfs_synced} CDF(s) importados.`
+        message: results.pdfs_downloaded > 0
+          ? `Sincronização concluída: ${results.pdfs_downloaded} PDF(s) baixados.`
           : results.errors.length > 0
-            ? `Sincronização concluída com erros. Verifique seu token SINIR.`
-            : "Nenhum dado novo encontrado no SINIR.",
+            ? "Sincronização concluída com erros."
+            : "Tudo sincronizado. Nenhum PDF pendente.",
+        architecture: "CicloMTR é a fonte da verdade. MTRs são criados via /salvarManifestoLote.",
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

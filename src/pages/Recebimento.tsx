@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { sinirReceberManifestoLote } from "@/hooks/useSinirLists";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -31,6 +32,7 @@ interface Manifest {
   created_at: string;
   destination_type: string;
   rejection_reason: string | null;
+  mtr_number: string | null;
 }
 
 const Recebimento = () => {
@@ -55,11 +57,24 @@ const Recebimento = () => {
   });
 
   const approveMutation = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (manifest: Manifest) => {
+      // Try to confirm receipt on SINIR if MTR has a number
+      if (manifest.mtr_number) {
+        try {
+          await sinirReceberManifestoLote({
+            manNumero: manifest.mtr_number,
+            manQtdeRecebida: manifest.received_weight || manifest.weight_kg,
+          });
+        } catch (sinirErr) {
+          console.warn("SINIR receipt confirmation failed:", sinirErr);
+          // Continue with local update even if SINIR fails
+        }
+      }
+
       const { error } = await supabase
         .from("waste_manifests")
         .update({ status: "completed" } as any)
-        .eq("id", id);
+        .eq("id", manifest.id);
 
       if (error) throw error;
     },
@@ -214,7 +229,7 @@ const Recebimento = () => {
                     <Button
                       size="sm"
                       className="gap-1.5"
-                      onClick={() => approveMutation.mutate(m.id)}
+                      onClick={() => approveMutation.mutate(m)}
                       disabled={approveMutation.isPending}
                     >
                       {approveMutation.isPending ? (

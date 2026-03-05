@@ -10,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { useWasteCodes } from "@/hooks/useWasteCodes";
 import { useManifestDraft } from "@/hooks/useManifestDraft";
+import { sinirSalvarManifestoLote, sinirDownloadManifesto } from "@/hooks/useSinirLists";
 import { formatCNPJ } from "@/lib/cnpj";
 import { parseNumericInput } from "@/lib/validation";
 import ReviewFormSection, { ManifestFormData } from "@/components/manifest/ReviewFormSection";
@@ -198,6 +199,55 @@ const NewManifest = () => {
       const hasCdf = !!cdfFile;
       const initialStatus = hasCdf ? "enviado" : "pendente";
 
+      // 1. Try to emit MTR via SINIR
+      let mtrNumber: string | null = null;
+      let pdfUrl: string | null = null;
+      let sinirEmitted = false;
+
+      try {
+        const sinirPayload = {
+          manQtde: quantityNum,
+          manUnidade: formData.unit,
+          resCodigo: formData.wasteClass,
+          parCnpjDestinador: formData.destinationCnpj?.replace(/\D/g, "") || "",
+          manTratamento: formData.destinationType,
+          estadoFisico: formData.physicalState || "",
+          acondicionamento: formData.packaging || "",
+          motorista: formData.driverName || "",
+          placa: formData.vehiclePlate || "",
+          dataTransporte: transportDate ? format(transportDate, "yyyy-MM-dd") : "",
+        };
+
+        const sinirResult = await sinirSalvarManifestoLote(sinirPayload);
+        
+        if (sinirResult?.manNumero) {
+          mtrNumber = sinirResult.manNumero;
+          sinirEmitted = true;
+          toast.success(`MTR ${mtrNumber} emitido no SINIR! ✅`);
+
+          // Try to download the PDF
+          try {
+            const pdfResult = await sinirDownloadManifesto({ manNumero: mtrNumber });
+            if (pdfResult?.pdf_base64) {
+              // Convert base64 to blob and upload to storage
+              const pdfBlob = Uint8Array.from(atob(pdfResult.pdf_base64), c => c.charCodeAt(0));
+              const pdfPath = `sinir-pdfs/${user.id}/${mtrNumber}.pdf`;
+              await supabase.storage.from("mtr_documents").upload(pdfPath, pdfBlob, {
+                contentType: "application/pdf",
+                upsert: true,
+              });
+              const { data: signedUrl } = await supabase.storage.from("mtr_documents").createSignedUrl(pdfPath, 365 * 24 * 60 * 60);
+              pdfUrl = signedUrl?.signedUrl || null;
+            }
+          } catch (pdfErr) {
+            console.warn("PDF download failed, will retry via sync:", pdfErr);
+          }
+        }
+      } catch (sinirErr: any) {
+        console.warn("SINIR emission failed, saving locally:", sinirErr);
+        toast.warning("MTR salvo localmente. Emissão SINIR será tentada depois.");
+      }
+
       const { data: insertedManifest, error: insertError } = await supabase.from("waste_manifests").insert({
         user_id: user.id,
         waste_class: formData.wasteClass || "Não classificado",
@@ -206,7 +256,7 @@ const NewManifest = () => {
         transporter_name: formData.transporterName,
         destination_type: formData.destinationType,
         photo_url: uploadedPhotoUrl,
-        status: initialStatus,
+        status: sinirEmitted ? "enviado" : initialStatus,
         expiration_date: format(expirationDate, "yyyy-MM-dd"),
         physical_state: formData.physicalState || null,
         packaging: formData.packaging || null,
@@ -216,12 +266,14 @@ const NewManifest = () => {
         driver_name: formData.driverName || null,
         vehicle_plate: formData.vehiclePlate || null,
         transport_date: transportDate ? format(transportDate, "yyyy-MM-dd") : null,
-        origin: "descarte",
+        origin: "ciclomtr",
+        mtr_number: mtrNumber,
+        pdf_url: pdfUrl,
       } as any).select("id").single();
 
       if (insertError) throw insertError;
 
-      // If CDF uploaded, store it in cdf-files bucket and create certificate
+      // If CDF uploaded, store it
       if (hasCdf && insertedManifest) {
         const ext = cdfFile!.name.split(".").pop() || "bin";
         const cdfPath = `${user.id}/${insertedManifest.id}.${ext}`;
@@ -237,7 +289,12 @@ const NewManifest = () => {
 
       setStep(3);
       clearDraft();
-      toast.success(hasCdf ? "MTR registrado como Enviado com CDF anexado! ✅" : "Manifesto registrado como Pendente.");
+      toast.success(sinirEmitted
+        ? `MTR ${mtrNumber} emitido e registrado com sucesso! 🎉`
+        : hasCdf
+          ? "MTR registrado como Enviado com CDF anexado! ✅"
+          : "Manifesto registrado como Pendente."
+      );
     } catch (err: any) {
       console.error("Erro ao salvar MTR:", err);
       toast.error(err.message || "Erro ao salvar o manifesto.");

@@ -101,15 +101,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Test connection to SINIR API (placeholder URL — adjust later)
-    const SINIR_API_URL = "https://mtr.sinir.gov.br/api/v1/status";
+    // Test connection using a lightweight list endpoint
+    const SINIR_TEST_URL = "https://mtr.sinir.gov.br/retornaListaUnidade";
 
     try {
-      const sinirResponse = await fetch(SINIR_API_URL, {
+      const sinirResponse = await fetch(SINIR_TEST_URL, {
         method: "GET",
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${govToken}`,
-          Accept: "application/json",
         },
       });
 

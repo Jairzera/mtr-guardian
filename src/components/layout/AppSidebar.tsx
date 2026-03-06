@@ -1,12 +1,12 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, FileText, Settings, Plus, LogOut,
-  ShieldAlert, Store, MapPin, Leaf, ArrowLeftRight, PackageCheck, ClipboardCheck, History, FileCheck, BarChart3,
+  ShieldAlert, Store, MapPin, Leaf, PackageCheck, ClipboardCheck, History, FileCheck, BarChart3,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+
 import logo from "@/assets/logo.png";
 
 const generatorItems = [
@@ -33,7 +33,7 @@ const receiverItems = [
 const AppSidebar = () => {
   const location = useLocation();
   const { signOut } = useAuth();
-  const { role, toggleDevRole, isDevOverride } = useUserRole();
+  const { role } = useUserRole();
 
   const navItems = role === "receiver" ? receiverItems : generatorItems;
   return (
@@ -43,19 +43,6 @@ const AppSidebar = () => {
         <span className="text-xl font-bold tracking-tight">CicloMTR</span>
       </div>
 
-      {/* Dev mode role toggle */}
-      <button
-        onClick={toggleDevRole}
-        className="mx-3 mt-3 flex items-center justify-between gap-2 rounded-lg border border-dashed border-sidebar-border px-3 py-2 text-xs text-sidebar-foreground/60 hover:bg-sidebar-accent/50 transition-colors"
-      >
-        <span className="flex items-center gap-1.5">
-          <ArrowLeftRight className="w-3.5 h-3.5" />
-          Trocar Perfil (Dev)
-        </span>
-        <Badge variant="outline" className="text-[10px] capitalize">
-          {role === "generator" ? "Gerador" : "Destinador"}
-        </Badge>
-      </button>
 
       <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         {navItems.map((item) => {

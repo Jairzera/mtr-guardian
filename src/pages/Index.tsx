@@ -1,5 +1,9 @@
-import { useState } from "react";
-import { Check, Shield, Zap, TrendingUp, ArrowRight, FileText, Truck, Award, Factory, Building2, MessageCircle, ChevronRight } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import {
+  Check, Shield, Zap, TrendingUp, ArrowRight, FileText, Truck, Award,
+  Factory, Building2, MessageCircle, ChevronRight, Clock, AlertTriangle,
+  BarChart3, Lock, Globe, Users, Star, Sparkles, Play, X as XIcon,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,19 +13,47 @@ import { useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import heroMockup from "@/assets/hero-mockup.jpg";
 
+/* ── Animated counter hook ── */
+function useCountUp(end: number, duration = 2000, suffix = "") {
+  const [value, setValue] = useState(0);
+  const ref = useRef<HTMLDivElement>(null);
+  const counted = useRef(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !counted.current) {
+          counted.current = true;
+          const start = performance.now();
+          const animate = (now: number) => {
+            const progress = Math.min((now - start) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            setValue(Math.floor(eased * end));
+            if (progress < 1) requestAnimationFrame(animate);
+          };
+          requestAnimationFrame(animate);
+        }
+      },
+      { threshold: 0.3 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [end, duration]);
+
+  return { ref, display: `${value.toLocaleString("pt-BR")}${suffix}` };
+}
+
 type Period = "mensal" | "semestral" | "anual";
 
 const plans = [
   {
     name: "Inicial",
     price: { mensal: "R$ 197,90", semestral: "R$ 1.187,90", anual: "R$ 2.374,80" },
+    monthlyEquiv: { mensal: "197,90", semestral: "197,98", anual: "197,90" },
     periodLabel: { mensal: "/mês", semestral: "/semestre", anual: "/ano" },
-    features: [
-      "Gestão de MTRs",
-      "Painel Web completo",
-      "Auditoria de Compliance",
-      "Suporte por e-mail",
-    ],
+    features: ["Gestão de MTRs", "Painel Web completo", "Auditoria de Compliance", "Suporte por e-mail"],
     links: {
       mensal: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=69RHPA1",
       semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=5XJI0DQ",
@@ -33,13 +65,9 @@ const plans = [
   {
     name: "Crescimento",
     price: { mensal: "R$ 237,90", semestral: "R$ 1.427,40", anual: "R$ 2.854,80" },
+    monthlyEquiv: { mensal: "237,90", semestral: "237,90", anual: "237,90" },
     periodLabel: { mensal: "/mês", semestral: "/semestre", anual: "/ano" },
-    features: [
-      "Tudo do Inicial +",
-      "App para Operadores",
-      "Validade Jurídica completa",
-      "Rastreio em tempo real",
-    ],
+    features: ["Tudo do Inicial +", "App para Operadores", "Validade Jurídica completa", "Rastreio em tempo real"],
     links: {
       mensal: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=HN1H9A1",
       semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=UYJIT1M",
@@ -51,14 +79,9 @@ const plans = [
   {
     name: "Avançado",
     price: { mensal: "R$ 797,90", semestral: "R$ 4.787,40", anual: "R$ 9.574,80" },
+    monthlyEquiv: { mensal: "797,90", semestral: "797,90", anual: "797,90" },
     periodLabel: { mensal: "/mês", semestral: "/semestre", anual: "/ano" },
-    features: [
-      "Tudo do Crescimento +",
-      "Emissão Automática de CDF",
-      "Gestão de Clientes",
-      "Multi-usuários",
-      "Suporte prioritário",
-    ],
+    features: ["Tudo do Crescimento +", "Cofre de CDFs Jurídico", "Gestão de Clientes", "Multi-usuários", "Suporte prioritário"],
     links: {
       mensal: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=QZMTVR0",
       semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=WKEZ3Y5",
@@ -70,14 +93,9 @@ const plans = [
   {
     name: "Ilimitado",
     price: { mensal: "R$ 837,90", semestral: "R$ 5.027,40", anual: "R$ 10.054,80" },
+    monthlyEquiv: { mensal: "837,90", semestral: "837,90", anual: "837,90" },
     periodLabel: { mensal: "/mês", semestral: "/semestre", anual: "/ano" },
-    features: [
-      "Tudo do Avançado +",
-      "API dedicada",
-      "Integração com Balança",
-      "SLA de suporte 2h",
-      "Customização",
-    ],
+    features: ["Tudo do Avançado +", "API dedicada", "Integração com Balança", "SLA de suporte 2h", "Customização"],
     links: {
       mensal: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=90SZL93",
       semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=2V20XDP",
@@ -91,7 +109,7 @@ const plans = [
 const faqs = [
   {
     q: "O MTR gerado aqui vale para o IBAMA?",
-    a: "Sim. Nosso sistema segue a IN 13/2012 do IBAMA/SINIR. Todos os campos obrigatórios (Estado Físico, Acondicionamento, CNPJ e Licença do Destinador) são validados automaticamente antes da emissão, garantindo total validade jurídica.",
+    a: "Sim. Nosso sistema emite o MTR diretamente na API oficial do SINIR (IN 13/2012 IBAMA). Todos os campos obrigatórios — Estado Físico, Acondicionamento, CNPJ e Licença do Destinador — são validados automaticamente antes da emissão, garantindo total validade jurídica.",
   },
   {
     q: "Preciso instalar algo no meu computador?",
@@ -110,101 +128,169 @@ const faqs = [
     a: "Sim. Sem fidelidade, sem multa de cancelamento. Teste 14 dias grátis e cancele quando quiser, com seus dados exportáveis.",
   },
   {
-    q: "O sistema gera o CDF automaticamente?",
-    a: "Sim. Quando o destinador valida o recebimento da carga, o Certificado de Destinação Final é gerado automaticamente e fica disponível no seu painel para download e auditoria.",
+    q: "Como funciona o CDF (Certificado de Destinação Final)?",
+    a: "O CDF oficial é emitido pelo portal do SINIR pelo destinador. No CicloMTR, oferecemos o Cofre de CDFs: um repositório seguro onde você faz upload dos CDFs oficiais baixados do governo, mantendo tudo organizado e auditável num só lugar.",
+  },
+  {
+    q: "Posso cancelar um MTR pelo CicloMTR?",
+    a: "O cancelamento de MTRs deve ser feito diretamente no portal do SINIR (mtr.sinir.gov.br), pois o governo não disponibiliza esse recurso via API. Nosso sistema avisa você automaticamente quando isso for necessário.",
   },
 ];
 
 const Index = () => {
   const navigate = useNavigate();
   const [selectedPeriods, setSelectedPeriods] = useState<Record<string, Period>>({});
-  const handleCta = (href: string) => {
-    if (href.startsWith("http")) {
-      window.open(href, "_blank");
-    } else {
-      navigate(href);
-    }
-  };
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const stat1 = useCountUp(10000, 2200, "+");
+  const stat2 = useCountUp(98, 1800, "%");
+  const stat3 = useCountUp(10, 1200, "s");
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       {/* ───── NAVBAR ───── */}
-      <header className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-md">
+      <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-xl">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
+          <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}>
             <img src={logo} alt="CicloMTR" className="w-9 h-9" />
-            <span className="font-bold text-lg text-foreground">CicloMTR</span>
+            <span className="font-bold text-lg tracking-tight text-foreground">CicloMTR</span>
           </div>
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
+          <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
+            <a href="#problema" className="hover:text-foreground transition-colors">O Problema</a>
             <a href="#como-funciona" className="hover:text-foreground transition-colors">Como Funciona</a>
             <a href="#para-quem" className="hover:text-foreground transition-colors">Para Quem</a>
             <a href="#planos" className="hover:text-foreground transition-colors">Planos</a>
             <a href="#faq" className="hover:text-foreground transition-colors">FAQ</a>
           </nav>
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={() => navigate("/auth")}>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/auth")} className="hidden sm:inline-flex">
               Entrar
             </Button>
-            <Button size="sm" className="gradient-primary text-primary-foreground shadow-primary" onClick={() => navigate("/auth")}>
+            <Button size="sm" className="gradient-primary text-primary-foreground shadow-primary font-semibold" onClick={() => navigate("/auth")}>
               Teste Grátis
             </Button>
+            {/* Mobile menu toggle */}
+            <button
+              className="md:hidden p-2 text-muted-foreground"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="Menu"
+            >
+              {mobileMenuOpen ? <XIcon className="w-5 h-5" /> : (
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" /></svg>
+              )}
+            </button>
           </div>
         </div>
+        {/* Mobile nav */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-border bg-background px-4 py-4 space-y-3 animate-in slide-in-from-top-2">
+            {[
+              { href: "#problema", label: "O Problema" },
+              { href: "#como-funciona", label: "Como Funciona" },
+              { href: "#para-quem", label: "Para Quem" },
+              { href: "#planos", label: "Planos" },
+              { href: "#faq", label: "FAQ" },
+            ].map((link) => (
+              <a key={link.href} href={link.href} className="block text-sm font-medium text-foreground py-2" onClick={() => setMobileMenuOpen(false)}>
+                {link.label}
+              </a>
+            ))}
+            <Button variant="ghost" size="sm" onClick={() => navigate("/auth")} className="w-full justify-start">
+              Entrar
+            </Button>
+          </div>
+        )}
       </header>
 
       {/* ───── HERO ───── */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-accent/40 via-background to-background pointer-events-none" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-20 md:pt-24 md:pb-28">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+        {/* Background pattern */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute inset-0 bg-gradient-to-br from-accent/50 via-background to-background" />
+          <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full bg-primary/5 blur-3xl -translate-y-1/2 translate-x-1/4" />
+          <div className="absolute bottom-0 left-0 w-[400px] h-[400px] rounded-full bg-primary/5 blur-3xl translate-y-1/2 -translate-x-1/4" />
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-16 md:pt-20 md:pb-24">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             <div className="space-y-8">
-              <Badge variant="secondary" className="text-xs font-medium">
-                🛡️ Plataforma de Inteligência Ambiental
-              </Badge>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight text-foreground">
-                A Primeira Plataforma que{" "}
-                <span className="text-primary">Blinda sua Fábrica de Multas</span>{" "}
-                e Automatiza o MTR.
+              <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-semibold text-primary">
+                <Sparkles className="w-3.5 h-3.5" />
+                Plataforma de Inteligência Ambiental
+              </div>
+
+              <h1 className="text-3xl sm:text-4xl lg:text-[2.75rem] xl:text-5xl font-extrabold leading-[1.15] tracking-tight text-foreground">
+                Emita MTRs em{" "}
+                <span className="relative inline-block">
+                  <span className="text-primary">10 segundos</span>
+                  <svg className="absolute -bottom-1 left-0 w-full" viewBox="0 0 200 8" fill="none"><path d="M2 6C50 2 150 2 198 6" stroke="hsl(var(--primary))" strokeWidth="3" strokeLinecap="round" opacity="0.3"/></svg>
+                </span>{" "}
+                e blinde sua fábrica de multas do IBAMA.
               </h1>
-              <p className="text-lg text-muted-foreground leading-relaxed max-w-xl">
-                Esqueça o site lento do governo. Gere manifestos em <strong className="text-foreground">10 segundos</strong>, rastreie a carga em tempo real e receba o Certificado (CDF) automaticamente. Tudo com validade jurídica.
+
+              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl">
+                Esqueça o site lento do governo. Automatize manifestos com validação inteligente, rastreie cargas em tempo real e mantenha sua documentação 100% auditável.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4">
+
+              <div className="flex flex-col sm:flex-row gap-3">
                 <Button
                   size="lg"
-                  className="gradient-primary text-primary-foreground shadow-primary h-14 px-8 text-base font-semibold"
+                  className="gradient-primary text-primary-foreground shadow-primary h-14 px-8 text-base font-semibold group"
                   onClick={() => navigate("/auth")}
                 >
                   Começar Teste Grátis de 14 Dias
-                  <ArrowRight className="w-5 h-5 ml-1" />
+                  <ArrowRight className="w-5 h-5 ml-1 transition-transform group-hover:translate-x-1" />
                 </Button>
                 <Button
                   variant="outline"
                   size="lg"
                   className="h-14 px-8 text-base font-semibold"
-                  onClick={() => {
-                    document.getElementById("como-funciona")?.scrollIntoView({ behavior: "smooth" });
-                  }}
+                  onClick={() => document.getElementById("como-funciona")?.scrollIntoView({ behavior: "smooth" })}
                 >
+                  <Play className="w-4 h-4 mr-2" />
                   Ver Como Funciona
                 </Button>
               </div>
-              <div className="flex items-center gap-6 text-sm text-muted-foreground pt-2">
+
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1.5"><Check className="w-4 h-4 text-primary" /> Sem cartão de crédito</span>
                 <span className="flex items-center gap-1.5"><Check className="w-4 h-4 text-primary" /> Cancele quando quiser</span>
+                <span className="flex items-center gap-1.5"><Check className="w-4 h-4 text-primary" /> Setup em 2 minutos</span>
               </div>
             </div>
+
+            {/* Hero mockup */}
             <div className="relative">
-              <div className="rounded-xl overflow-hidden shadow-2xl border border-border">
-                <img src={heroMockup} alt="Dashboard CicloMTR – Gestão de MTRs e Rastreio de Resíduos" className="w-full h-auto" />
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl border border-border/60 ring-1 ring-border/20">
+                <img
+                  src={heroMockup}
+                  alt="Dashboard CicloMTR – Gestão de MTRs e Rastreio de Resíduos"
+                  className="w-full h-auto"
+                  loading="eager"
+                />
+                {/* Gradient overlay at bottom */}
+                <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background/20 to-transparent" />
               </div>
-              <div className="absolute -bottom-4 -left-4 bg-card border border-border rounded-lg px-4 py-3 shadow-card flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center">
-                  <TrendingUp className="w-5 h-5 text-primary-foreground" />
+
+              {/* Floating card - bottom left */}
+              <div className="absolute -bottom-5 -left-3 sm:-left-6 bg-card border border-border rounded-xl px-4 py-3 shadow-lg flex items-center gap-3 animate-in slide-in-from-bottom-4">
+                <div className="w-11 h-11 rounded-xl gradient-primary flex items-center justify-center shadow-primary shrink-0">
+                  <Shield className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-foreground">+10.000 ton</p>
-                  <p className="text-xs text-muted-foreground">rastreadas com segurança</p>
+                  <p className="text-sm font-bold text-foreground">100% Compliance</p>
+                  <p className="text-xs text-muted-foreground">Validação IBAMA automática</p>
+                </div>
+              </div>
+
+              {/* Floating card - top right */}
+              <div className="absolute -top-3 -right-2 sm:-right-4 bg-card border border-border rounded-xl px-4 py-3 shadow-lg flex items-center gap-3 animate-in slide-in-from-top-4">
+                <div className="w-11 h-11 rounded-xl bg-accent flex items-center justify-center shrink-0">
+                  <Zap className="w-5 h-5 text-accent-foreground" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">10s por MTR</p>
+                  <p className="text-xs text-muted-foreground">vs 20 min manual</p>
                 </div>
               </div>
             </div>
@@ -212,26 +298,113 @@ const Index = () => {
         </div>
       </section>
 
-      {/* ───── LOGOS / SOCIAL PROOF BAR ───── */}
-      <section className="border-y border-border bg-muted/40 py-6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-center gap-4 text-sm text-muted-foreground">
-          <span className="font-medium">Conformidade baseada em:</span>
-          <div className="flex flex-wrap items-center justify-center gap-6 font-semibold text-foreground/70">
-            <span>IN 13/2012 IBAMA</span>
-            <span className="hidden md:inline text-border">|</span>
-            <span>SINIR</span>
-            <span className="hidden md:inline text-border">|</span>
-            <span>PNRS</span>
-            <span className="hidden md:inline text-border">|</span>
-            <span>CONAMA</span>
+      {/* ───── SOCIAL PROOF BAR ───── */}
+      <section className="border-y border-border/60 bg-muted/30 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Lock className="w-4 h-4" />
+              <span className="font-medium">Conformidade baseada em:</span>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-sm font-semibold text-foreground/60">
+              <span className="flex items-center gap-2"><Globe className="w-4 h-4 text-primary/60" /> IN 13/2012 IBAMA</span>
+              <span className="flex items-center gap-2"><Globe className="w-4 h-4 text-primary/60" /> SINIR</span>
+              <span className="flex items-center gap-2"><Globe className="w-4 h-4 text-primary/60" /> PNRS</span>
+              <span className="flex items-center gap-2"><Globe className="w-4 h-4 text-primary/60" /> CONAMA</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ───── STATS ───── */}
+      <section className="py-16 md:py-20">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-8 text-center">
+            <div ref={stat1.ref}>
+              <p className="text-3xl sm:text-4xl font-extrabold text-primary">{stat1.display}</p>
+              <p className="text-sm text-muted-foreground mt-1">Toneladas rastreadas</p>
+            </div>
+            <div ref={stat2.ref}>
+              <p className="text-3xl sm:text-4xl font-extrabold text-primary">{stat2.display}</p>
+              <p className="text-sm text-muted-foreground mt-1">Compliance na emissão</p>
+            </div>
+            <div ref={stat3.ref} className="col-span-2 md:col-span-1">
+              <p className="text-3xl sm:text-4xl font-extrabold text-primary">{stat3.display}</p>
+              <p className="text-sm text-muted-foreground mt-1">Para emitir um MTR</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ───── O PROBLEMA ───── */}
+      <section id="problema" className="py-16 md:py-24 bg-muted/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14 max-w-2xl mx-auto">
+            <Badge variant="secondary" className="mb-4 text-xs font-medium">O Problema</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+              O processo manual está <span className="text-destructive">custando caro</span>
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              Cada erro no manifesto é uma multa potencial. Cada minuto no site do governo é produtividade perdida.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            {/* Before */}
+            <Card className="p-8 border-2 border-destructive/20 bg-destructive/5 relative overflow-hidden">
+              <div className="absolute top-4 right-4">
+                <Badge variant="destructive" className="text-xs">Sem CicloMTR</Badge>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-destructive/10 flex items-center justify-center mb-6">
+                <AlertTriangle className="w-6 h-6 text-destructive" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-4">Processo Manual</h3>
+              <ul className="space-y-3">
+                {[
+                  { icon: Clock, text: "15-20 minutos por MTR no site do governo" },
+                  { icon: AlertTriangle, text: "Erros de preenchimento = multas do IBAMA" },
+                  { icon: FileText, text: "CDFs perdidos em pastas desorganizadas" },
+                  { icon: XIcon, text: "Zero rastreabilidade de cargas" },
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-foreground/80">
+                    <item.icon className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
+                    {item.text}
+                  </li>
+                ))}
+              </ul>
+            </Card>
+
+            {/* After */}
+            <Card className="p-8 border-2 border-primary/20 bg-accent/30 relative overflow-hidden">
+              <div className="absolute top-4 right-4">
+                <Badge className="text-xs gradient-primary text-primary-foreground border-0">Com CicloMTR</Badge>
+              </div>
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-6">
+                <Shield className="w-6 h-6 text-primary" />
+              </div>
+              <h3 className="text-xl font-bold text-foreground mb-4">Processo Automatizado</h3>
+              <ul className="space-y-3">
+                {[
+                  { icon: Zap, text: "MTR emitido em 10 segundos com validação" },
+                  { icon: Shield, text: "Campos validados contra a base oficial do IBAMA" },
+                  { icon: Lock, text: "Cofre jurídico de CDFs organizado e auditável" },
+                  { icon: Truck, text: "Rastreio de cada carga em tempo real" },
+                ].map((item, i) => (
+                  <li key={i} className="flex items-start gap-3 text-sm text-foreground/80">
+                    <item.icon className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                    {item.text}
+                  </li>
+                ))}
+              </ul>
+            </Card>
           </div>
         </div>
       </section>
 
       {/* ───── 3 PILARES ───── */}
-      <section className="py-20 md:py-28">
+      <section className="py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16 max-w-2xl mx-auto">
+          <div className="text-center mb-14 max-w-2xl mx-auto">
             <Badge variant="secondary" className="mb-4 text-xs font-medium">Por que o CicloMTR?</Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Três pilares para sua operação ficar <span className="text-primary">blindada</span>
@@ -247,22 +420,25 @@ const Index = () => {
                 title: "Blindagem Jurídica",
                 desc: "O sistema valida se o resíduo combina com o destino. Nunca mais envie carga errada e evite multas milionárias do IBAMA.",
                 accent: "bg-primary/10 text-primary",
+                border: "hover:border-primary/40",
               },
               {
                 icon: Zap,
-                title: "Automação com IA",
-                desc: "Scan Inteligente: Tire foto da nota fiscal e o MTR é preenchido sozinho. Fim da digitação manual e dos erros humanos.",
+                title: "Preenchimento Inteligente",
+                desc: "Catálogos oficiais do IBAMA carregados automaticamente. CEP auto-completa endereço. Zero digitação manual, zero erros.",
                 accent: "bg-warning/10 text-warning",
+                border: "hover:border-warning/40",
               },
               {
                 icon: TrendingUp,
                 title: "Marketplace de Resíduos",
                 desc: "Conecte-se a quem compra seu lixo. Transforme custo de descarte em nova receita para sua empresa.",
                 accent: "bg-accent text-accent-foreground",
+                border: "hover:border-accent-foreground/30",
               },
             ].map((pillar) => (
-              <Card key={pillar.title} className="p-8 border-2 border-border hover:border-primary/30 transition-colors group">
-                <div className={`w-14 h-14 rounded-xl ${pillar.accent} flex items-center justify-center mb-6`}>
+              <Card key={pillar.title} className={`p-8 border-2 border-border ${pillar.border} transition-all duration-300 group hover:shadow-lg`}>
+                <div className={`w-14 h-14 rounded-2xl ${pillar.accent} flex items-center justify-center mb-6 transition-transform group-hover:scale-110`}>
                   <pillar.icon className="w-7 h-7" />
                 </div>
                 <h3 className="text-xl font-bold text-foreground mb-3">{pillar.title}</h3>
@@ -274,9 +450,9 @@ const Index = () => {
       </section>
 
       {/* ───── COMO FUNCIONA ───── */}
-      <section id="como-funciona" className="py-20 md:py-28 bg-sidebar text-sidebar-foreground">
+      <section id="como-funciona" className="py-16 md:py-24 bg-sidebar text-sidebar-foreground">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16 max-w-2xl mx-auto">
+          <div className="text-center mb-14 max-w-2xl mx-auto">
             <Badge className="mb-4 text-xs font-medium bg-sidebar-accent text-sidebar-accent-foreground border-0">
               Simples como 1-2-3
             </Badge>
@@ -284,27 +460,24 @@ const Index = () => {
               Como funciona o CicloMTR
             </h2>
             <p className="text-sidebar-foreground/70 text-lg">
-              Do manifesto ao certificado — tudo automatizado.
+              Do manifesto ao comprovante — tudo automatizado.
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8 relative">
-            {/* Connector lines (desktop) */}
-            <div className="hidden md:block absolute top-16 left-[calc(33.33%+1rem)] right-[calc(33.33%+1rem)] h-0.5 bg-sidebar-border" />
+          <div className="grid md:grid-cols-3 gap-8 lg:gap-12 relative">
+            {/* Connector line */}
+            <div className="hidden md:block absolute top-12 left-[20%] right-[20%] h-px bg-gradient-to-r from-transparent via-sidebar-border to-transparent" />
             {[
-              { step: "01", icon: FileText, title: "Emita o MTR", desc: "Preencha em segundos pelo painel web ou app mobile. Dados validados automaticamente." },
-              { step: "02", icon: Truck, title: "Rastreie a Carga", desc: "O motorista recebe o link de rastreio. Acompanhe a ida e a entrega em tempo real." },
-              { step: "03", icon: Award, title: "Receba o CDF", desc: "O destinador valida o recebimento e o Certificado de Destinação Final é gerado automaticamente." },
+              { step: "01", icon: FileText, title: "Emita o MTR", desc: "Preencha em segundos pelo painel web. Dados validados automaticamente contra a base do IBAMA." },
+              { step: "02", icon: Truck, title: "Rastreie a Carga", desc: "O motorista recebe o link de rastreio. Acompanhe a ida e a entrega em tempo real no mapa." },
+              { step: "03", icon: Award, title: "Documente Tudo", desc: "O destinador confirma o recebimento. Todos os comprovantes ficam organizados no seu Cofre Jurídico." },
             ].map((s, i) => (
-              <div key={s.step} className="relative text-center space-y-4">
-                <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center mx-auto shadow-primary relative z-10">
+              <div key={s.step} className="relative text-center space-y-5">
+                <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center mx-auto shadow-primary relative z-10 transition-transform hover:scale-105">
                   <s.icon className="w-7 h-7 text-primary-foreground" />
                 </div>
-                <span className="text-xs font-bold text-sidebar-primary tracking-widest uppercase">Passo {s.step}</span>
+                <span className="text-xs font-bold text-sidebar-primary tracking-[0.2em] uppercase">Passo {s.step}</span>
                 <h3 className="text-xl font-bold">{s.title}</h3>
-                <p className="text-sidebar-foreground/70 max-w-xs mx-auto">{s.desc}</p>
-                {i < 2 && (
-                  <ChevronRight className="hidden md:block absolute -right-4 top-16 w-6 h-6 text-sidebar-primary transform -translate-y-1/2" />
-                )}
+                <p className="text-sidebar-foreground/60 max-w-xs mx-auto leading-relaxed">{s.desc}</p>
               </div>
             ))}
           </div>
@@ -312,19 +485,19 @@ const Index = () => {
       </section>
 
       {/* ───── PARA QUEM ───── */}
-      <section id="para-quem" className="py-20 md:py-28">
+      <section id="para-quem" className="py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16 max-w-2xl mx-auto">
+          <div className="text-center mb-14 max-w-2xl mx-auto">
             <Badge variant="secondary" className="mb-4 text-xs font-medium">Segmentação</Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Feito para quem <span className="text-primary">gera</span> e quem <span className="text-primary">recebe</span> resíduos
             </h2>
           </div>
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {/* Geradores */}
-            <Card className="p-8 border-2 border-border hover:border-primary/30 transition-colors">
+            <Card className="p-8 border-2 border-border hover:border-primary/30 transition-all hover:shadow-lg group">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center transition-transform group-hover:scale-110">
                   <Factory className="w-7 h-7 text-primary" />
                 </div>
                 <div>
@@ -337,7 +510,7 @@ const Index = () => {
                   "Evite multas do IBAMA com validação automática",
                   "Emita MTRs em 10 segundos (não em 20 minutos)",
                   "Rastreie cada carga até o destino final",
-                  "Tenha todos os CDFs organizados e auditáveis",
+                  "Cofre jurídico com todos os comprovantes",
                   "Venda resíduos no Marketplace integrado",
                 ].map((f) => (
                   <li key={f} className="flex items-start gap-3 text-sm text-foreground">
@@ -346,16 +519,16 @@ const Index = () => {
                   </li>
                 ))}
               </ul>
-              <Button className="mt-8 w-full gradient-primary text-primary-foreground shadow-primary h-12 font-semibold" onClick={() => navigate("/auth")}>
+              <Button className="mt-8 w-full gradient-primary text-primary-foreground shadow-primary h-12 font-semibold group/btn" onClick={() => navigate("/auth")}>
                 Começar Teste Grátis
-                <ArrowRight className="w-4 h-4 ml-1" />
+                <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover/btn:translate-x-1" />
               </Button>
             </Card>
 
             {/* Destinadores */}
-            <Card className="p-8 border-2 border-border hover:border-primary/30 transition-colors">
+            <Card className="p-8 border-2 border-border hover:border-accent-foreground/20 transition-all hover:shadow-lg group">
               <div className="flex items-center gap-4 mb-6">
-                <div className="w-14 h-14 rounded-xl bg-accent flex items-center justify-center">
+                <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center transition-transform group-hover:scale-110">
                   <Building2 className="w-7 h-7 text-accent-foreground" />
                 </div>
                 <div>
@@ -366,7 +539,7 @@ const Index = () => {
               <ul className="space-y-3">
                 {[
                   "Receba mais cargas com validação digital instantânea",
-                  "Emissão automática de CDF sem papelada",
+                  "Confirme recebimento direto pelo sistema",
                   "Painel de recebimento com peso e foto",
                   "Gestão completa de clientes geradores",
                   "Integração com balança e API dedicada",
@@ -377,8 +550,8 @@ const Index = () => {
                   </li>
                 ))}
               </ul>
-              <Button variant="outline" className="mt-8 w-full h-12 font-semibold" onClick={() => handleCta("https://wa.me/5511999999999?text=Olá!%20Tenho%20interesse%20no%20CicloMTR%20para%20Destinadores.")}>
-                <MessageCircle className="w-4 h-4 mr-1" />
+              <Button variant="outline" className="mt-8 w-full h-12 font-semibold" onClick={() => window.open("https://wa.me/5511999999999?text=Olá!%20Tenho%20interesse%20no%20CicloMTR%20para%20Destinadores.", "_blank")}>
+                <MessageCircle className="w-4 h-4 mr-2" />
                 Falar com Especialista
               </Button>
             </Card>
@@ -386,16 +559,67 @@ const Index = () => {
         </div>
       </section>
 
-      {/* ───── PLANOS ───── */}
-      <section id="planos" className="py-20 md:py-28 bg-muted/40">
+      {/* ───── SOCIAL PROOF / TESTIMONIALS ───── */}
+      <section className="py-16 md:py-20 bg-muted/30 border-y border-border/60">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16 max-w-2xl mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+              O que nossos clientes dizem
+            </h2>
+          </div>
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                quote: "Reduzimos o tempo de emissão de MTRs de 20 minutos para menos de 1 minuto. O impacto na produtividade foi imediato.",
+                name: "Carlos M.",
+                role: "Gestor Ambiental",
+                company: "Indústria Metalúrgica",
+              },
+              {
+                quote: "A validação automática nos salvou de erros que poderiam gerar multas sérias. Hoje temos confiança total na documentação.",
+                name: "Ana R.",
+                role: "Coordenadora de Meio Ambiente",
+                company: "Construtora",
+              },
+              {
+                quote: "O Marketplace nos conectou com geradores que não conhecíamos. Aumentamos o volume de recebimento em 30% no primeiro trimestre.",
+                name: "Roberto S.",
+                role: "Diretor Operacional",
+                company: "Recicladora",
+              },
+            ].map((t, i) => (
+              <Card key={i} className="p-6 border border-border hover:shadow-md transition-shadow">
+                <div className="flex gap-1 mb-4">
+                  {[...Array(5)].map((_, j) => (
+                    <Star key={j} className="w-4 h-4 fill-primary text-primary" />
+                  ))}
+                </div>
+                <p className="text-sm text-foreground leading-relaxed mb-6">"{t.quote}"</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full gradient-primary flex items-center justify-center text-sm font-bold text-primary-foreground">
+                    {t.name.charAt(0)}
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{t.name}</p>
+                    <p className="text-xs text-muted-foreground">{t.role} · {t.company}</p>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ───── PLANOS ───── */}
+      <section id="planos" className="py-16 md:py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-14 max-w-2xl mx-auto">
             <Badge variant="secondary" className="mb-4 text-xs font-medium">Planos</Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
               Investimento que se paga na <span className="text-primary">primeira multa evitada</span>
             </h2>
             <p className="text-muted-foreground text-lg">
-              Escolha o plano ideal e o período de pagamento.
+              14 dias grátis em todos os planos. Escolha o período de pagamento.
             </p>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -404,28 +628,27 @@ const Index = () => {
               return (
                 <Card
                   key={plan.name}
-                  className={`relative flex flex-col p-6 border-2 transition-shadow hover:shadow-lg ${
-                    plan.highlight ? "border-primary shadow-primary" : "border-border"
+                  className={`relative flex flex-col p-6 border-2 transition-all duration-300 hover:shadow-xl ${
+                    plan.highlight ? "border-primary shadow-primary scale-[1.02]" : "border-border hover:border-primary/20"
                   }`}
                 >
                   {plan.badge && (
-                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs gradient-primary text-primary-foreground border-0">
+                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 whitespace-nowrap text-xs gradient-primary text-primary-foreground border-0 shadow-primary">
                       {plan.badge}
                     </Badge>
                   )}
                   <div className="mb-4">
                     <h3 className="text-xl font-bold text-foreground">{plan.name}</h3>
                   </div>
-                  <div className="mb-4">
+                  <div className="mb-1">
                     <span className="text-3xl font-extrabold text-foreground">{plan.price[period]}</span>
                     <span className="text-sm text-muted-foreground ml-1">{plan.periodLabel[period]}</span>
                   </div>
+                  <p className="text-xs text-muted-foreground mb-4">14 dias grátis para testar</p>
                   <div className="mb-6">
                     <Select
                       value={period}
-                      onValueChange={(v) =>
-                        setSelectedPeriods((prev) => ({ ...prev, [plan.name]: v as Period }))
-                      }
+                      onValueChange={(v) => setSelectedPeriods((prev) => ({ ...prev, [plan.name]: v as Period }))}
                     >
                       <SelectTrigger className="w-full">
                         <SelectValue />
@@ -447,13 +670,11 @@ const Index = () => {
                   </ul>
                   <Button
                     variant={plan.highlight ? "default" : "outline"}
-                    className={`w-full h-12 font-semibold ${
-                      plan.highlight ? "gradient-primary shadow-primary text-primary-foreground" : ""
-                    }`}
+                    className={`w-full h-12 font-semibold ${plan.highlight ? "gradient-primary shadow-primary text-primary-foreground" : ""}`}
                     onClick={() => window.open(plan.links[period], "_blank")}
                   >
-                    <ArrowRight className="w-4 h-4 mr-1" />
                     Assinar Agora
+                    <ArrowRight className="w-4 h-4 ml-1" />
                   </Button>
                 </Card>
               );
@@ -463,7 +684,7 @@ const Index = () => {
       </section>
 
       {/* ───── FAQ ───── */}
-      <section id="faq" className="py-20 md:py-28">
+      <section id="faq" className="py-16 md:py-24 bg-muted/30">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <Badge variant="secondary" className="mb-4 text-xs font-medium">Dúvidas Frequentes</Badge>
@@ -471,13 +692,13 @@ const Index = () => {
               Tudo que você precisa saber
             </h2>
           </div>
-          <Accordion type="single" collapsible className="w-full">
+          <Accordion type="single" collapsible className="w-full space-y-2">
             {faqs.map((faq, i) => (
-              <AccordionItem key={i} value={`faq-${i}`} className="border-border">
-                <AccordionTrigger className="text-left text-foreground font-semibold hover:no-underline">
+              <AccordionItem key={i} value={`faq-${i}`} className="border border-border rounded-lg px-4 bg-card data-[state=open]:shadow-sm transition-shadow">
+                <AccordionTrigger className="text-left text-foreground font-semibold hover:no-underline py-5">
                   {faq.q}
                 </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground leading-relaxed">
+                <AccordionContent className="text-muted-foreground leading-relaxed pb-5">
                   {faq.a}
                 </AccordionContent>
               </AccordionItem>
@@ -487,50 +708,74 @@ const Index = () => {
       </section>
 
       {/* ───── CTA FINAL ───── */}
-      <section className="py-20 md:py-28 bg-sidebar text-sidebar-foreground">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
+      <section className="py-16 md:py-24 bg-sidebar text-sidebar-foreground relative overflow-hidden">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 right-0 w-[500px] h-[500px] rounded-full bg-sidebar-primary/5 blur-3xl -translate-y-1/2 translate-x-1/3" />
+          <div className="absolute bottom-0 left-0 w-[300px] h-[300px] rounded-full bg-sidebar-primary/5 blur-3xl translate-y-1/2 -translate-x-1/3" />
+        </div>
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
           <h2 className="text-3xl md:text-4xl font-bold">
             Sua operação <span className="text-sidebar-primary">100% legalizada</span> hoje.
           </h2>
-          <p className="text-sidebar-foreground/70 text-lg max-w-xl mx-auto">
+          <p className="text-sidebar-foreground/60 text-lg max-w-xl mx-auto">
             Junte-se a empresas que já eliminaram o risco de multas e automatizaram a gestão de resíduos.
           </p>
-          <Button
-            size="lg"
-            className="gradient-primary text-primary-foreground shadow-primary h-14 px-10 text-base font-semibold"
-            onClick={() => navigate("/auth")}
-          >
-            Começar Teste Grátis de 14 Dias
-            <ArrowRight className="w-5 h-5 ml-1" />
-          </Button>
-          <p className="text-xs text-sidebar-foreground/50">Sem cartão de crédito. Sem compromisso.</p>
+          <div className="pt-2">
+            <Button
+              size="lg"
+              className="gradient-primary text-primary-foreground shadow-primary h-14 px-10 text-base font-semibold group"
+              onClick={() => navigate("/auth")}
+            >
+              Começar Teste Grátis de 14 Dias
+              <ArrowRight className="w-5 h-5 ml-1 transition-transform group-hover:translate-x-1" />
+            </Button>
+          </div>
+          <p className="text-xs text-sidebar-foreground/40">Sem cartão de crédito. Sem compromisso. Cancele quando quiser.</p>
         </div>
       </section>
 
       {/* ───── FOOTER ───── */}
-      <footer className="border-t border-border bg-card py-10">
+      <footer className="border-t border-border bg-card py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-2">
-              <img src={logo} alt="CicloMTR" className="w-7 h-7" />
-              <span className="font-bold text-foreground">CicloMTR</span>
+          <div className="grid md:grid-cols-3 gap-8 items-start">
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <img src={logo} alt="CicloMTR" className="w-8 h-8" />
+                <span className="font-bold text-foreground text-lg">CicloMTR</span>
+              </div>
+              <p className="text-sm text-muted-foreground max-w-xs">
+                A plataforma de inteligência ambiental que blinda sua fábrica de multas e automatiza a gestão de resíduos.
+              </p>
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-muted-foreground">
-              <a href="#" className="hover:text-foreground transition-colors">Termos de Uso</a>
-              <a href="#" className="hover:text-foreground transition-colors">Política de Privacidade</a>
-              <a
-                href="https://wa.me/5511999999999?text=Olá!%20Preciso%20de%20suporte%20no%20CicloMTR."
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hover:text-foreground transition-colors flex items-center gap-1"
-              >
-                <MessageCircle className="w-3.5 h-3.5" /> Suporte WhatsApp
-              </a>
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold text-foreground">Produto</h4>
+              <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+                <a href="#como-funciona" className="hover:text-foreground transition-colors">Como Funciona</a>
+                <a href="#planos" className="hover:text-foreground transition-colors">Planos e Preços</a>
+                <a href="#faq" className="hover:text-foreground transition-colors">FAQ</a>
+              </div>
+            </div>
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold text-foreground">Legal</h4>
+              <div className="flex flex-col gap-2 text-sm text-muted-foreground">
+                <a href="#" className="hover:text-foreground transition-colors">Termos de Uso</a>
+                <a href="#" className="hover:text-foreground transition-colors">Política de Privacidade</a>
+                <a
+                  href="https://wa.me/5511999999999?text=Olá!%20Preciso%20de%20suporte%20no%20CicloMTR."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-foreground transition-colors flex items-center gap-1.5"
+                >
+                  <MessageCircle className="w-3.5 h-3.5" /> Suporte WhatsApp
+                </a>
+              </div>
             </div>
           </div>
-          <p className="text-center text-xs text-muted-foreground mt-8">
-            © {new Date().getFullYear()} CicloMTR. Todos os direitos reservados.
-          </p>
+          <div className="border-t border-border mt-10 pt-6">
+            <p className="text-center text-xs text-muted-foreground">
+              © {new Date().getFullYear()} CicloMTR. Todos os direitos reservados.
+            </p>
+          </div>
         </div>
       </footer>
     </div>

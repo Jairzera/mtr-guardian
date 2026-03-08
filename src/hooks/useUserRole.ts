@@ -40,7 +40,9 @@ export const UserRoleProvider = ({ children }: { children: ReactNode }) => {
 
       if (data) {
         const r = data.role as string;
-        setRole(r === "consultant" ? "consultant" : "generator");
+        if (r === "consultant") setRole("consultant");
+        else if (r === "client_viewer") setRole("client_viewer");
+        else setRole("generator");
       } else {
         await supabase.rpc("assign_user_role", { _user_id: user.id, _role: "generator" });
         setRole("generator");

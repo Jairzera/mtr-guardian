@@ -27,6 +27,7 @@ const Dashboard = () => {
 const GeneratorDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { role } = useUserRole();
   const alertShown = useRef(false);
   const generatorData = useDashboardData();
 

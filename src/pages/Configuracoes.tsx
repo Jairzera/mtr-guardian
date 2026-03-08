@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Building2, SlidersHorizontal, Loader2, Building } from "lucide-react";
+import { Building2, SlidersHorizontal, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
-import { useUserRole } from "@/hooks/useUserRole";
 import { useTheme } from "next-themes";
 import { formatCNPJ, isValidCNPJ } from "@/lib/cnpj";
 import { formatPhone, isValidPhone } from "@/lib/phone";
@@ -18,27 +17,20 @@ import ManagedCompaniesTab from "@/components/settings/ManagedCompaniesTab";
 const Configuracoes = () => {
   const { settings, loading, saveSettings } = useCompanySettings();
   const { theme, setTheme } = useTheme();
-  const { role } = useUserRole();
   const [form, setForm] = useState(settings);
   const [saving, setSaving] = useState(false);
-  const [alertasEmail, setAlertasEmail] = useState(() => {
-    return localStorage.getItem("alertas_email") !== "false";
-  });
+  const [alertasEmail, setAlertasEmail] = useState(() => localStorage.getItem("alertas_email") !== "false");
   const [cnpjError, setCnpjError] = useState("");
   const [phoneError, setPhoneError] = useState("");
 
-  useEffect(() => {
-    setForm(settings);
-  }, [settings]);
+  useEffect(() => { setForm(settings); }, [settings]);
 
   const handleChange = (field: string, value: string) => {
     if (field === "cnpj") {
-      const formatted = formatCNPJ(value);
-      setForm((prev) => ({ ...prev, [field]: formatted }));
+      setForm((prev) => ({ ...prev, [field]: formatCNPJ(value) }));
       setCnpjError("");
     } else if (field === "phone") {
-      const formatted = formatPhone(value);
-      setForm((prev) => ({ ...prev, [field]: formatted }));
+      setForm((prev) => ({ ...prev, [field]: formatPhone(value) }));
       setPhoneError("");
     } else {
       setForm((prev) => ({ ...prev, [field]: value }));
@@ -46,70 +38,46 @@ const Configuracoes = () => {
   };
 
   const handleSave = async () => {
-    if (!isValidCNPJ(form.cnpj)) {
-      setCnpjError("CNPJ não corresponde ao modelo padrão");
-      return;
-    }
-    if (form.phone && !isValidPhone(form.phone)) {
-      setPhoneError("Telefone inválido");
-      return;
-    }
-
+    if (!isValidCNPJ(form.cnpj)) { setCnpjError("CNPJ não corresponde ao modelo padrão"); return; }
+    if (form.phone && !isValidPhone(form.phone)) { setPhoneError("Telefone inválido"); return; }
     setSaving(true);
     const ok = await saveSettings(form);
     setSaving(false);
     if (ok) {
       toast({ title: "Alterações salvas", description: "Suas configurações foram atualizadas com sucesso." });
-      setCnpjError("");
-      setPhoneError("");
+      setCnpjError(""); setPhoneError("");
     } else {
       toast({ title: "Erro", description: "Não foi possível salvar as configurações.", variant: "destructive" });
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-6 h-6 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  const showIntegrations = role === "generator";
+  if (loading) return <div className="flex items-center justify-center h-64"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
 
   return (
     <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-6">
       <h1 className="text-2xl md:text-3xl font-bold text-foreground">Configurações</h1>
 
-      {showIntegrations ? (
-        <Tabs defaultValue="empresa" className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="empresa">Empresa</TabsTrigger>
-            <TabsTrigger value="filiais">Filiais / CNPJs</TabsTrigger>
-            <TabsTrigger value="integracoes">Integrações</TabsTrigger>
-          </TabsList>
+      <Tabs defaultValue="empresa" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="empresa">Empresa</TabsTrigger>
+          <TabsTrigger value="filiais">Filiais / CNPJs</TabsTrigger>
+          <TabsTrigger value="integracoes">Integrações</TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="empresa" className="space-y-6">
-            <CompanyCard form={form} handleChange={handleChange} cnpjError={cnpjError} phoneError={phoneError} />
-            <PreferencesCard theme={theme} setTheme={setTheme} alertasEmail={alertasEmail} setAlertasEmail={setAlertasEmail} />
-            <SaveButton saving={saving} onSave={handleSave} />
-          </TabsContent>
-
-          <TabsContent value="filiais" className="space-y-6">
-            <ManagedCompaniesTab />
-          </TabsContent>
-
-          <TabsContent value="integracoes" className="space-y-6">
-            <GovernmentIntegrationCard />
-          </TabsContent>
-        </Tabs>
-      ) : (
-        <div className="space-y-6">
+        <TabsContent value="empresa" className="space-y-6">
           <CompanyCard form={form} handleChange={handleChange} cnpjError={cnpjError} phoneError={phoneError} />
           <PreferencesCard theme={theme} setTheme={setTheme} alertasEmail={alertasEmail} setAlertasEmail={setAlertasEmail} />
           <SaveButton saving={saving} onSave={handleSave} />
-        </div>
-      )}
+        </TabsContent>
+
+        <TabsContent value="filiais" className="space-y-6">
+          <ManagedCompaniesTab />
+        </TabsContent>
+
+        <TabsContent value="integracoes" className="space-y-6">
+          <GovernmentIntegrationCard />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
@@ -128,7 +96,7 @@ const CompanyCard = ({ form, handleChange, cnpjError, phoneError }: CompanyCardP
     <CardHeader>
       <div className="flex items-center gap-2">
         <Building2 className="w-5 h-5 text-primary" />
-        <CardTitle className="text-lg">Dados da Empresa Geradora</CardTitle>
+        <CardTitle className="text-lg">Dados da Empresa</CardTitle>
       </div>
       <CardDescription>Informações usadas no cabeçalho dos MTRs.</CardDescription>
     </CardHeader>
@@ -160,12 +128,7 @@ const CompanyCard = ({ form, handleChange, cnpjError, phoneError }: CompanyCardP
   </Card>
 );
 
-interface PreferencesCardProps {
-  theme: string | undefined;
-  setTheme: (t: string) => void;
-  alertasEmail: boolean;
-  setAlertasEmail: (v: boolean) => void;
-}
+interface PreferencesCardProps { theme: string | undefined; setTheme: (t: string) => void; alertasEmail: boolean; setAlertasEmail: (v: boolean) => void; }
 
 const PreferencesCard = ({ theme, setTheme, alertasEmail, setAlertasEmail }: PreferencesCardProps) => (
   <Card className="shadow-card border-border/60">
@@ -177,17 +140,11 @@ const PreferencesCard = ({ theme, setTheme, alertasEmail, setAlertasEmail }: Pre
     </CardHeader>
     <CardContent className="space-y-5">
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-foreground">Modo Escuro</p>
-          <p className="text-xs text-muted-foreground">Alterna o tema da interface</p>
-        </div>
+        <div><p className="text-sm font-medium text-foreground">Modo Escuro</p><p className="text-xs text-muted-foreground">Alterna o tema da interface</p></div>
         <Switch checked={theme === "dark"} onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")} />
       </div>
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-foreground">Alertas de Vencimento por E-mail</p>
-          <p className="text-xs text-muted-foreground">Receba notificações sobre MTRs próximos do vencimento</p>
-        </div>
+        <div><p className="text-sm font-medium text-foreground">Alertas de Vencimento por E-mail</p><p className="text-xs text-muted-foreground">Receba notificações sobre MTRs próximos do vencimento</p></div>
         <Switch checked={alertasEmail} onCheckedChange={(v) => { setAlertasEmail(v); localStorage.setItem("alertas_email", String(v)); }} />
       </div>
     </CardContent>

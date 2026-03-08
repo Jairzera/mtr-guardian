@@ -1,29 +1,24 @@
-import { useState, useEffect, useCallback, createContext, useContext, ReactNode } from "react";
+import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import React from "react";
 
-export type AppRole = "generator" | "receiver";
+export type AppRole = "generator" | "consultant";
 
 interface UserRoleContextType {
   role: AppRole;
   loading: boolean;
-  toggleDevRole: () => void;
-  isDevOverride: boolean;
 }
 
 const UserRoleContext = createContext<UserRoleContextType>({
   role: "generator",
   loading: true,
-  toggleDevRole: () => {},
-  isDevOverride: false,
 });
 
 export const UserRoleProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const [role, setRole] = useState<AppRole>("generator");
   const [loading, setLoading] = useState(true);
-  const [devOverride, setDevOverride] = useState<AppRole | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -39,7 +34,8 @@ export const UserRoleProvider = ({ children }: { children: ReactNode }) => {
         .maybeSingle();
 
       if (data) {
-        setRole(data.role as AppRole);
+        const r = data.role as string;
+        setRole(r === "consultant" ? "consultant" : "generator");
       } else {
         await supabase.rpc("assign_user_role", { _user_id: user.id, _role: "generator" });
         setRole("generator");
@@ -50,18 +46,9 @@ export const UserRoleProvider = ({ children }: { children: ReactNode }) => {
     fetchRole();
   }, [user]);
 
-  const toggleDevRole = useCallback(() => {
-    setDevOverride((prev) => {
-      const current = prev ?? role;
-      return current === "generator" ? "receiver" : "generator";
-    });
-  }, [role]);
-
-  const activeRole = devOverride ?? role;
-
   return React.createElement(
     UserRoleContext.Provider,
-    { value: { role: activeRole, loading, toggleDevRole, isDevOverride: devOverride !== null } },
+    { value: { role, loading } },
     children
   );
 };

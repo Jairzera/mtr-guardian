@@ -1,10 +1,8 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, ShoppingCart, ScanLine, PackageCheck, Map, User } from "lucide-react";
-import { useUserRole } from "@/hooks/useUserRole";
+import { LayoutDashboard, ShoppingCart, ScanLine, Map, User } from "lucide-react";
 
 const BottomNav = () => {
   const location = useLocation();
-  const { role } = useUserRole();
 
   const linkClass = (path: string) =>
     `flex flex-col items-center justify-center gap-0.5 text-xs font-medium transition-colors min-w-[44px] min-h-[44px] py-1 ${
@@ -26,21 +24,12 @@ const BottomNav = () => {
           <span>Mercado</span>
         </NavLink>
 
-        {role === "generator" ? (
-          <NavLink to="/novo-manifesto" className="flex flex-col items-center -mt-5">
-            <div className="w-14 h-14 rounded-full gradient-primary shadow-primary flex items-center justify-center active:scale-95 transition-transform">
-              <ScanLine className="w-7 h-7 text-primary-foreground" />
-            </div>
-            <span className="text-xs font-semibold text-primary mt-1">Scan</span>
-          </NavLink>
-        ) : (
-          <NavLink to="/receber-carga" className="flex flex-col items-center -mt-5">
-            <div className="w-14 h-14 rounded-full gradient-primary shadow-primary flex items-center justify-center active:scale-95 transition-transform">
-              <PackageCheck className="w-7 h-7 text-primary-foreground" />
-            </div>
-            <span className="text-xs font-semibold text-primary mt-1">Receber</span>
-          </NavLink>
-        )}
+        <NavLink to="/novo-manifesto" className="flex flex-col items-center -mt-5">
+          <div className="w-14 h-14 rounded-full gradient-primary shadow-primary flex items-center justify-center active:scale-95 transition-transform">
+            <ScanLine className="w-7 h-7 text-primary-foreground" />
+          </div>
+          <span className="text-xs font-semibold text-primary mt-1">Scan</span>
+        </NavLink>
 
         <NavLink to="/mapa" className={linkClass("/mapa")}>
           <Map className="w-6 h-6" />

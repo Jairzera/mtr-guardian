@@ -10,16 +10,23 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { DashboardSkeleton } from "@/components/Skeletons";
 import AchievementsSection from "@/components/dashboard/AchievementsSection";
-import { useActiveCompany } from "@/hooks/useActiveCompany";
 import { useUserRole } from "@/hooks/useUserRole";
+import ConsultantDashboard from "./ConsultantDashboard";
 
 const Dashboard = () => {
+  const { role } = useUserRole();
+
+  if (role === "consultant") {
+    return <ConsultantDashboard />;
+  }
+
+  return <GeneratorDashboard />;
+};
+
+const GeneratorDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { role } = useUserRole();
-  const { activeCompany } = useActiveCompany();
   const alertShown = useRef(false);
-
   const generatorData = useDashboardData();
 
   useEffect(() => {
@@ -45,15 +52,11 @@ const Dashboard = () => {
     return <DashboardSkeleton />;
   }
 
-  const title = role === "consultant" && activeCompany
-    ? `Dashboard — ${activeCompany.razao_social}`
-    : "Dashboard";
-
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6 animate-fade-in">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">{title}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1">Visão geral de conformidade ambiental</p>
         </div>
         <Button

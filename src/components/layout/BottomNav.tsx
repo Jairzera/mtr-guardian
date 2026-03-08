@@ -1,10 +1,17 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, ShoppingCart, ScanLine, Map, User, FileText, FileCheck } from "lucide-react";
+import { LayoutDashboard, ShoppingCart, ScanLine, Map, User, FileText, FileCheck, RefreshCw } from "lucide-react";
 import { useUserRole } from "@/hooks/useUserRole";
+import { Badge } from "@/components/ui/badge";
+
+const roleLabelMap: Record<string, string> = {
+  generator: "🏭 Gerador",
+  consultant: "📋 Consultor",
+  client_viewer: "👁️ Viewer",
+};
 
 const BottomNav = () => {
   const location = useLocation();
-  const { role } = useUserRole();
+  const { role, toggleDevRole, isDevOverride } = useUserRole();
   const isViewOnly = role === "client_viewer";
 
   const linkClass = (path: string) =>

@@ -74,10 +74,13 @@ const BottomNav = () => {
           <span>Mapa</span>
         </NavLink>
 
-        <NavLink to="/configuracoes" className={linkClass("/configuracoes")}>
-          <User className="w-6 h-6" />
-          <span>Perfil</span>
-        </NavLink>
+        <button onClick={toggleDevRole} className="flex flex-col items-center justify-center gap-0.5 text-xs font-medium text-muted-foreground min-w-[44px] min-h-[44px] py-1">
+          <RefreshCw className="w-5 h-5" />
+          <span className="truncate max-w-[56px]">
+            {isDevOverride && <Badge variant="secondary" className="text-[8px] px-1 py-0 mr-0.5">DEV</Badge>}
+            {roleLabelMap[role]}
+          </span>
+        </button>
       </div>
     </nav>
   );

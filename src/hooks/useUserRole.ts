@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import React from "react";
 
-export type AppRole = "generator" | "consultant";
+export type AppRole = "generator" | "consultant" | "client_viewer";
 
 interface UserRoleContextType {
   role: AppRole;

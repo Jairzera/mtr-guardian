@@ -56,7 +56,9 @@ export const UserRoleProvider = ({ children }: { children: ReactNode }) => {
   const toggleDevRole = useCallback(() => {
     setDevOverride((prev) => {
       const current = prev ?? role;
-      return current === "generator" ? "consultant" : "generator";
+      if (current === "generator") return "consultant";
+      if (current === "consultant") return "client_viewer";
+      return "generator";
     });
   }, [role]);
 

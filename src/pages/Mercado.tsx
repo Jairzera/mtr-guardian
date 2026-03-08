@@ -221,12 +221,8 @@ const Mercado = () => {
   };
 
   const filteredListings = useMemo(() => {
-    if (role === "receiver") {
-      // Receivers see ALL active listings (including their own for dev testing)
-      return listings;
-    }
     return listings.filter((item) => item.user_id === user?.id);
-  }, [listings, role, user?.id]);
+  }, [listings, user?.id]);
 
   const totalRevenue = filteredListings.reduce((sum, l) => {
     return sum + (l.price_per_kg ? l.quantity * l.price_per_kg : 0);
@@ -251,14 +247,8 @@ const Mercado = () => {
       )}
       <div className="flex items-center justify-between">
         <div>
-         <h1 className="text-2xl md:text-3xl font-bold text-foreground">
-            {role === "receiver" ? "Mercado de Compras" : "Meus Anúncios de Venda"}
-          </h1>
-           <p className="text-sm text-muted-foreground mt-1">
-             {role === "receiver"
-               ? "Encontre resíduos disponíveis para compra"
-               : "Gerencie seus anúncios de resíduos com valor comercial"}
-          </p>
+         <h1 className="text-2xl md:text-3xl font-bold text-foreground">Meus Anúncios de Venda</h1>
+           <p className="text-sm text-muted-foreground mt-1">Gerencie seus anúncios de resíduos com valor comercial</p>
         </div>
         {role === "generator" && (
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
@@ -331,7 +321,7 @@ const Mercado = () => {
         <Card className="p-3 md:p-4 shadow-card border-border/60 flex items-center gap-3 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg">
           <div className="p-2.5 rounded-xl bg-primary/10 hidden sm:block"><Users className="w-5 h-5 text-primary" /></div>
           <div>
-            <p className="text-xs text-muted-foreground">{role === "receiver" ? "Fornecedores" : "Vendedores"}</p>
+            <p className="text-xs text-muted-foreground">Vendedores</p>
             <p className="text-xl md:text-2xl font-bold text-card-foreground">{new Set(filteredListings.map((l) => l.user_id)).size}</p>
           </div>
         </Card>
@@ -343,10 +333,10 @@ const Mercado = () => {
       ) : filteredListings.length === 0 ? (
         <EmptyState
           icon={Store}
-          title={role === "receiver" ? "Nenhuma oportunidade disponível ainda." : "Nenhuma oportunidade na sua região ainda."}
-          description={role === "receiver" ? "Novos resíduos serão listados aqui quando disponíveis." : "Publique seu primeiro anúncio e conecte-se com compradores interessados."}
-          actionLabel={role === "generator" ? "Anunciar Resíduo" : undefined}
-          onAction={role === "generator" ? () => setDialogOpen(true) : undefined}
+          title="Nenhuma oportunidade na sua região ainda."
+          description="Publique seu primeiro anúncio e conecte-se com compradores interessados."
+          actionLabel="Anunciar Resíduo"
+          onAction={() => setDialogOpen(true)}
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
@@ -380,23 +370,6 @@ const Mercado = () => {
                   )}
                 </div>
 
-                {role === "receiver" && (
-                  <div className="flex items-center gap-4 pt-1">
-                    <button
-                      className="flex items-center gap-1.5 text-sm font-medium text-primary hover:text-primary/80 transition-colors"
-                      onClick={() => handleInterest(item)}
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      Tenho Interesse
-                    </button>
-                    {item.seller_phone && (
-                      <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                        <Phone className="w-3.5 h-3.5" />
-                        {item.seller_phone}
-                      </span>
-                    )}
-                  </div>
-                )}
 
                 {role === "generator" && isOwn && (
                   <div className="flex items-center gap-4 pt-1">

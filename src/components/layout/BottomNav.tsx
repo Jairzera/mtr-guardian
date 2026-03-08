@@ -53,7 +53,8 @@ const BottomNav = () => {
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-border px-2 pb-[env(safe-area-inset-bottom)]">
-      <div className="flex items-end justify-around h-16">
+      <div className="relative flex items-end justify-around h-16">
+        {devButton}
         <NavLink to="/dashboard" className={linkClass("/dashboard")}>
           <LayoutDashboard className="w-6 h-6" />
           <span>Home</span>
@@ -76,13 +77,10 @@ const BottomNav = () => {
           <span>Mapa</span>
         </NavLink>
 
-        <button onClick={toggleDevRole} className="flex flex-col items-center justify-center gap-0.5 text-xs font-medium text-muted-foreground min-w-[44px] min-h-[44px] py-1">
-          <RefreshCw className="w-5 h-5" />
-          <span className="truncate max-w-[56px]">
-            {isDevOverride && <Badge variant="secondary" className="text-[8px] px-1 py-0 mr-0.5">DEV</Badge>}
-            {roleLabelMap[role]}
-          </span>
-        </button>
+        <NavLink to="/configuracoes" className={linkClass("/configuracoes")}>
+          <User className="w-6 h-6" />
+          <span>Perfil</span>
+        </NavLink>
       </div>
     </nav>
   );

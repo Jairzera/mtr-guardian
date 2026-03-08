@@ -4,7 +4,9 @@ import {
   ShieldAlert, Store, MapPin, Leaf, History, FileCheck, BarChart3, ClipboardList, ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/logo.png";
 
 const navItems = [
@@ -25,6 +27,7 @@ const navItems = [
 const AppSidebar = () => {
   const location = useLocation();
   const { signOut } = useAuth();
+  const { role, toggleDevRole, isDevOverride } = useUserRole();
 
   return (
     <aside className="hidden md:flex md:flex-col md:w-64 bg-sidebar text-sidebar-foreground min-h-screen fixed left-0 top-0 z-30">
@@ -60,6 +63,15 @@ const AppSidebar = () => {
             Novo Manifesto
           </Button>
         </NavLink>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={toggleDevRole}
+          className="w-full justify-center gap-2 text-xs"
+        >
+          {isDevOverride && <Badge variant="secondary" className="text-[10px] px-1 py-0">DEV</Badge>}
+          {role === "generator" ? "🏭 Gerador" : "📋 Consultor"} — Trocar
+        </Button>
         <Button variant="ghost" onClick={signOut} className="w-full justify-start gap-2 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50">
           <LogOut className="w-4 h-4" />
           Sair

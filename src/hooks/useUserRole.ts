@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import React from "react";
 
-export type AppRole = "generator" | "consultant";
+export type AppRole = "generator" | "consultant" | "client_viewer";
 
 interface UserRoleContextType {
   role: AppRole;
@@ -40,7 +40,9 @@ export const UserRoleProvider = ({ children }: { children: ReactNode }) => {
 
       if (data) {
         const r = data.role as string;
-        setRole(r === "consultant" ? "consultant" : "generator");
+        if (r === "consultant") setRole("consultant");
+        else if (r === "client_viewer") setRole("client_viewer");
+        else setRole("generator");
       } else {
         await supabase.rpc("assign_user_role", { _user_id: user.id, _role: "generator" });
         setRole("generator");
@@ -54,7 +56,9 @@ export const UserRoleProvider = ({ children }: { children: ReactNode }) => {
   const toggleDevRole = useCallback(() => {
     setDevOverride((prev) => {
       const current = prev ?? role;
-      return current === "generator" ? "consultant" : "generator";
+      if (current === "generator") return "consultant";
+      if (current === "consultant") return "client_viewer";
+      return "generator";
     });
   }, [role]);
 

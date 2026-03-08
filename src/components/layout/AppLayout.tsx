@@ -4,17 +4,24 @@ import BottomNav from "./BottomNav";
 import DraftBanner from "@/components/manifest/DraftBanner";
 import OfflineBanner from "@/components/OfflineBanner";
 import CompanySwitcher from "./CompanySwitcher";
+import ViewOnlyBanner from "./ViewOnlyBanner";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const AppLayout = () => {
+  const { role } = useUserRole();
+  const isViewOnly = role === "client_viewer";
+
   return (
     <div className="min-h-screen bg-background">
       <OfflineBanner />
       <AppSidebar />
-      {/* Top navbar for consultant company switcher */}
       <div className="md:ml-64">
-        <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border px-4 py-2 flex items-center">
-          <CompanySwitcher />
-        </header>
+        {isViewOnly && <ViewOnlyBanner />}
+        {!isViewOnly && (
+          <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-md border-b border-border px-4 py-2 flex items-center">
+            <CompanySwitcher />
+          </header>
+        )}
         <main className="pb-20 md:pb-0 min-h-[calc(100vh-49px)]">
           <div className="animate-fade-in">
             <Outlet />
@@ -22,7 +29,7 @@ const AppLayout = () => {
         </main>
       </div>
       <BottomNav />
-      <DraftBanner />
+      {!isViewOnly && <DraftBanner />}
     </div>
   );
 };

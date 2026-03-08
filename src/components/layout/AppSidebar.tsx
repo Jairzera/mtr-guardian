@@ -9,25 +9,33 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/logo.png";
 
-const navItems = [
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/mtrs", label: "MTRs", icon: FileText },
-  { to: "/historico-cargas", label: "Histórico de Cargas", icon: History },
-  { to: "/auditoria", label: "Auditoria", icon: ShieldAlert },
-  { to: "/controle-abc", label: "Controle ABC", icon: BarChart3 },
-  { to: "/mercado", label: "Mercado", icon: Store },
-  { to: "/mapa", label: "Mapa", icon: MapPin },
-  { to: "/esg", label: "ESG", icon: Leaf },
-  { to: "/cofre-cdf", label: "Cofre de CDFs", icon: FileCheck },
-  { to: "/licencas", label: "Licenças / CADRIs", icon: ShieldCheck },
-  { to: "/relatorios", label: "Relatórios Oficiais", icon: ClipboardList },
-  { to: "/configuracoes", label: "Configurações", icon: Settings },
+const allNavItems = [
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["generator", "consultant", "client_viewer"] },
+  { to: "/mtrs", label: "MTRs", icon: FileText, roles: ["generator", "consultant", "client_viewer"] },
+  { to: "/historico-cargas", label: "Histórico de Cargas", icon: History, roles: ["generator", "consultant"] },
+  { to: "/auditoria", label: "Auditoria", icon: ShieldAlert, roles: ["generator", "consultant"] },
+  { to: "/controle-abc", label: "Controle ABC", icon: BarChart3, roles: ["generator", "consultant"] },
+  { to: "/mercado", label: "Mercado", icon: Store, roles: ["generator", "consultant"] },
+  { to: "/mapa", label: "Mapa", icon: MapPin, roles: ["generator", "consultant"] },
+  { to: "/esg", label: "ESG", icon: Leaf, roles: ["generator", "consultant"] },
+  { to: "/cofre-cdf", label: "Cofre de CDFs", icon: FileCheck, roles: ["generator", "consultant", "client_viewer"] },
+  { to: "/licencas", label: "Licenças / CADRIs", icon: ShieldCheck, roles: ["generator", "consultant"] },
+  { to: "/relatorios", label: "Relatórios Oficiais", icon: ClipboardList, roles: ["generator", "consultant"] },
+  { to: "/configuracoes", label: "Configurações", icon: Settings, roles: ["generator", "consultant"] },
 ];
+
+const roleLabelMap: Record<string, string> = {
+  generator: "🏭 Gerador",
+  consultant: "📋 Consultor",
+  client_viewer: "👁️ Visualizador",
+};
 
 const AppSidebar = () => {
   const location = useLocation();
   const { signOut } = useAuth();
   const { role, toggleDevRole, isDevOverride } = useUserRole();
+
+  const navItems = allNavItems.filter((item) => item.roles.includes(role));
 
   return (
     <aside className="hidden md:flex md:flex-col md:w-64 bg-sidebar text-sidebar-foreground min-h-screen fixed left-0 top-0 z-30">
@@ -57,12 +65,14 @@ const AppSidebar = () => {
       </nav>
 
       <div className="px-3 pb-6 space-y-2">
-        <NavLink to="/novo-manifesto">
-          <Button className="w-full gradient-primary shadow-primary font-semibold gap-2">
-            <Plus className="w-4 h-4" />
-            Novo Manifesto
-          </Button>
-        </NavLink>
+        {role !== "client_viewer" && (
+          <NavLink to="/novo-manifesto">
+            <Button className="w-full gradient-primary shadow-primary font-semibold gap-2">
+              <Plus className="w-4 h-4" />
+              Novo Manifesto
+            </Button>
+          </NavLink>
+        )}
         <Button
           variant="outline"
           size="sm"
@@ -70,7 +80,7 @@ const AppSidebar = () => {
           className="w-full justify-center gap-2 text-xs"
         >
           {isDevOverride && <Badge variant="secondary" className="text-[10px] px-1 py-0">DEV</Badge>}
-          {role === "generator" ? "🏭 Gerador" : "📋 Consultor"} — Trocar
+          {roleLabelMap[role] || role} — Trocar
         </Button>
         <Button variant="ghost" onClick={signOut} className="w-full justify-start gap-2 text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50">
           <LogOut className="w-4 h-4" />

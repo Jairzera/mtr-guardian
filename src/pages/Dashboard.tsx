@@ -20,6 +20,7 @@ const Dashboard = () => {
     return <ConsultantDashboard />;
   }
 
+  // client_viewer and generator both use GeneratorDashboard
   return <GeneratorDashboard />;
 };
 

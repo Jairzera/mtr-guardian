@@ -60,13 +60,15 @@ const GeneratorDashboard = () => {
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">Dashboard</h1>
           <p className="text-sm text-muted-foreground mt-1">Visão geral de conformidade ambiental</p>
         </div>
-        <Button
-          onClick={() => navigate("/novo-manifesto")}
-          className="hidden md:flex gradient-primary shadow-primary font-semibold gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Novo Manifesto
-        </Button>
+        {role !== "client_viewer" && (
+          <Button
+            onClick={() => navigate("/novo-manifesto")}
+            className="hidden md:flex gradient-primary shadow-primary font-semibold gap-2"
+          >
+            <Plus className="w-4 h-4" />
+            Novo Manifesto
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

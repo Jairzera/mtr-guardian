@@ -136,6 +136,56 @@ export type Database = {
         }
         Relationships: []
       }
+      licenses: {
+        Row: {
+          created_at: string
+          document_name: string
+          expiration_date: string
+          id: string
+          issuing_body: string
+          managed_company_id: string | null
+          pdf_url: string | null
+          updated_at: string
+          user_id: string
+          weight_limit_kg: number
+          weight_used_kg: number
+        }
+        Insert: {
+          created_at?: string
+          document_name: string
+          expiration_date: string
+          id?: string
+          issuing_body?: string
+          managed_company_id?: string | null
+          pdf_url?: string | null
+          updated_at?: string
+          user_id: string
+          weight_limit_kg?: number
+          weight_used_kg?: number
+        }
+        Update: {
+          created_at?: string
+          document_name?: string
+          expiration_date?: string
+          id?: string
+          issuing_body?: string
+          managed_company_id?: string | null
+          pdf_url?: string | null
+          updated_at?: string
+          user_id?: string
+          weight_limit_kg?: number
+          weight_used_kg?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "licenses_managed_company_id_fkey"
+            columns: ["managed_company_id"]
+            isOneToOne: false
+            referencedRelation: "managed_companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       managed_companies: {
         Row: {
           cnpj: string

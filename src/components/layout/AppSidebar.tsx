@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, FileText, Settings, Plus, LogOut,
-  ShieldAlert, Store, MapPin, Leaf, History, FileCheck, BarChart3,
+  ShieldAlert, Store, MapPin, Leaf, History, FileCheck, BarChart3, ClipboardList,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ const navItems = [
   { to: "/mapa", label: "Mapa", icon: MapPin },
   { to: "/esg", label: "ESG", icon: Leaf },
   { to: "/cofre-cdf", label: "Cofre de CDFs", icon: FileCheck },
+  { to: "/relatorios", label: "Relatórios Oficiais", icon: ClipboardList },
   { to: "/configuracoes", label: "Configurações", icon: Settings },
 ];
 

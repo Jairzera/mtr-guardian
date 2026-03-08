@@ -14,6 +14,7 @@ import MTRList from "./pages/MTRList";
 import HistoricoCargas from "./pages/HistoricoCargas";
 import NewManifest from "./pages/NewManifest";
 import CDFVault from "./pages/CDFVault";
+import Relatorios from "./pages/Relatorios";
 import Configuracoes from "./pages/Configuracoes";
 import Auditoria from "./pages/Auditoria";
 import ControleABC from "./pages/ControleABC";
@@ -60,6 +61,7 @@ const App = () => (
                     <Route path="/mercado" element={<Mercado />} />
                     <Route path="/mapa" element={<Mapa />} />
                     <Route path="/esg" element={<ESG />} />
+                    <Route path="/relatorios" element={<Relatorios />} />
                   </Route>
                   <Route path="/tracking/:id" element={<PublicTracking />} />
                   <Route path="*" element={<NotFound />} />

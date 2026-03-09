@@ -65,6 +65,7 @@ const App = () => (
                     <Route path="/esg" element={<ESG />} />
                     <Route path="/relatorios" element={<Relatorios />} />
                     <Route path="/licencas" element={<Licencas />} />
+                    <Route path="/subscricao" element={<Subscricao />} />
                   </Route>
                   <Route path="/tracking/:id" element={<PublicTracking />} />
                   <Route path="*" element={<NotFound />} />

@@ -63,9 +63,9 @@ const BottomNav = () => {
         </NavLink>
 
         {!isConsultant && (
-          <NavLink to="/mercado" className={linkClass("/mercado")}>
-            <ShoppingCart className="w-6 h-6" />
-            <span>Mercado</span>
+          <NavLink to="/mtrs" className={linkClass("/mtrs")}>
+            <FileText className="w-6 h-6" />
+            <span>MTRs</span>
           </NavLink>
         )}
 

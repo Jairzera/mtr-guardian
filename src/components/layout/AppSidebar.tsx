@@ -16,7 +16,7 @@ const allNavItems = [
   { to: "/historico-cargas", label: "Histórico de Cargas", icon: History, roles: ["generator", "consultant"] },
   { to: "/auditoria", label: "Auditoria", icon: ShieldAlert, roles: ["generator", "consultant"] },
   { to: "/controle-abc", label: "Controle ABC", icon: BarChart3, roles: ["generator", "consultant"] },
-  { to: "/mercado", label: "Mercado", icon: Store, roles: ["generator"] },
+  
   { to: "/mapa", label: "Mapa", icon: MapPin, roles: ["generator", "consultant"] },
   { to: "/esg", label: "ESG", icon: Leaf, roles: ["generator"] },
   { to: "/cofre-cdf", label: "Cofre de CDFs", icon: FileCheck, roles: ["generator", "consultant", "client_viewer"] },

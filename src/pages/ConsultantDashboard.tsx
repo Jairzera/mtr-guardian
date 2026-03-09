@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import KPICard from "@/components/dashboard/KPICard";
 import { useConsultantDashboard, ConsultantAlert } from "@/hooks/useConsultantDashboard";
 import { DashboardSkeleton } from "@/components/Skeletons";
+import CompanySwitcher from "@/components/layout/CompanySwitcher";
 
 const severityConfig = {
   critical: {

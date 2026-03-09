@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { useTheme } from "next-themes";
+import { useUserRole } from "@/hooks/useUserRole";
 import { formatCNPJ, isValidCNPJ } from "@/lib/cnpj";
 import { formatPhone, isValidPhone } from "@/lib/phone";
 import GovernmentIntegrationCard from "@/components/settings/GovernmentIntegrationCard";

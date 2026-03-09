@@ -8,6 +8,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import logo from "@/assets/logo.png";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const allNavItems = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, roles: ["generator", "consultant", "client_viewer"] },

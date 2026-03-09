@@ -19,7 +19,7 @@ import Licencas from "./pages/Licencas";
 import Configuracoes from "./pages/Configuracoes";
 import Auditoria from "./pages/Auditoria";
 import ControleABC from "./pages/ControleABC";
-import Mercado from "./pages/Mercado";
+
 import Mapa from "./pages/Mapa";
 import ESG from "./pages/ESG";
 import Auth from "./pages/Auth";

@@ -45,25 +45,27 @@ const AppSidebar = () => {
         <span className="text-xl font-bold tracking-tight">CicloMTR</span>
       </div>
 
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.to;
-          return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
-                isActive
-                  ? "bg-sidebar-accent text-sidebar-primary"
-                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-              }`}
-            >
-              <item.icon className="w-5 h-5" />
-              {item.label}
-            </NavLink>
-          );
-        })}
-      </nav>
+      <ScrollArea className="flex-1">
+        <nav className="px-3 py-4 space-y-1">
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.to;
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
+                  isActive
+                    ? "bg-sidebar-accent text-sidebar-primary"
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                }`}
+              >
+                <item.icon className="w-5 h-5" />
+                {item.label}
+              </NavLink>
+            );
+          })}
+        </nav>
+      </ScrollArea>
 
       <div className="px-3 pb-6 space-y-2">
         {role !== "client_viewer" && (

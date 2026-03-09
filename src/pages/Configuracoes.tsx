@@ -76,9 +76,11 @@ const Configuracoes = () => {
           <ManagedCompaniesTab />
         </TabsContent>
 
-        <TabsContent value="integracoes" className="space-y-6">
-          <GovernmentIntegrationCard />
-        </TabsContent>
+        {role === "generator" && (
+          <TabsContent value="integracoes" className="space-y-6">
+            <GovernmentIntegrationCard />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

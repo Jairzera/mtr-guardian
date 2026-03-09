@@ -63,7 +63,7 @@ const Configuracoes = () => {
         <TabsList>
           <TabsTrigger value="empresa">Empresa</TabsTrigger>
           <TabsTrigger value="filiais">Filiais / CNPJs</TabsTrigger>
-          <TabsTrigger value="integracoes">Integrações</TabsTrigger>
+          {role === "generator" && <TabsTrigger value="integracoes">Integrações</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="empresa" className="space-y-6">

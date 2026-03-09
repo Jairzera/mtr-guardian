@@ -45,7 +45,7 @@ const AppSidebar = () => {
         <span className="text-xl font-bold tracking-tight">CicloMTR</span>
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 [&>[data-radix-scroll-area-viewport]]:max-h-[calc(100vh-220px)]">
         <nav className="px-3 py-4 space-y-1">
           {navItems.map((item) => {
             const isActive = location.pathname === item.to;

@@ -19,6 +19,7 @@ import Licencas from "./pages/Licencas";
 import Configuracoes from "./pages/Configuracoes";
 import Auditoria from "./pages/Auditoria";
 import ControleABC from "./pages/ControleABC";
+import Subscricao from "./pages/Subscricao";
 
 import Mapa from "./pages/Mapa";
 import ESG from "./pages/ESG";

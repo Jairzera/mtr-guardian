@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import KPICard from "@/components/dashboard/KPICard";
 import { useConsultantDashboard, ConsultantAlert } from "@/hooks/useConsultantDashboard";
 import { DashboardSkeleton } from "@/components/Skeletons";
+import CompanySwitcher from "@/components/layout/CompanySwitcher";
 
 const severityConfig = {
   critical: {
@@ -88,9 +89,9 @@ const ConsultantDashboard = () => {
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-8 animate-fade-in">
-      {/* Header */}
-      <div>
-        <div className="flex items-center gap-3 mb-1">
+      {/* Company Switcher */}
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-center gap-3">
           <div className="p-2 rounded-lg bg-primary/10">
             <Shield className="w-5 h-5 text-primary" />
           </div>
@@ -99,6 +100,7 @@ const ConsultantDashboard = () => {
             <p className="text-sm text-muted-foreground">Panorama de todos os seus clientes em tempo real</p>
           </div>
         </div>
+        <CompanySwitcher />
       </div>
 
       {/* KPI Cards */}

@@ -51,6 +51,8 @@ const BottomNav = () => {
     );
   }
 
+  const isConsultant = role === "consultant";
+
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-card border-t border-border px-2 pb-[env(safe-area-inset-bottom)]">
       <div className="relative flex items-end justify-around h-16">
@@ -60,10 +62,19 @@ const BottomNav = () => {
           <span>Home</span>
         </NavLink>
 
-        <NavLink to="/mercado" className={linkClass("/mercado")}>
-          <ShoppingCart className="w-6 h-6" />
-          <span>Mercado</span>
-        </NavLink>
+        {!isConsultant && (
+          <NavLink to="/mercado" className={linkClass("/mercado")}>
+            <ShoppingCart className="w-6 h-6" />
+            <span>Mercado</span>
+          </NavLink>
+        )}
+
+        {isConsultant && (
+          <NavLink to="/mtrs" className={linkClass("/mtrs")}>
+            <FileText className="w-6 h-6" />
+            <span>MTRs</span>
+          </NavLink>
+        )}
 
         <NavLink to="/novo-manifesto" className="flex flex-col items-center -mt-5">
           <div className="w-14 h-14 rounded-full gradient-primary shadow-primary flex items-center justify-center active:scale-95 transition-transform">

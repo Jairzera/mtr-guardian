@@ -22,6 +22,7 @@ const allNavItems = [
   { to: "/cofre-cdf", label: "Cofre de CDFs", icon: FileCheck, roles: ["generator", "consultant", "client_viewer"] },
   { to: "/licencas", label: "Licenças / CADRIs", icon: ShieldCheck, roles: ["generator", "consultant"] },
   { to: "/relatorios", label: "Relatórios Oficiais", icon: ClipboardList, roles: ["generator", "consultant"] },
+  { to: "/subscricao", label: "Subscrição & Parceiro", icon: Store, roles: ["consultant"] },
   { to: "/configuracoes", label: "Configurações", icon: Settings, roles: ["generator", "consultant"] },
 ];
 

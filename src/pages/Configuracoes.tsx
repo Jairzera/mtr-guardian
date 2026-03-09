@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { useCompanySettings } from "@/hooks/useCompanySettings";
 import { useTheme } from "next-themes";
+import { useUserRole } from "@/hooks/useUserRole";
 import { formatCNPJ, isValidCNPJ } from "@/lib/cnpj";
 import { formatPhone, isValidPhone } from "@/lib/phone";
 import GovernmentIntegrationCard from "@/components/settings/GovernmentIntegrationCard";
@@ -17,6 +18,7 @@ import ManagedCompaniesTab from "@/components/settings/ManagedCompaniesTab";
 const Configuracoes = () => {
   const { settings, loading, saveSettings } = useCompanySettings();
   const { theme, setTheme } = useTheme();
+  const { role } = useUserRole();
   const [form, setForm] = useState(settings);
   const [saving, setSaving] = useState(false);
   const [alertasEmail, setAlertasEmail] = useState(() => localStorage.getItem("alertas_email") !== "false");
@@ -61,7 +63,7 @@ const Configuracoes = () => {
         <TabsList>
           <TabsTrigger value="empresa">Empresa</TabsTrigger>
           <TabsTrigger value="filiais">Filiais / CNPJs</TabsTrigger>
-          <TabsTrigger value="integracoes">Integrações</TabsTrigger>
+          {role === "generator" && <TabsTrigger value="integracoes">Integrações</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="empresa" className="space-y-6">
@@ -74,9 +76,11 @@ const Configuracoes = () => {
           <ManagedCompaniesTab />
         </TabsContent>
 
-        <TabsContent value="integracoes" className="space-y-6">
-          <GovernmentIntegrationCard />
-        </TabsContent>
+        {role === "generator" && (
+          <TabsContent value="integracoes" className="space-y-6">
+            <GovernmentIntegrationCard />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

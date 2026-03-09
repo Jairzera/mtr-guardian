@@ -18,6 +18,7 @@ import ManagedCompaniesTab from "@/components/settings/ManagedCompaniesTab";
 const Configuracoes = () => {
   const { settings, loading, saveSettings } = useCompanySettings();
   const { theme, setTheme } = useTheme();
+  const { role } = useUserRole();
   const [form, setForm] = useState(settings);
   const [saving, setSaving] = useState(false);
   const [alertasEmail, setAlertasEmail] = useState(() => localStorage.getItem("alertas_email") !== "false");

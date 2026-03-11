@@ -157,12 +157,10 @@ const GovernmentIntegrationCard = () => {
           </DialogHeader>
 
           <div className="space-y-5 py-2">
-            <Step number={1} text='Acesse o portal mtr.sinir.gov.br e faça login com suas credenciais.' image={sinirLogin} />
+            <Step number={1} text='Acesse mtr.sinir.gov.br e faça login com suas credenciais.' image={sinirHome} />
             <Step number={2} text='No menu superior, clique em "Configurações".' image={sinirMenuConfig} />
-            <Step number={3} text='Selecione "Usuário API" no submenu.' image={sinirUsuarioApiMenu} />
-            <Step number={4} text='Na tela de Usuário API, localize ou gere seu token de acesso.' image={sinirUsuarioApi} />
-            <Step number={5} text='Clique em "Adicionar" para confirmar a permissão.' image={sinirAdicionar} />
-            <Step number={6} text='Verifique seu perfil para confirmar que a integração está ativa.' image={sinirPerfil} />
+            <Step number={3} text='Selecione "Gerar Token API WS" no submenu.' image={sinirGerarToken} />
+            <Step number={4} text='Clique em "Gerar token", depois em "Copiar token" e cole aqui.' image={sinirTokenApi} />
           </div>
         </DialogContent>
       </Dialog>

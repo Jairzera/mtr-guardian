@@ -10,12 +10,10 @@ import { Loader2, Eye, EyeOff, CheckCircle2, XCircle, Link2, HelpCircle, Externa
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import sinirLogin from "@/assets/sinir-login.png";
+import sinirHome from "@/assets/sinir-home.png";
 import sinirMenuConfig from "@/assets/sinir-menu-config.png";
-import sinirUsuarioApiMenu from "@/assets/sinir-usuario-api-menu.png";
-import sinirUsuarioApi from "@/assets/sinir-usuario-api.png";
-import sinirAdicionar from "@/assets/sinir-adicionar.png";
-import sinirPerfil from "@/assets/sinir-perfil.png";
+import sinirGerarToken from "@/assets/sinir-gerar-token.png";
+import sinirTokenApi from "@/assets/sinir-token-api.png";
 
 type ConnectionStatus = "idle" | "saving" | "testing" | "success" | "error";
 

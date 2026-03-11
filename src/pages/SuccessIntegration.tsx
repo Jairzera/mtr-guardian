@@ -1,32 +1,27 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2, Copy, Loader2, ExternalLink, ArrowRight } from "lucide-react";
+import { CheckCircle2, Copy, Loader2, ExternalLink, ArrowRight, Key } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
-import sinirLogin from "@/assets/sinir-login.png";
+import sinirHome from "@/assets/sinir-home.png";
 import sinirMenuConfig from "@/assets/sinir-menu-config.png";
-import sinirUsuarioApiMenu from "@/assets/sinir-usuario-api-menu.png";
-import sinirUsuarioApi from "@/assets/sinir-usuario-api.png";
-import sinirAdicionar from "@/assets/sinir-adicionar.png";
-
-const CNPJ_CICLOMTR = "00.000.000/0001-00";
+import sinirGerarToken from "@/assets/sinir-gerar-token.png";
+import sinirTokenApi from "@/assets/sinir-token-api.png";
 
 const SuccessIntegration = () => {
   const navigate = useNavigate();
   const [isValidating, setIsValidating] = useState(false);
-  const [copied, setCopied] = useState(false);
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(CNPJ_CICLOMTR);
-    setCopied(true);
-    toast.success("CNPJ copiado!");
-    setTimeout(() => setCopied(false), 2000);
-  };
+  const [token, setToken] = useState("");
 
   const handleValidate = () => {
+    if (!token.trim()) {
+      toast.error("Cole o token gerado no campo acima antes de continuar.");
+      return;
+    }
     setIsValidating(true);
     setTimeout(() => {
       setIsValidating(false);
@@ -48,7 +43,7 @@ const SuccessIntegration = () => {
           </h1>
           <p className="text-muted-foreground max-w-xl mx-auto">
             Sua assinatura está ativa. Para liberar seu Dashboard e automatizar sua gestão de resíduos, precisamos de apenas um último passo:{" "}
-            <strong className="text-foreground">conectar o sistema ao Governo.</strong>
+            <strong className="text-foreground">gerar seu Token API no SINIR e colar aqui.</strong>
           </p>
         </div>
 
@@ -60,12 +55,12 @@ const SuccessIntegration = () => {
                 Tutorial
               </Badge>
               <span className="text-sm text-muted-foreground">
-                Integração com o SINIR / MTR Nacional
+                Gerar Token API no SINIR — 4 passos simples
               </span>
             </div>
 
             {/* Step 1 */}
-            <Step number={1} title="Acesse o portal oficial e faça login com seu CNPJ">
+            <Step number={1} title="Acesse o portal SINIR e faça login">
               <p className="text-sm text-muted-foreground mb-3">
                 Entre no site{" "}
                 <a
@@ -76,98 +71,90 @@ const SuccessIntegration = () => {
                 >
                   mtr.sinir.gov.br <ExternalLink className="w-3 h-3" />
                 </a>{" "}
-                e faça login selecionando <strong>CNPJ</strong>, conforme destacado abaixo.
+                e faça login com suas credenciais (CNPJ e senha).
               </p>
               <img
-                src={sinirLogin}
-                alt="Tela de login do SINIR com opção CNPJ destacada"
+                src={sinirHome}
+                alt="Página inicial do SINIR após login"
                 className="rounded-lg border w-full"
                 loading="lazy"
               />
             </Step>
 
             {/* Step 2 */}
-            <Step number={2} title='No menu superior, clique em "Configurações" > "Usuário API"'>
+            <Step number={2} title='Abra o menu "Configurações"'>
               <p className="text-sm text-muted-foreground mb-3">
-                Após fazer login, localize o menu <strong>Configurações</strong> na barra superior e clique em{" "}
-                <strong>Usuário API</strong>.
+                No menu superior do portal, clique em <strong>"Configurações"</strong> para abrir o submenu.
               </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <img
-                  src={sinirMenuConfig}
-                  alt="Menu Configurações aberto no SINIR"
-                  className="rounded-lg border w-full"
-                  loading="lazy"
-                />
-                <img
-                  src={sinirUsuarioApiMenu}
-                  alt="Opção Usuário API destacada no menu"
-                  className="rounded-lg border w-full"
-                  loading="lazy"
-                />
-              </div>
+              <img
+                src={sinirMenuConfig}
+                alt="Menu Configurações aberto no SINIR"
+                className="rounded-lg border w-full"
+                loading="lazy"
+              />
             </Step>
 
             {/* Step 3 */}
-            <Step number={3} title="Copie o CNPJ do CicloMTR e busque no sistema do governo">
+            <Step number={3} title='Clique em "Gerar Token API WS"'>
               <p className="text-sm text-muted-foreground mb-3">
-                Na tela de <strong>Usuário API</strong>, cole o CNPJ abaixo no campo de busca e clique na lupa para pesquisar.
+                Dentro do submenu de Configurações, selecione a opção{" "}
+                <strong>"Gerar Token API WS"</strong> (destacada em azul na imagem).
               </p>
-              <div className="flex items-center gap-2 mb-3">
-                <div className="flex-1 flex items-center gap-2 rounded-md border bg-muted px-4 py-2.5">
-                  <span className="font-mono text-sm font-semibold text-foreground tracking-wide">
-                    {CNPJ_CICLOMTR}
-                  </span>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCopy}
-                  className="shrink-0 gap-1.5"
-                >
-                  <Copy className="w-4 h-4" />
-                  {copied ? "Copiado!" : "Copiar"}
-                </Button>
-              </div>
               <img
-                src={sinirUsuarioApi}
-                alt="Tela de Usuário API com campo CNPJ"
+                src={sinirGerarToken}
+                alt="Opção Gerar Token API WS destacada no menu"
                 className="rounded-lg border w-full"
                 loading="lazy"
               />
             </Step>
 
             {/* Step 4 */}
-            <Step number={4} title='Encontre o CicloMTR e clique em "Adicionar"'>
+            <Step number={4} title='Clique em "Gerar token" e depois "Copiar token"'>
               <p className="text-sm text-muted-foreground mb-3">
-                O sistema irá localizar o CicloMTR na busca. Clique no botão{" "}
-                <strong>"Adicionar"</strong> para nos dar a permissão de operar em seu nome.
+                Na tela de <strong>Token API WS</strong>, clique no botão{" "}
+                <strong>"Gerar token"</strong> para criar seu token. Após gerado, clique em{" "}
+                <strong>"Copiar token"</strong> e cole no campo abaixo.
               </p>
               <img
-                src={sinirAdicionar}
-                alt="Resultado da busca com botão Adicionar destacado"
+                src={sinirTokenApi}
+                alt="Tela de geração do Token API WS com botões Gerar e Copiar"
                 className="rounded-lg border w-full"
                 loading="lazy"
               />
             </Step>
+
+            {/* Token input */}
+            <div className="space-y-3 pt-2 border-t">
+              <div className="flex items-center gap-2">
+                <Key className="w-4 h-4 text-primary" />
+                <span className="text-sm font-semibold text-foreground">Cole seu token aqui:</span>
+              </div>
+              <Input
+                type="password"
+                placeholder="Cole o token gerado no SINIR"
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                className="font-mono"
+              />
+            </div>
           </CardContent>
         </Card>
 
         {/* CTA */}
         <Button
           onClick={handleValidate}
-          disabled={isValidating}
+          disabled={isValidating || !token.trim()}
           size="lg"
           className="w-full text-base font-semibold gap-2 h-14"
         >
           {isValidating ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              Validando conexão com o órgão ambiental...
+              Validando conexão com o SINIR...
             </>
           ) : (
             <>
-              Já autorizei! Testar Conexão e Acessar Dashboard
+              Testar Conexão e Acessar Dashboard
               <ArrowRight className="w-5 h-5" />
             </>
           )}

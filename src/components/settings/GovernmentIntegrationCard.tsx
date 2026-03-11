@@ -10,12 +10,10 @@ import { Loader2, Eye, EyeOff, CheckCircle2, XCircle, Link2, HelpCircle, Externa
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
-import sinirLogin from "@/assets/sinir-login.png";
+import sinirHome from "@/assets/sinir-home.png";
 import sinirMenuConfig from "@/assets/sinir-menu-config.png";
-import sinirUsuarioApiMenu from "@/assets/sinir-usuario-api-menu.png";
-import sinirUsuarioApi from "@/assets/sinir-usuario-api.png";
-import sinirAdicionar from "@/assets/sinir-adicionar.png";
-import sinirPerfil from "@/assets/sinir-perfil.png";
+import sinirGerarToken from "@/assets/sinir-gerar-token.png";
+import sinirTokenApi from "@/assets/sinir-token-api.png";
 
 type ConnectionStatus = "idle" | "saving" | "testing" | "success" | "error";
 
@@ -159,12 +157,10 @@ const GovernmentIntegrationCard = () => {
           </DialogHeader>
 
           <div className="space-y-5 py-2">
-            <Step number={1} text='Acesse o portal mtr.sinir.gov.br e faça login com suas credenciais.' image={sinirLogin} />
+            <Step number={1} text='Acesse mtr.sinir.gov.br e faça login com suas credenciais.' image={sinirHome} />
             <Step number={2} text='No menu superior, clique em "Configurações".' image={sinirMenuConfig} />
-            <Step number={3} text='Selecione "Usuário API" no submenu.' image={sinirUsuarioApiMenu} />
-            <Step number={4} text='Na tela de Usuário API, localize ou gere seu token de acesso.' image={sinirUsuarioApi} />
-            <Step number={5} text='Clique em "Adicionar" para confirmar a permissão.' image={sinirAdicionar} />
-            <Step number={6} text='Verifique seu perfil para confirmar que a integração está ativa.' image={sinirPerfil} />
+            <Step number={3} text='Selecione "Gerar Token API WS" no submenu.' image={sinirGerarToken} />
+            <Step number={4} text='Clique em "Gerar token", depois em "Copiar token" e cole aqui.' image={sinirTokenApi} />
           </div>
         </DialogContent>
       </Dialog>

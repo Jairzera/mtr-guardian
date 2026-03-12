@@ -28,6 +28,7 @@ import Index from "./pages/Index";
 import PublicTracking from "./pages/PublicTracking";
 import NotFound from "./pages/NotFound";
 import SuccessIntegration from "./pages/SuccessIntegration";
+import RoleSelection from "./pages/RoleSelection";
 
 const queryClient = new QueryClient();
 
@@ -44,6 +45,7 @@ const App = () => (
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/auth" element={<Auth />} />
+                  <Route path="/escolher-perfil" element={<RoleSelection />} />
                   <Route path="/sucesso" element={<SuccessIntegration />} />
                   <Route
                     element={

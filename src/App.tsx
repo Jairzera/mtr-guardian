@@ -45,6 +45,7 @@ const App = () => (
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/auth" element={<Auth />} />
+                  <Route path="/escolher-perfil" element={<RoleSelection />} />
                   <Route path="/sucesso" element={<SuccessIntegration />} />
                   <Route
                     element={

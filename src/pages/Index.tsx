@@ -479,7 +479,7 @@ const Index = () => {
           <div className="text-center mb-14 max-w-2xl mx-auto">
             <Badge variant="secondary" className="mb-4 text-xs font-medium">Segmentação</Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Feito para quem <span className="text-primary">gera</span> e quem <span className="text-primary">recebe</span> resíduos
+              Feito para quem <span className="text-primary">gera</span>, <span className="text-primary">recebe</span> e <span className="text-primary">consulta</span> resíduos
             </h2>
           </div>
           <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">

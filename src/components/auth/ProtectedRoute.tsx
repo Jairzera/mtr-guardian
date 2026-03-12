@@ -4,6 +4,7 @@ import { useTrialStatus } from "@/hooks/useTrialStatus";
 import { Loader2 } from "lucide-react";
 import { ReactNode } from "react";
 import TrialExpiredModal from "./TrialExpiredModal";
+import PaymentFailedModal from "./PaymentFailedModal";
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
   const { user, loading } = useAuth();
@@ -19,6 +20,10 @@ const ProtectedRoute = ({ children }: { children: ReactNode }) => {
 
   if (!user) {
     return <Navigate to="/auth" replace />;
+  }
+
+  if (trial.status === "blocked") {
+    return <PaymentFailedModal />;
   }
 
   if (trial.isExpired) {

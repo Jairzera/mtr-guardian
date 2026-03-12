@@ -514,24 +514,24 @@ const Index = () => {
               </Button>
             </Card>
 
-            {/* Destinadores */}
+            {/* Consultores */}
             <Card className="p-8 border-2 border-border hover:border-accent-foreground/20 transition-all hover:shadow-lg group">
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center transition-transform group-hover:scale-110">
                   <Building2 className="w-7 h-7 text-accent-foreground" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-foreground">Para Destinadores</h3>
-                  <p className="text-sm text-muted-foreground">Aterros e Recicladoras</p>
+                  <h3 className="text-xl font-bold text-foreground">Para Consultores</h3>
+                  <p className="text-sm text-muted-foreground">Gestão Multi-Empresa</p>
                 </div>
               </div>
               <ul className="space-y-3">
                 {[
-                  "Receba mais cargas com validação digital instantânea",
-                  "Confirme recebimento direto pelo sistema",
-                  "Painel de recebimento com peso e foto",
-                  "Gestão completa de clientes geradores",
-                  "Integração com balança e API dedicada",
+                  "Gestão centralizada de múltiplos CNPJs num único painel",
+                  "Geração automática de relatórios anuais para o IBAMA e DMR",
+                  "Monitorização de vencimento de licenças e CADRIs com alertas",
+                  "Emissão rápida e histórico completo de MTRs para todos os clientes",
+                  "Acesso de visualização 'White-Label' para o dono da fábrica",
                 ].map((f) => (
                   <li key={f} className="flex items-start gap-3 text-sm text-foreground">
                     <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
@@ -539,7 +539,7 @@ const Index = () => {
                   </li>
                 ))}
               </ul>
-              <Button variant="outline" className="mt-8 w-full h-12 font-semibold" onClick={() => window.open("https://wa.me/5511999999999?text=Olá!%20Tenho%20interesse%20no%20CicloMTR%20para%20Destinadores.", "_blank")}>
+              <Button variant="outline" className="mt-8 w-full h-12 font-semibold" onClick={() => window.open("https://wa.me/5511999999999?text=Olá!%20Tenho%20interesse%20no%20CicloMTR%20para%20Consultores.", "_blank")}>
                 <MessageCircle className="w-4 h-4 mr-2" />
                 Falar com Especialista
               </Button>

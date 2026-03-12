@@ -103,7 +103,11 @@ const PlanCards = () => {
                   ))}
                 </ul>
 
-                <Button className="w-full gap-2" variant={plan.popular ? "default" : "outline"}>
+                <Button 
+                  className="w-full gap-2" 
+                  variant={plan.popular ? "default" : "outline"}
+                  onClick={() => window.open(plan.link, "_blank")}
+                >
                   <ArrowUpRight className="w-4 h-4" />
                   Assinar {plan.name}
                 </Button>

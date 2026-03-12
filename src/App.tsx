@@ -28,6 +28,7 @@ import Index from "./pages/Index";
 import PublicTracking from "./pages/PublicTracking";
 import NotFound from "./pages/NotFound";
 import SuccessIntegration from "./pages/SuccessIntegration";
+import RoleSelection from "./pages/RoleSelection";
 
 const queryClient = new QueryClient();
 

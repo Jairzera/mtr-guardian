@@ -151,34 +151,15 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* Consultancy elastic model */}
+      {/* Expansion note */}
       <section className="max-w-7xl mx-auto px-4 pb-20">
         <Card className="p-8 border-2 border-primary/20">
-          <div className="text-center mb-6">
-            <Badge className="mb-3 gradient-primary text-primary-foreground border-0">Para Consultorias & Engenharias</Badge>
-            <h2 className="text-2xl font-bold text-foreground mb-2">Modelo Elástico Pay-per-CNPJ</h2>
+          <div className="text-center">
+            <Badge className="mb-3 gradient-primary text-primary-foreground border-0">Expansão sob demanda</Badge>
+            <h2 className="text-2xl font-bold text-foreground mb-2">Precisa de mais empresas?</h2>
             <p className="text-muted-foreground max-w-lg mx-auto">
-              Pague apenas pelos CNPJs ativos. Gerencie múltiplas filiais e clientes sem contratos arriscados.
+              No plano Consultoria, adicione pacotes de <strong className="text-foreground">+10 empresas</strong> por apenas <strong className="text-foreground">R$ 397,00/mês</strong>. Escale sua operação conforme a receita cresce.
             </p>
-          </div>
-          <div className="grid sm:grid-cols-3 gap-6 mb-6">
-            <div className="text-center p-4 rounded-lg border border-border">
-              <p className="text-2xl font-bold text-foreground">1–5 CNPJs</p>
-              <p className="text-sm text-muted-foreground">R$ 49,90 / CNPJ ativo</p>
-            </div>
-            <div className="text-center p-4 rounded-lg border border-primary">
-              <p className="text-2xl font-bold text-foreground">6–20 CNPJs</p>
-              <p className="text-sm text-muted-foreground">R$ 39,90 / CNPJ ativo</p>
-            </div>
-            <div className="text-center p-4 rounded-lg border border-border">
-              <p className="text-2xl font-bold text-foreground">21+ CNPJs</p>
-              <p className="text-sm text-muted-foreground">R$ 29,90 / CNPJ ativo</p>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-3 justify-center">
-            <Badge variant="secondary">✓ Sem contrato mínimo</Badge>
-            <Badge variant="secondary">✓ CNPJs inativos não cobram</Badge>
-            <Badge variant="secondary">✓ Escale sem fricção</Badge>
           </div>
         </Card>
       </section>

@@ -10,6 +10,7 @@ const plans = [
     subtitle: "Pequenas empresas",
     icon: Zap,
     popular: false,
+    link: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=51PFUS6",
     features: [
       "Até 5 MTRs por mês",
       "1 empresa incluída",
@@ -23,6 +24,7 @@ const plans = [
     subtitle: "Gestão própria",
     icon: Crown,
     popular: true,
+    link: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=ERDQ60M",
     features: [
       "MTRs ilimitados",
       "1 empresa incluída",
@@ -36,6 +38,7 @@ const plans = [
     subtitle: "Consultorias e transportadoras",
     icon: Building2,
     popular: false,
+    link: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=QZMTVR0",
     features: [
       "MTRs ilimitados",
       "Até 10 empresas incluídas",
@@ -100,7 +103,11 @@ const PlanCards = () => {
                   ))}
                 </ul>
 
-                <Button className="w-full gap-2" variant={plan.popular ? "default" : "outline"}>
+                <Button 
+                  className="w-full gap-2" 
+                  variant={plan.popular ? "default" : "outline"}
+                  onClick={() => window.open(plan.link, "_blank")}
+                >
                   <ArrowUpRight className="w-4 h-4" />
                   Assinar {plan.name}
                 </Button>

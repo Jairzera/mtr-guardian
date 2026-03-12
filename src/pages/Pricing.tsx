@@ -39,7 +39,7 @@ const plans = [
     badge: "Mais Popular",
   },
   {
-    name: "Consultoria",
+    name: "Consultoria/Industria",
     price: { mensal: "R$ 797,90", semestral: "R$ 4.308,66", anual: "R$ 7.659,84" },
     periodLabel: { mensal: "/mês", semestral: "/semestre", anual: "/ano" },
     subtitle: "Consultorias e transportadoras",

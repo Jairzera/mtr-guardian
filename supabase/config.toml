@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.sinir-api]
 verify_jwt = false
+
+[functions.payment-webhook]
+verify_jwt = false

@@ -49,11 +49,12 @@ type Period = "mensal" | "semestral" | "anual";
 
 const plans = [
   {
-    name: "Inicial",
-    price: { mensal: "R$ 197,90", semestral: "R$ 1.187,90", anual: "R$ 2.374,80" },
-    monthlyEquiv: { mensal: "197,90", semestral: "197,98", anual: "197,90" },
+    name: "Essencial",
+    price: { mensal: "R$ 99,00", semestral: "R$ 534,60", anual: "R$ 950,40" },
+    monthlyEquiv: { mensal: "99,00", semestral: "89,10", anual: "79,20" },
     periodLabel: { mensal: "/mês", semestral: "/semestre", anual: "/ano" },
-    features: ["Gestão de MTRs", "Painel Web completo", "Auditoria de Compliance", "Suporte por e-mail"],
+    subtitle: "Pequenas empresas",
+    features: ["Até 5 MTRs por mês", "1 empresa incluída", "Painel Web completo", "Suporte por e-mail"],
     links: {
       mensal: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=69RHPA1",
       semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=5XJI0DQ",
@@ -63,43 +64,31 @@ const plans = [
     badge: null,
   },
   {
-    name: "Crescimento",
-    price: { mensal: "R$ 237,90", semestral: "R$ 1.427,40", anual: "R$ 2.854,80" },
-    monthlyEquiv: { mensal: "237,90", semestral: "237,90", anual: "237,90" },
+    name: "Pro",
+    price: { mensal: "R$ 129,90", semestral: "R$ 701,46", anual: "R$ 1.247,04" },
+    monthlyEquiv: { mensal: "129,90", semestral: "116,91", anual: "103,92" },
     periodLabel: { mensal: "/mês", semestral: "/semestre", anual: "/ano" },
-    features: ["Tudo do Inicial +", "App para Operadores", "Validade Jurídica completa", "Rastreio em tempo real"],
+    subtitle: "Empresas que fazem a própria gestão",
+    features: ["MTRs ilimitados", "1 empresa incluída", "Auditoria de Compliance", "Rastreio em tempo real"],
     links: {
       mensal: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=HN1H9A1",
       semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=UYJIT1M",
       anual: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=0D7EFOI",
     },
-    highlight: false,
-    badge: null,
-  },
-  {
-    name: "Avançado",
-    price: { mensal: "R$ 797,90", semestral: "R$ 4.787,40", anual: "R$ 9.574,80" },
-    monthlyEquiv: { mensal: "797,90", semestral: "797,90", anual: "797,90" },
-    periodLabel: { mensal: "/mês", semestral: "/semestre", anual: "/ano" },
-    features: ["Tudo do Crescimento +", "Cofre de CDFs Jurídico", "Gestão de Clientes", "Multi-usuários", "Suporte prioritário"],
-    links: {
-      mensal: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=QZMTVR0",
-      semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=WKEZ3Y5",
-      anual: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=WI87DD5",
-    },
     highlight: true,
     badge: "Mais Popular",
   },
   {
-    name: "Ilimitado",
-    price: { mensal: "R$ 837,90", semestral: "R$ 5.027,40", anual: "R$ 10.054,80" },
-    monthlyEquiv: { mensal: "837,90", semestral: "837,90", anual: "837,90" },
+    name: "Consultoria",
+    price: { mensal: "R$ 797,90", semestral: "R$ 4.308,66", anual: "R$ 7.659,84" },
+    monthlyEquiv: { mensal: "797,90", semestral: "718,11", anual: "638,32" },
     periodLabel: { mensal: "/mês", semestral: "/semestre", anual: "/ano" },
-    features: ["Tudo do Avançado +", "API dedicada", "Integração com Balança", "SLA de suporte 2h", "Customização"],
+    subtitle: "Consultorias e transportadoras",
+    features: ["MTRs ilimitados", "Até 10 empresas incluídas", "+R$ 397/cada 10 empresas adicionais", "Gestão multiempresa", "Suporte prioritário"],
     links: {
-      mensal: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=90SZL93",
-      semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=2V20XDP",
-      anual: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=98ZG7MD",
+      mensal: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=QZMTVR0",
+      semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=WKEZ3Y5",
+      anual: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=WI87DD5",
     },
     highlight: false,
     badge: null,
@@ -622,7 +611,7 @@ const Index = () => {
               14 dias grátis em todos os planos. Escolha o período de pagamento.
             </p>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {plans.map((plan) => {
               const period = selectedPeriods[plan.name] || "mensal";
               return (

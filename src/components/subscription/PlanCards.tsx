@@ -1,33 +1,47 @@
-import { Zap, Crown, CheckCircle2, ArrowUpRight, Sparkles, Flame } from "lucide-react";
+import { Zap, Crown, CheckCircle2, ArrowUpRight, Sparkles, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 const plans = [
   {
-    name: "Growth",
-    price: "49,90",
-    limit: "Até 30 CNPJs",
+    name: "Essencial",
+    price: "99,00",
+    subtitle: "Pequenas empresas",
     icon: Zap,
     popular: false,
     features: [
-      "Gestão de até 30 empresas",
-      "Dashboard Torre de Controle",
-      "Alertas automáticos",
-      "Relatórios oficiais",
+      "Até 5 MTRs por mês",
+      "1 empresa incluída",
+      "Painel Web completo",
+      "Suporte por e-mail",
     ],
   },
   {
-    name: "Max",
-    price: "89,90",
-    limit: "CNPJs Ilimitados",
+    name: "Pro",
+    price: "129,90",
+    subtitle: "Gestão própria",
     icon: Crown,
     popular: true,
     features: [
-      "Tudo do Growth",
-      "Empresas ilimitadas",
+      "MTRs ilimitados",
+      "1 empresa incluída",
+      "Auditoria de Compliance",
+      "Rastreio em tempo real",
+    ],
+  },
+  {
+    name: "Consultoria",
+    price: "797,90",
+    subtitle: "Consultorias e transportadoras",
+    icon: Building2,
+    popular: false,
+    features: [
+      "MTRs ilimitados",
+      "Até 10 empresas incluídas",
+      "+R$ 397/cada 10 adicionais",
+      "Gestão multiempresa",
       "Suporte prioritário",
-      "API dedicada",
-      "White-label reports",
     ],
   },
 ];
@@ -38,14 +52,14 @@ const PlanCards = () => {
       <div>
         <h2 className="text-lg font-bold text-foreground flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-primary" />
-          Destrave limites e transforme seus clientes em receita recorrente
+          Escolha o plano ideal para sua operação
         </h2>
         <p className="text-xs text-muted-foreground mt-0.5">
-          Escolha o plano ideal para escalar a sua consultoria.
+          Escale conforme sua necessidade — de pequenas empresas a consultorias.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         {plans.map((plan) => {
           const Icon = plan.icon;
           return (
@@ -56,9 +70,9 @@ const PlanCards = () => {
               }`}
             >
               {plan.popular && (
-                <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-bl-lg">
+                <Badge className="absolute top-0 right-0 rounded-bl-lg rounded-tr-none border-0 gradient-primary text-primary-foreground text-[10px] font-bold px-3 py-1">
                   MAIS POPULAR
-                </div>
+                </Badge>
               )}
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2">
@@ -67,7 +81,7 @@ const PlanCards = () => {
                   </div>
                   <div>
                     <CardTitle className="text-base">{plan.name}</CardTitle>
-                    <CardDescription className="text-xs">{plan.limit}</CardDescription>
+                    <CardDescription className="text-xs">{plan.subtitle}</CardDescription>
                   </div>
                 </div>
               </CardHeader>
@@ -88,36 +102,13 @@ const PlanCards = () => {
 
                 <Button className="w-full gap-2" variant={plan.popular ? "default" : "outline"}>
                   <ArrowUpRight className="w-4 h-4" />
-                  Subscrever {plan.name}
+                  Assinar {plan.name}
                 </Button>
               </CardContent>
             </Card>
           );
         })}
       </div>
-
-      {/* ROI Simulator - 30% commission highlight */}
-      <Card className="border-2 border-primary/30 bg-primary/5">
-        <CardContent className="py-5 px-6 flex items-start gap-4">
-          <div className="p-2.5 rounded-full bg-primary/10 shrink-0 mt-0.5">
-            <Flame className="w-6 h-6 text-primary" />
-          </div>
-          <div className="space-y-1.5">
-            <p className="text-base font-bold text-foreground">
-              🔥 Ganhe 30% de comissão recorrente!
-            </p>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Ao indicar apenas <strong className="text-foreground">2 clientes</strong> para o plano
-              básico do CicloMTR, suas comissões (
-              <strong className="text-success">R$ 118,74/mês</strong>) já pagam a sua assinatura Max
-              e você ainda sai no lucro.
-            </p>
-            <p className="text-xs text-muted-foreground/70 mt-1">
-              Quanto mais clientes indicar, maior o seu rendimento passivo mensal.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 };

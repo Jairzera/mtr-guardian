@@ -11,10 +11,11 @@ type Period = "mensal" | "semestral" | "anual";
 
 const plans = [
   {
-    name: "Inicial",
-    price: { mensal: "R$ 197,90", semestral: "R$ 1.187,90", anual: "R$ 2.374,80" },
+    name: "Essencial",
+    price: { mensal: "R$ 99,00", semestral: "R$ 534,60", anual: "R$ 950,40" },
     periodLabel: { mensal: "/mês", semestral: "/semestre", anual: "/ano" },
-    features: ["Gestão de MTRs", "Painel Web completo", "Auditoria de Compliance", "Suporte por e-mail"],
+    subtitle: "Pequenas empresas",
+    features: ["Até 5 MTRs por mês", "1 empresa incluída", "Painel Web completo", "Suporte por e-mail"],
     links: {
       mensal: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=69RHPA1",
       semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=5XJI0DQ",
@@ -24,40 +25,29 @@ const plans = [
     badge: null,
   },
   {
-    name: "Crescimento",
-    price: { mensal: "R$ 237,90", semestral: "R$ 1.427,40", anual: "R$ 2.854,80" },
+    name: "Pro",
+    price: { mensal: "R$ 129,90", semestral: "R$ 701,46", anual: "R$ 1.247,04" },
     periodLabel: { mensal: "/mês", semestral: "/semestre", anual: "/ano" },
-    features: ["Tudo do Inicial +", "App para Operadores", "Validade Jurídica completa", "Rastreio em tempo real"],
+    subtitle: "Empresas que fazem a própria gestão",
+    features: ["MTRs ilimitados", "1 empresa incluída", "Auditoria de Compliance", "Rastreio em tempo real"],
     links: {
       mensal: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=HN1H9A1",
       semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=UYJIT1M",
       anual: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=0D7EFOI",
     },
-    highlight: false,
-    badge: null,
-  },
-  {
-    name: "Avançado",
-    price: { mensal: "R$ 797,90", semestral: "R$ 4.787,40", anual: "R$ 9.574,80" },
-    periodLabel: { mensal: "/mês", semestral: "/semestre", anual: "/ano" },
-    features: ["Tudo do Crescimento +", "Emissão Automática de CDF", "Gestão de Clientes", "Multi-usuários", "Suporte prioritário"],
-    links: {
-      mensal: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=QZMTVR0",
-      semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=WKEZ3Y5",
-      anual: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=WI87DD5",
-    },
     highlight: true,
     badge: "Mais Popular",
   },
   {
-    name: "Ilimitado",
-    price: { mensal: "R$ 837,90", semestral: "R$ 5.027,40", anual: "R$ 10.054,80" },
+    name: "Consultoria",
+    price: { mensal: "R$ 797,90", semestral: "R$ 4.308,66", anual: "R$ 7.659,84" },
     periodLabel: { mensal: "/mês", semestral: "/semestre", anual: "/ano" },
-    features: ["Tudo do Avançado +", "API dedicada", "Integração com Balança", "SLA de suporte 2h", "Customização"],
+    subtitle: "Consultorias e transportadoras",
+    features: ["MTRs ilimitados", "Até 10 empresas incluídas", "+R$ 397/cada 10 empresas adicionais", "Gestão multiempresa", "Suporte prioritário"],
     links: {
-      mensal: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=90SZL93",
-      semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=2V20XDP",
-      anual: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=98ZG7MD",
+      mensal: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=QZMTVR0",
+      semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=WKEZ3Y5",
+      anual: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=WI87DD5",
     },
     highlight: false,
     badge: null,
@@ -98,7 +88,7 @@ const Pricing = () => {
 
       {/* Cards */}
       <section className="max-w-7xl mx-auto px-4 pb-20">
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {plans.map((plan) => {
             const period = selectedPeriods[plan.name] || "mensal";
             return (
@@ -161,34 +151,15 @@ const Pricing = () => {
         </div>
       </section>
 
-      {/* Consultancy elastic model */}
+      {/* Expansion note */}
       <section className="max-w-7xl mx-auto px-4 pb-20">
         <Card className="p-8 border-2 border-primary/20">
-          <div className="text-center mb-6">
-            <Badge className="mb-3 gradient-primary text-primary-foreground border-0">Para Consultorias & Engenharias</Badge>
-            <h2 className="text-2xl font-bold text-foreground mb-2">Modelo Elástico Pay-per-CNPJ</h2>
+          <div className="text-center">
+            <Badge className="mb-3 gradient-primary text-primary-foreground border-0">Expansão sob demanda</Badge>
+            <h2 className="text-2xl font-bold text-foreground mb-2">Precisa de mais empresas?</h2>
             <p className="text-muted-foreground max-w-lg mx-auto">
-              Pague apenas pelos CNPJs ativos. Gerencie múltiplas filiais e clientes sem contratos arriscados.
+              No plano Consultoria, adicione pacotes de <strong className="text-foreground">+10 empresas</strong> por apenas <strong className="text-foreground">R$ 397,00/mês</strong>. Escale sua operação conforme a receita cresce.
             </p>
-          </div>
-          <div className="grid sm:grid-cols-3 gap-6 mb-6">
-            <div className="text-center p-4 rounded-lg border border-border">
-              <p className="text-2xl font-bold text-foreground">1–5 CNPJs</p>
-              <p className="text-sm text-muted-foreground">R$ 49,90 / CNPJ ativo</p>
-            </div>
-            <div className="text-center p-4 rounded-lg border border-primary">
-              <p className="text-2xl font-bold text-foreground">6–20 CNPJs</p>
-              <p className="text-sm text-muted-foreground">R$ 39,90 / CNPJ ativo</p>
-            </div>
-            <div className="text-center p-4 rounded-lg border border-border">
-              <p className="text-2xl font-bold text-foreground">21+ CNPJs</p>
-              <p className="text-sm text-muted-foreground">R$ 29,90 / CNPJ ativo</p>
-            </div>
-          </div>
-          <div className="flex flex-wrap gap-3 justify-center">
-            <Badge variant="secondary">✓ Sem contrato mínimo</Badge>
-            <Badge variant="secondary">✓ CNPJs inativos não cobram</Badge>
-            <Badge variant="secondary">✓ Escale sem fricção</Badge>
           </div>
         </Card>
       </section>

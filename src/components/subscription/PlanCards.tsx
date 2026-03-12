@@ -32,8 +32,8 @@ const plans = [
       "Rastreio em tempo real",
     ],
   },
-  {
-    name: "Consultoria",
+    {
+      name: "Consultoria/Industria",
     price: "797,90",
     subtitle: "Consultorias e transportadoras",
     icon: Building2,

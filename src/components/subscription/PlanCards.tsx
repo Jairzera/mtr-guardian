@@ -13,7 +13,6 @@ const plans = [
     link: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=51PFUS6",
     features: [
       "Até 5 MTRs por mês",
-      "1 empresa incluída",
       "Painel Web completo",
       "Suporte por e-mail",
     ],

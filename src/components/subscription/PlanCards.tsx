@@ -26,7 +26,6 @@ const plans = [
     link: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=ERDQ60M",
     features: [
       "MTRs ilimitados",
-      "1 empresa incluída",
       "Auditoria de Compliance",
       "Rastreio em tempo real",
     ],

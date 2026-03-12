@@ -29,7 +29,7 @@ const plans = [
     price: { mensal: "R$ 129,90", semestral: "R$ 701,46", anual: "R$ 1.247,04" },
     periodLabel: { mensal: "/mês", semestral: "/semestre", anual: "/ano" },
     subtitle: "Empresas que fazem a própria gestão",
-    features: ["MTRs ilimitados", "1 empresa incluída", "Auditoria de Compliance", "Rastreio em tempo real"],
+    features: ["MTRs ilimitados", "Auditoria de Compliance", "Rastreio em tempo real"],
     links: {
       mensal: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=ERDQ60M",
       semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=AB0O0N5",

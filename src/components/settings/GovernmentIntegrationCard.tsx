@@ -24,6 +24,42 @@ const GovernmentIntegrationCard = () => {
   const [status, setStatus] = useState<ConnectionStatus>("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [tutorialOpen, setTutorialOpen] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
+
+  // Check if token exists on mount
+  useState(() => {
+    if (!user) return;
+    supabase
+      .from("company_settings")
+      .select("gov_api_token")
+      .eq("user_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.gov_api_token && data.gov_api_token.trim() !== "") {
+          setIsConnected(true);
+        }
+      });
+  });
+
+  const handleDisconnect = async () => {
+    if (!user) return;
+    setIsDisconnecting(true);
+    const { error } = await supabase
+      .from("company_settings")
+      .update({ gov_api_token: "" })
+      .eq("user_id", user.id);
+
+    setIsDisconnecting(false);
+    if (error) {
+      toast({ title: "Erro", description: "Não foi possível desconectar.", variant: "destructive" });
+    } else {
+      setIsConnected(false);
+      setToken("");
+      setStatus("idle");
+      toast({ title: "Desconectado", description: "Token SINIR removido com sucesso." });
+    }
+  };
 
   const handleSaveAndTest = async () => {
     if (!token || !user) return;
@@ -47,6 +83,7 @@ const GovernmentIntegrationCard = () => {
 
       if (data?.success) {
         setStatus("success");
+        setIsConnected(true);
         toast({ title: "Sucesso!", description: "Conexão com o SINIR estabelecida com sucesso!" });
       } else {
         setStatus("error");
@@ -142,6 +179,19 @@ const GovernmentIntegrationCard = () => {
               <XCircle className="w-5 h-5 shrink-0" />
               <span className="text-sm font-medium">{errorMessage}</span>
             </div>
+          )}
+
+          {/* Disconnect button */}
+          {isConnected && (
+            <Button
+              variant="destructive"
+              onClick={handleDisconnect}
+              disabled={isDisconnecting}
+              className="gap-2"
+            >
+              {isDisconnecting && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isDisconnecting ? "Desconectando..." : "Desconectar SINIR"}
+            </Button>
           )}
         </CardContent>
       </Card>

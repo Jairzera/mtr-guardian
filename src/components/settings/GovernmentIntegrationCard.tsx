@@ -83,6 +83,7 @@ const GovernmentIntegrationCard = () => {
 
       if (data?.success) {
         setStatus("success");
+        setIsConnected(true);
         toast({ title: "Sucesso!", description: "Conexão com o SINIR estabelecida com sucesso!" });
       } else {
         setStatus("error");

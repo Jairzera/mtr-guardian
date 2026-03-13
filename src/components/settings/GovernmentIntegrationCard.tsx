@@ -180,6 +180,19 @@ const GovernmentIntegrationCard = () => {
               <span className="text-sm font-medium">{errorMessage}</span>
             </div>
           )}
+
+          {/* Disconnect button */}
+          {isConnected && (
+            <Button
+              variant="destructive"
+              onClick={handleDisconnect}
+              disabled={isDisconnecting}
+              className="gap-2"
+            >
+              {isDisconnecting && <Loader2 className="w-4 h-4 animate-spin" />}
+              {isDisconnecting ? "Desconectando..." : "Desconectar SINIR"}
+            </Button>
+          )}
         </CardContent>
       </Card>
 

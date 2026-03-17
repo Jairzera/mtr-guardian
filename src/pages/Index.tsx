@@ -320,10 +320,10 @@ const Index = () => {
               <h3 className="text-xl font-bold text-foreground mb-4">Processo Manual</h3>
               <ul className="space-y-3">
                 {[
-                  { icon: Clock, text: "15-20 minutos por MTR no site do governo" },
-                  { icon: AlertTriangle, text: "Erros de preenchimento = multas do IBAMA" },
-                  { icon: FileText, text: "CDFs perdidos em pastas desorganizadas" },
-                  { icon: XIcon, text: "Zero rastreabilidade de cargas" },
+                  { icon: Clock, text: "15-20 minutos por MTR no site do governo, por cliente" },
+                  { icon: AlertTriangle, text: "Erros de preenchimento = multas e perda de contratos" },
+                  { icon: FileText, text: "CDFs e comprovantes espalhados em pastas e e-mails" },
+                  { icon: XIcon, text: "Sem visibilidade centralizada das cargas" },
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-3 text-sm text-foreground/80">
                     <item.icon className="w-4 h-4 text-destructive mt-0.5 shrink-0" />

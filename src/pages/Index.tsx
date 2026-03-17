@@ -674,10 +674,10 @@ const Index = () => {
         </div>
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
           <h2 className="text-3xl md:text-4xl font-bold">
-            Sua operação <span className="text-sidebar-primary">100% legalizada</span> hoje.
+            Escale sua operação <span className="text-sidebar-primary">sem aumentar equipe</span>.
           </h2>
           <p className="text-sidebar-foreground/60 text-lg max-w-xl mx-auto">
-            Junte-se a empresas que já eliminaram o risco de multas e automatizaram a gestão de resíduos.
+            Junte-se a empresas de resíduos que automatizaram a gestão de MTRs e multiplicaram a carteira de clientes.
           </p>
           <div className="pt-2">
             <Button

@@ -49,12 +49,12 @@ type Period = "mensal" | "semestral" | "anual";
 
 const plans = [
   {
-    name: "Consultoria/Industria",
+    name: "Profissional",
     price: { mensal: "R$ 797,90", semestral: "R$ 4.308,66", anual: "R$ 7.659,84" },
     monthlyEquiv: { mensal: "797,90", semestral: "718,11", anual: "638,32" },
     periodLabel: { mensal: "/mês", semestral: "/semestre", anual: "/ano" },
-    subtitle: "Consultorias e transportadoras",
-    features: ["MTRs ilimitados", "Até 10 empresas incluídas", "+R$ 397/cada 10 empresas adicionais", "Gestão multiempresa", "Suporte prioritário"],
+    subtitle: "Para empresas de resíduos",
+    features: ["MTRs ilimitados", "Até 10 empresas/clientes incluídos", "+R$ 397/cada 10 adicionais", "Gestão multiempresa", "Suporte prioritário"],
     links: {
       mensal: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=QZMTVR0",
       semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=WKEZ3Y5",

@@ -175,20 +175,20 @@ const Index = () => {
             <div className="space-y-8">
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-semibold text-primary">
                 <Sparkles className="w-3.5 h-3.5" />
-                Plataforma de Inteligência Ambiental
+                Plataforma para Empresas de Resíduos
               </div>
 
               <h1 className="text-3xl sm:text-4xl lg:text-[2.75rem] xl:text-5xl font-extrabold leading-[1.15] tracking-tight text-foreground">
-                Emita MTRs em{" "}
+                Gerencie MTRs de{" "}
                 <span className="relative inline-block">
-                  <span className="text-primary">10 segundos</span>
+                  <span className="text-primary">todos os seus clientes</span>
                   <svg className="absolute -bottom-1 left-0 w-full" viewBox="0 0 200 8" fill="none"><path d="M2 6C50 2 150 2 198 6" stroke="hsl(var(--primary))" strokeWidth="3" strokeLinecap="round" opacity="0.3"/></svg>
                 </span>{" "}
-                e blinde sua fábrica de multas do IBAMA.
+                em um único painel.
               </h1>
 
               <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl">
-                Esqueça o site lento do governo. Automatize manifestos com validação inteligente, rastreie cargas em tempo real e mantenha sua documentação 100% auditável.
+                Feito para quem coleta, transporta, trata e destina resíduos. Automatize manifestos, rastreie cargas e mantenha a documentação 100% auditável — tudo centralizado.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3">

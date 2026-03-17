@@ -49,36 +49,6 @@ type Period = "mensal" | "semestral" | "anual";
 
 const plans = [
   {
-    name: "Essencial",
-    price: { mensal: "R$ 99,00", semestral: "R$ 534,60", anual: "R$ 950,40" },
-    monthlyEquiv: { mensal: "99,00", semestral: "89,10", anual: "79,20" },
-    periodLabel: { mensal: "/mês", semestral: "/semestre", anual: "/ano" },
-    subtitle: "Pequenas empresas",
-    features: ["Até 5 MTRs por mês", "Painel Web completo", "Suporte por e-mail"],
-    links: {
-      mensal: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=51PFUS6",
-      semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=N05IA0D",
-      anual: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=BRV2N1F",
-    },
-    highlight: false,
-    badge: null,
-  },
-  {
-    name: "Pro",
-    price: { mensal: "R$ 129,90", semestral: "R$ 701,46", anual: "R$ 1.247,04" },
-    monthlyEquiv: { mensal: "129,90", semestral: "116,91", anual: "103,92" },
-    periodLabel: { mensal: "/mês", semestral: "/semestre", anual: "/ano" },
-    subtitle: "Empresas que fazem a própria gestão",
-    features: ["MTRs ilimitados", "Auditoria de Compliance", "Rastreio em tempo real"],
-    links: {
-      mensal: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=ERDQ60M",
-      semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=AB0O0N5",
-      anual: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=AB0O0N5",
-    },
-    highlight: true,
-    badge: "Mais Popular",
-  },
-  {
     name: "Consultoria/Industria",
     price: { mensal: "R$ 797,90", semestral: "R$ 4.308,66", anual: "R$ 7.659,84" },
     monthlyEquiv: { mensal: "797,90", semestral: "718,11", anual: "638,32" },
@@ -90,7 +60,7 @@ const plans = [
       semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=WKEZ3Y5",
       anual: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=WI87DD5",
     },
-    highlight: false,
+    highlight: true,
     badge: null,
   },
 ];

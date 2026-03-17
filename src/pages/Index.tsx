@@ -529,21 +529,21 @@ const Index = () => {
           <div className="grid md:grid-cols-3 gap-6">
             {[
               {
-                quote: "Reduzimos o tempo de emissão de MTRs de 20 minutos para menos de 1 minuto. O impacto na produtividade foi imediato.",
+                quote: "Gerenciamos mais de 40 clientes e o CicloMTR centralizou tudo. Reduzimos erros e o tempo de operação caiu pela metade.",
                 name: "Carlos M.",
-                role: "Gestor Ambiental",
-                company: "Indústria Metalúrgica",
-              },
-              {
-                quote: "A validação automática nos salvou de erros que poderiam gerar multas sérias. Hoje temos confiança total na documentação.",
-                name: "Ana R.",
-                role: "Coordenadora de Meio Ambiente",
-                company: "Construtora",
-              },
-              {
-                quote: "O Marketplace nos conectou com geradores que não conhecíamos. Aumentamos o volume de recebimento em 30% no primeiro trimestre.",
-                name: "Roberto S.",
                 role: "Diretor Operacional",
+                company: "Transportadora de Resíduos",
+              },
+              {
+                quote: "A validação automática nos salvou de erros que poderiam gerar multas sérias para nossos clientes. Hoje temos confiança total na documentação.",
+                name: "Ana R.",
+                role: "Coordenadora Ambiental",
+                company: "Empresa de Coleta",
+              },
+              {
+                quote: "O rastreio em tempo real e o Cofre de CDFs são diferenciais competitivos. Nossos clientes adoram a transparência.",
+                name: "Roberto S.",
+                role: "Gerente de Operações",
                 company: "Recicladora",
               },
             ].map((t, i) => (

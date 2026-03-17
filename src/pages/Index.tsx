@@ -447,30 +447,30 @@ const Index = () => {
       <section id="para-quem" className="py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14 max-w-2xl mx-auto">
-            <Badge variant="secondary" className="mb-4 text-xs font-medium">Segmentação</Badge>
+            <Badge variant="secondary" className="mb-4 text-xs font-medium">Para Quem</Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Feito para quem <span className="text-primary">gera</span>, <span className="text-primary">recebe</span> e <span className="text-primary">consulta</span> resíduos
+              Feito para quem <span className="text-primary">coleta</span>, <span className="text-primary">transporta</span> e <span className="text-primary">destina</span> resíduos
             </h2>
           </div>
           <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* Geradores */}
+            {/* Transportadoras e Coletoras */}
             <Card className="p-8 border-2 border-border hover:border-primary/30 transition-all hover:shadow-lg group">
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center transition-transform group-hover:scale-110">
-                  <Factory className="w-7 h-7 text-primary" />
+                  <Truck className="w-7 h-7 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-foreground">Para Geradores</h3>
-                  <p className="text-sm text-muted-foreground">Indústrias, Construtoras e PMEs</p>
+                  <h3 className="text-xl font-bold text-foreground">Coleta e Transporte</h3>
+                  <p className="text-sm text-muted-foreground">Transportadoras e coletoras de resíduos</p>
                 </div>
               </div>
               <ul className="space-y-3">
                 {[
-                  "Evite multas do IBAMA com validação automática",
-                  "Emita MTRs em 10 segundos (não em 20 minutos)",
-                  "Rastreie cada carga até o destino final",
+                  "Emita MTRs para múltiplos clientes em segundos",
+                  "Rastreie cada carga com link para o motorista",
+                  "Gerencie dezenas de CNPJs num único painel",
                   "Cofre jurídico com todos os comprovantes",
-                  "Venda resíduos no Marketplace integrado",
+                  "Acesso de visualização para o cliente acompanhar",
                 ].map((f) => (
                   <li key={f} className="flex items-start gap-3 text-sm text-foreground">
                     <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
@@ -484,24 +484,24 @@ const Index = () => {
               </Button>
             </Card>
 
-            {/* Consultores */}
+            {/* Tratamento e Destinação */}
             <Card className="p-8 border-2 border-border hover:border-accent-foreground/20 transition-all hover:shadow-lg group">
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center transition-transform group-hover:scale-110">
-                  <Building2 className="w-7 h-7 text-accent-foreground" />
+                  <Factory className="w-7 h-7 text-accent-foreground" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-foreground">Para Consultores</h3>
-                  <p className="text-sm text-muted-foreground">Gestão Multi-Empresa</p>
+                  <h3 className="text-xl font-bold text-foreground">Tratamento e Destinação</h3>
+                  <p className="text-sm text-muted-foreground">Aterros, recicladoras e unidades de tratamento</p>
                 </div>
               </div>
               <ul className="space-y-3">
                 {[
-                  "Gestão centralizada de múltiplos CNPJs num único painel",
-                  "Geração automática de relatórios anuais para o IBAMA e DMR",
-                  "Monitorização de vencimento de licenças e CADRIs com alertas",
-                  "Emissão rápida e histórico completo de MTRs para todos os clientes",
-                  "Acesso de visualização 'White-Label' para o dono da fábrica",
+                  "Receba e confirme MTRs dos geradores com agilidade",
+                  "Emita CDFs e mantenha tudo centralizado no Cofre",
+                  "Controle o peso recebido vs. declarado automaticamente",
+                  "Relatórios de compliance prontos para fiscalização",
+                  "Monitoramento de licenças com alertas de vencimento",
                 ].map((f) => (
                   <li key={f} className="flex items-start gap-3 text-sm text-foreground">
                     <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
@@ -509,9 +509,9 @@ const Index = () => {
                   </li>
                 ))}
               </ul>
-              <Button variant="outline" className="mt-8 w-full h-12 font-semibold" onClick={() => window.open("https://wa.me/5511999999999?text=Olá!%20Tenho%20interesse%20no%20CicloMTR%20para%20Consultores.", "_blank")}>
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Falar com Especialista
+              <Button className="mt-8 w-full gradient-primary text-primary-foreground shadow-primary h-12 font-semibold group/btn" onClick={() => navigate("/auth")}>
+                Começar Teste Grátis
+                <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover/btn:translate-x-1" />
               </Button>
             </Card>
           </div>

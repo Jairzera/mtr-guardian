@@ -49,12 +49,12 @@ type Period = "mensal" | "semestral" | "anual";
 
 const plans = [
   {
-    name: "Consultoria/Industria",
+    name: "Profissional",
     price: { mensal: "R$ 797,90", semestral: "R$ 4.308,66", anual: "R$ 7.659,84" },
     monthlyEquiv: { mensal: "797,90", semestral: "718,11", anual: "638,32" },
     periodLabel: { mensal: "/mês", semestral: "/semestre", anual: "/ano" },
-    subtitle: "Consultorias e transportadoras",
-    features: ["MTRs ilimitados", "Até 10 empresas incluídas", "+R$ 397/cada 10 empresas adicionais", "Gestão multiempresa", "Suporte prioritário"],
+    subtitle: "Para empresas de resíduos",
+    features: ["MTRs ilimitados", "Até 10 empresas/clientes incluídos", "+R$ 397/cada 10 adicionais", "Gestão multiempresa", "Suporte prioritário"],
     links: {
       mensal: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=QZMTVR0",
       semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=WKEZ3Y5",
@@ -68,15 +68,15 @@ const plans = [
 const faqs = [
   {
     q: "O MTR gerado aqui vale para o IBAMA?",
-    a: "Sim. Nosso sistema emite o MTR diretamente na API oficial do SINIR (IN 13/2012 IBAMA). Todos os campos obrigatórios — Estado Físico, Acondicionamento, CNPJ e Licença do Destinador — são validados automaticamente antes da emissão, garantindo total validade jurídica.",
+    a: "Sim. Nosso sistema emite o MTR diretamente na API oficial do SINIR (IN 13/2012 IBAMA). Todos os campos obrigatórios são validados automaticamente antes da emissão, garantindo total validade jurídica.",
   },
   {
     q: "Preciso instalar algo no meu computador?",
     a: "Não. O CicloMTR é 100% Web e Cloud. Funciona em qualquer navegador, computador ou celular. Basta criar sua conta e começar a usar imediatamente.",
   },
   {
-    q: "E se o destinador não usar o sistema?",
-    a: "Sem problema. Temos a opção de upload manual de comprovante de recebimento. Você não fica na mão e mantém sua documentação completa e auditável.",
+    q: "Como gerencio os MTRs dos meus clientes?",
+    a: "Pelo painel multiempresa você cadastra os CNPJs dos seus clientes e emite, acompanha e documenta todos os MTRs de forma centralizada, sem precisar acessar conta por conta.",
   },
   {
     q: "Quanto tempo leva para emitir um MTR?",
@@ -88,11 +88,11 @@ const faqs = [
   },
   {
     q: "Como funciona o CDF (Certificado de Destinação Final)?",
-    a: "O CDF oficial é emitido pelo portal do SINIR pelo destinador. No CicloMTR, oferecemos o Cofre de CDFs: um repositório seguro onde você faz upload dos CDFs oficiais baixados do governo, mantendo tudo organizado e auditável num só lugar.",
+    a: "O CDF oficial é emitido pelo portal do SINIR. No CicloMTR, oferecemos o Cofre de CDFs: um repositório seguro onde você faz upload dos CDFs oficiais, mantendo tudo organizado e auditável num só lugar.",
   },
   {
-    q: "Posso cancelar um MTR pelo CicloMTR?",
-    a: "O cancelamento de MTRs deve ser feito diretamente no portal do SINIR (mtr.sinir.gov.br), pois o governo não disponibiliza esse recurso via API. Nosso sistema avisa você automaticamente quando isso for necessário.",
+    q: "Posso dar acesso de visualização aos meus clientes?",
+    a: "Sim. Com o acesso View-Only, seus clientes acompanham os MTRs e comprovantes sem poder editar nada — total transparência na prestação de serviço.",
   },
 ];
 
@@ -175,20 +175,20 @@ const Index = () => {
             <div className="space-y-8">
               <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-semibold text-primary">
                 <Sparkles className="w-3.5 h-3.5" />
-                Plataforma de Inteligência Ambiental
+                Plataforma para Empresas de Resíduos
               </div>
 
               <h1 className="text-3xl sm:text-4xl lg:text-[2.75rem] xl:text-5xl font-extrabold leading-[1.15] tracking-tight text-foreground">
-                Emita MTRs em{" "}
+                Gerencie MTRs de{" "}
                 <span className="relative inline-block">
-                  <span className="text-primary">10 segundos</span>
+                  <span className="text-primary">todos os seus clientes</span>
                   <svg className="absolute -bottom-1 left-0 w-full" viewBox="0 0 200 8" fill="none"><path d="M2 6C50 2 150 2 198 6" stroke="hsl(var(--primary))" strokeWidth="3" strokeLinecap="round" opacity="0.3"/></svg>
                 </span>{" "}
-                e blinde sua fábrica de multas do IBAMA.
+                em um único painel.
               </h1>
 
               <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-xl">
-                Esqueça o site lento do governo. Automatize manifestos com validação inteligente, rastreie cargas em tempo real e mantenha sua documentação 100% auditável.
+                Feito para quem coleta, transporta, trata e destina resíduos. Automatize manifestos, rastreie cargas e mantenha a documentação 100% auditável — tudo centralizado.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-3">
@@ -237,8 +237,8 @@ const Index = () => {
                   <Shield className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-foreground">100% Compliance</p>
-                  <p className="text-xs text-muted-foreground">Validação IBAMA automática</p>
+                 <p className="text-sm font-bold text-foreground">100% Compliance</p>
+                  <p className="text-xs text-muted-foreground">Validação SINIR automática</p>
                 </div>
               </div>
 
@@ -301,10 +301,10 @@ const Index = () => {
           <div className="text-center mb-14 max-w-2xl mx-auto">
             <Badge variant="secondary" className="mb-4 text-xs font-medium">O Problema</Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              O processo manual está <span className="text-destructive">custando caro</span>
+              O processo manual está <span className="text-destructive">travando sua operação</span>
             </h2>
             <p className="text-muted-foreground text-lg">
-              Cada erro no manifesto é uma multa potencial. Cada minuto no site do governo é produtividade perdida.
+              Cada erro no manifesto é uma multa potencial. Cada minuto no site do governo é um cliente a menos atendido.
             </p>
           </div>
 
@@ -320,10 +320,10 @@ const Index = () => {
               <h3 className="text-xl font-bold text-foreground mb-4">Processo Manual</h3>
               <ul className="space-y-3">
                 {[
-                  { icon: Clock, text: "15-20 minutos por MTR no site do governo" },
-                  { icon: AlertTriangle, text: "Erros de preenchimento = multas do IBAMA" },
-                  { icon: FileText, text: "CDFs perdidos em pastas desorganizadas" },
-                  { icon: XIcon, text: "Zero rastreabilidade de cargas" },
+                  { icon: Clock, text: "15-20 minutos por MTR no site do governo, por cliente" },
+                  { icon: AlertTriangle, text: "Erros de preenchimento = multas e perda de contratos" },
+                  { icon: FileText, text: "CDFs e comprovantes espalhados em pastas e e-mails" },
+                  { icon: XIcon, text: "Sem visibilidade centralizada das cargas" },
                 ].map((item, i) => (
                   <li key={i} className="flex items-start gap-3 text-sm text-foreground/80">
                     <item.icon className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
@@ -366,10 +366,10 @@ const Index = () => {
           <div className="text-center mb-14 max-w-2xl mx-auto">
             <Badge variant="secondary" className="mb-4 text-xs font-medium">Por que o CicloMTR?</Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Três pilares para sua operação ficar <span className="text-primary">blindada</span>
+              Três pilares para escalar sua operação com <span className="text-primary">segurança</span>
             </h2>
             <p className="text-muted-foreground text-lg">
-              Deixe de lado planilhas, sites lentos e o medo de fiscalização.
+              Deixe de lado planilhas e sites lentos. Gerencie dezenas de clientes sem aumentar equipe.
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
@@ -377,21 +377,21 @@ const Index = () => {
               {
                 icon: Shield,
                 title: "Blindagem Jurídica",
-                desc: "O sistema valida se o resíduo combina com o destino. Nunca mais envie carga errada e evite multas milionárias do IBAMA.",
+                desc: "O sistema valida se o resíduo combina com o destino. Proteja sua empresa e seus clientes de multas e não-conformidades.",
                 accent: "bg-primary/10 text-primary",
                 border: "hover:border-primary/40",
               },
               {
                 icon: Zap,
-                title: "Preenchimento Inteligente",
-                desc: "Catálogos oficiais do IBAMA carregados automaticamente. CEP auto-completa endereço. Zero digitação manual, zero erros.",
+                title: "Gestão Multiempresa",
+                desc: "Cadastre dezenas de CNPJs de clientes e opere tudo em um único painel. Emita, rastreie e documente sem trocar de conta.",
                 accent: "bg-warning/10 text-warning",
                 border: "hover:border-warning/40",
               },
               {
                 icon: TrendingUp,
-                title: "Marketplace de Resíduos",
-                desc: "Conecte-se a quem compra seu lixo. Transforme custo de descarte em nova receita para sua empresa.",
+                title: "Rastreio e Comprovação",
+                desc: "Acompanhe cada carga em tempo real e centralize CDFs e comprovantes. Ofereça transparência total ao seu cliente.",
                 accent: "bg-accent text-accent-foreground",
                 border: "hover:border-accent-foreground/30",
               },
@@ -426,9 +426,9 @@ const Index = () => {
             {/* Connector line */}
             <div className="hidden md:block absolute top-12 left-[20%] right-[20%] h-px bg-gradient-to-r from-transparent via-sidebar-border to-transparent" />
             {[
-              { step: "01", icon: FileText, title: "Emita o MTR", desc: "Preencha em segundos pelo painel web. Dados validados automaticamente contra a base do IBAMA." },
-              { step: "02", icon: Truck, title: "Rastreie a Carga", desc: "O motorista recebe o link de rastreio. Acompanhe a ida e a entrega em tempo real no mapa." },
-              { step: "03", icon: Award, title: "Documente Tudo", desc: "O destinador confirma o recebimento. Todos os comprovantes ficam organizados no seu Cofre Jurídico." },
+              { step: "01", icon: FileText, title: "Emita o MTR", desc: "Preencha em segundos pelo painel web. Selecione o cliente, o resíduo e o destino — tudo validado automaticamente." },
+              { step: "02", icon: Truck, title: "Rastreie a Carga", desc: "O motorista recebe o link de rastreio. Você e seu cliente acompanham a coleta e a entrega em tempo real." },
+              { step: "03", icon: Award, title: "Documente Tudo", desc: "Comprovantes de recebimento e CDFs ficam organizados no Cofre Jurídico. Relatórios prontos para fiscalização." },
             ].map((s, i) => (
               <div key={s.step} className="relative text-center space-y-5">
                 <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center mx-auto shadow-primary relative z-10 transition-transform hover:scale-105">
@@ -447,30 +447,30 @@ const Index = () => {
       <section id="para-quem" className="py-16 md:py-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-14 max-w-2xl mx-auto">
-            <Badge variant="secondary" className="mb-4 text-xs font-medium">Segmentação</Badge>
+            <Badge variant="secondary" className="mb-4 text-xs font-medium">Para Quem</Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Feito para quem <span className="text-primary">gera</span>, <span className="text-primary">recebe</span> e <span className="text-primary">consulta</span> resíduos
+              Feito para quem <span className="text-primary">coleta</span>, <span className="text-primary">transporta</span> e <span className="text-primary">destina</span> resíduos
             </h2>
           </div>
           <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {/* Geradores */}
+            {/* Transportadoras e Coletoras */}
             <Card className="p-8 border-2 border-border hover:border-primary/30 transition-all hover:shadow-lg group">
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center transition-transform group-hover:scale-110">
-                  <Factory className="w-7 h-7 text-primary" />
+                  <Truck className="w-7 h-7 text-primary" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-foreground">Para Geradores</h3>
-                  <p className="text-sm text-muted-foreground">Indústrias, Construtoras e PMEs</p>
+                  <h3 className="text-xl font-bold text-foreground">Coleta e Transporte</h3>
+                  <p className="text-sm text-muted-foreground">Transportadoras e coletoras de resíduos</p>
                 </div>
               </div>
               <ul className="space-y-3">
                 {[
-                  "Evite multas do IBAMA com validação automática",
-                  "Emita MTRs em 10 segundos (não em 20 minutos)",
-                  "Rastreie cada carga até o destino final",
+                  "Emita MTRs para múltiplos clientes em segundos",
+                  "Rastreie cada carga com link para o motorista",
+                  "Gerencie dezenas de CNPJs num único painel",
                   "Cofre jurídico com todos os comprovantes",
-                  "Venda resíduos no Marketplace integrado",
+                  "Acesso de visualização para o cliente acompanhar",
                 ].map((f) => (
                   <li key={f} className="flex items-start gap-3 text-sm text-foreground">
                     <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
@@ -484,24 +484,24 @@ const Index = () => {
               </Button>
             </Card>
 
-            {/* Consultores */}
+            {/* Tratamento e Destinação */}
             <Card className="p-8 border-2 border-border hover:border-accent-foreground/20 transition-all hover:shadow-lg group">
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-14 h-14 rounded-2xl bg-accent flex items-center justify-center transition-transform group-hover:scale-110">
-                  <Building2 className="w-7 h-7 text-accent-foreground" />
+                  <Factory className="w-7 h-7 text-accent-foreground" />
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold text-foreground">Para Consultores</h3>
-                  <p className="text-sm text-muted-foreground">Gestão Multi-Empresa</p>
+                  <h3 className="text-xl font-bold text-foreground">Tratamento e Destinação</h3>
+                  <p className="text-sm text-muted-foreground">Aterros, recicladoras e unidades de tratamento</p>
                 </div>
               </div>
               <ul className="space-y-3">
                 {[
-                  "Gestão centralizada de múltiplos CNPJs num único painel",
-                  "Geração automática de relatórios anuais para o IBAMA e DMR",
-                  "Monitorização de vencimento de licenças e CADRIs com alertas",
-                  "Emissão rápida e histórico completo de MTRs para todos os clientes",
-                  "Acesso de visualização 'White-Label' para o dono da fábrica",
+                  "Receba e confirme MTRs dos geradores com agilidade",
+                  "Emita CDFs e mantenha tudo centralizado no Cofre",
+                  "Controle o peso recebido vs. declarado automaticamente",
+                  "Relatórios de compliance prontos para fiscalização",
+                  "Monitoramento de licenças com alertas de vencimento",
                 ].map((f) => (
                   <li key={f} className="flex items-start gap-3 text-sm text-foreground">
                     <Check className="w-4 h-4 text-primary mt-0.5 shrink-0" />
@@ -509,9 +509,9 @@ const Index = () => {
                   </li>
                 ))}
               </ul>
-              <Button variant="outline" className="mt-8 w-full h-12 font-semibold" onClick={() => window.open("https://wa.me/5511999999999?text=Olá!%20Tenho%20interesse%20no%20CicloMTR%20para%20Consultores.", "_blank")}>
-                <MessageCircle className="w-4 h-4 mr-2" />
-                Falar com Especialista
+              <Button className="mt-8 w-full gradient-primary text-primary-foreground shadow-primary h-12 font-semibold group/btn" onClick={() => navigate("/auth")}>
+                Começar Teste Grátis
+                <ArrowRight className="w-4 h-4 ml-1 transition-transform group-hover/btn:translate-x-1" />
               </Button>
             </Card>
           </div>
@@ -529,21 +529,21 @@ const Index = () => {
           <div className="grid md:grid-cols-3 gap-6">
             {[
               {
-                quote: "Reduzimos o tempo de emissão de MTRs de 20 minutos para menos de 1 minuto. O impacto na produtividade foi imediato.",
+                quote: "Gerenciamos mais de 40 clientes e o CicloMTR centralizou tudo. Reduzimos erros e o tempo de operação caiu pela metade.",
                 name: "Carlos M.",
-                role: "Gestor Ambiental",
-                company: "Indústria Metalúrgica",
-              },
-              {
-                quote: "A validação automática nos salvou de erros que poderiam gerar multas sérias. Hoje temos confiança total na documentação.",
-                name: "Ana R.",
-                role: "Coordenadora de Meio Ambiente",
-                company: "Construtora",
-              },
-              {
-                quote: "O Marketplace nos conectou com geradores que não conhecíamos. Aumentamos o volume de recebimento em 30% no primeiro trimestre.",
-                name: "Roberto S.",
                 role: "Diretor Operacional",
+                company: "Transportadora de Resíduos",
+              },
+              {
+                quote: "A validação automática nos salvou de erros que poderiam gerar multas sérias para nossos clientes. Hoje temos confiança total na documentação.",
+                name: "Ana R.",
+                role: "Coordenadora Ambiental",
+                company: "Empresa de Coleta",
+              },
+              {
+                quote: "O rastreio em tempo real e o Cofre de CDFs são diferenciais competitivos. Nossos clientes adoram a transparência.",
+                name: "Roberto S.",
+                role: "Gerente de Operações",
                 company: "Recicladora",
               },
             ].map((t, i) => (
@@ -575,10 +575,10 @@ const Index = () => {
           <div className="text-center mb-14 max-w-2xl mx-auto">
             <Badge variant="secondary" className="mb-4 text-xs font-medium">Planos</Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Investimento que se paga na <span className="text-primary">primeira multa evitada</span>
+              Investimento que se paga no <span className="text-primary">primeiro mês de operação</span>
             </h2>
             <p className="text-muted-foreground text-lg">
-              14 dias grátis em todos os planos. Escolha o período de pagamento.
+              14 dias grátis. Gerencie todos os seus clientes sem limites.
             </p>
           </div>
           <div className="grid grid-cols-1 gap-6 max-w-md mx-auto">
@@ -674,10 +674,10 @@ const Index = () => {
         </div>
         <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
           <h2 className="text-3xl md:text-4xl font-bold">
-            Sua operação <span className="text-sidebar-primary">100% legalizada</span> hoje.
+            Escale sua operação <span className="text-sidebar-primary">sem aumentar equipe</span>.
           </h2>
           <p className="text-sidebar-foreground/60 text-lg max-w-xl mx-auto">
-            Junte-se a empresas que já eliminaram o risco de multas e automatizaram a gestão de resíduos.
+            Junte-se a empresas de resíduos que automatizaram a gestão de MTRs e multiplicaram a carteira de clientes.
           </p>
           <div className="pt-2">
             <Button
@@ -703,7 +703,7 @@ const Index = () => {
                 <span className="font-bold text-foreground text-lg">CicloMTR</span>
               </div>
               <p className="text-sm text-muted-foreground max-w-xs">
-                A plataforma de inteligência ambiental que blinda sua fábrica de multas e automatiza a gestão de resíduos.
+                A plataforma para empresas de coleta, transporte, tratamento e destinação de resíduos que querem escalar com compliance.
               </p>
             </div>
             <div className="space-y-3">

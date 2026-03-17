@@ -11,11 +11,11 @@ type Period = "mensal" | "semestral" | "anual";
 
 const plans = [
   {
-    name: "Consultoria/Industria",
+    name: "Profissional",
     price: { mensal: "R$ 797,90", semestral: "R$ 4.308,66", anual: "R$ 7.659,84" },
     periodLabel: { mensal: "/mês", semestral: "/semestre", anual: "/ano" },
-    subtitle: "Consultorias e transportadoras",
-    features: ["MTRs ilimitados", "Até 10 empresas incluídas", "+R$ 397/cada 10 empresas adicionais", "Gestão multiempresa", "Suporte prioritário"],
+    subtitle: "Para empresas de resíduos",
+    features: ["MTRs ilimitados", "Até 10 empresas/clientes incluídos", "+R$ 397/cada 10 adicionais", "Gestão multiempresa", "Suporte prioritário"],
     links: {
       mensal: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=QZMTVR0",
       semestral: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=WKEZ3Y5",
@@ -48,13 +48,13 @@ const Pricing = () => {
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-4 pt-16 pb-10 text-center">
         <Badge variant="secondary" className="mb-4 text-xs font-medium">
-          Plataforma B2B para Gestão de Resíduos
+          Plataforma para Empresas de Resíduos
         </Badge>
         <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-          Escolha o plano ideal para sua operação
+          O plano ideal para sua operação
         </h1>
         <p className="text-muted-foreground max-w-xl mx-auto">
-          Controle total de MTRs, Compliance e Rastreabilidade com segurança jurídica.
+          Controle total de MTRs, Compliance e Rastreabilidade para quem coleta, transporta e destina resíduos.
         </p>
       </section>
 
@@ -128,9 +128,9 @@ const Pricing = () => {
         <Card className="p-8 border-2 border-primary/20">
           <div className="text-center">
             <Badge className="mb-3 gradient-primary text-primary-foreground border-0">Expansão sob demanda</Badge>
-            <h2 className="text-2xl font-bold text-foreground mb-2">Precisa de mais empresas?</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-2">Precisa gerenciar mais clientes?</h2>
             <p className="text-muted-foreground max-w-lg mx-auto">
-              No plano Consultoria, adicione pacotes de <strong className="text-foreground">+10 empresas</strong> por apenas <strong className="text-foreground">R$ 397,00/mês</strong>. Escale sua operação conforme a receita cresce.
+              Adicione pacotes de <strong className="text-foreground">+10 empresas/clientes</strong> por apenas <strong className="text-foreground">R$ 397,00/mês</strong>. Escale sua operação conforme a carteira cresce.
             </p>
           </div>
         </Card>

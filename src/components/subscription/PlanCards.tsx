@@ -5,15 +5,15 @@ import { Badge } from "@/components/ui/badge";
 
 const plans = [
   {
-    name: "Consultoria/Industria",
+    name: "Profissional",
     price: "797,90",
-    subtitle: "Consultorias e transportadoras",
+    subtitle: "Para empresas de resíduos",
     icon: Building2,
     popular: true,
     link: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=QZMTVR0",
     features: [
       "MTRs ilimitados",
-      "Até 10 empresas incluídas",
+      "Até 10 empresas/clientes incluídos",
       "+R$ 397/cada 10 adicionais",
       "Gestão multiempresa",
       "Suporte prioritário",

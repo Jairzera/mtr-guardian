@@ -703,7 +703,7 @@ const Index = () => {
                 <span className="font-bold text-foreground text-lg">CicloMTR</span>
               </div>
               <p className="text-sm text-muted-foreground max-w-xs">
-                A plataforma de inteligência ambiental que blinda sua fábrica de multas e automatiza a gestão de resíduos.
+                A plataforma para empresas de coleta, transporte, tratamento e destinação de resíduos que querem escalar com compliance.
               </p>
             </div>
             <div className="space-y-3">

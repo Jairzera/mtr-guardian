@@ -575,10 +575,10 @@ const Index = () => {
           <div className="text-center mb-14 max-w-2xl mx-auto">
             <Badge variant="secondary" className="mb-4 text-xs font-medium">Planos</Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Investimento que se paga na <span className="text-primary">primeira multa evitada</span>
+              Investimento que se paga no <span className="text-primary">primeiro mês de operação</span>
             </h2>
             <p className="text-muted-foreground text-lg">
-              14 dias grátis em todos os planos. Escolha o período de pagamento.
+              14 dias grátis. Gerencie todos os seus clientes sem limites.
             </p>
           </div>
           <div className="grid grid-cols-1 gap-6 max-w-md mx-auto">

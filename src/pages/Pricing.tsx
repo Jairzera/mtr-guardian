@@ -48,13 +48,13 @@ const Pricing = () => {
       {/* Hero */}
       <section className="max-w-7xl mx-auto px-4 pt-16 pb-10 text-center">
         <Badge variant="secondary" className="mb-4 text-xs font-medium">
-          Plataforma B2B para Gestão de Resíduos
+          Plataforma para Empresas de Resíduos
         </Badge>
         <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
-          Escolha o plano ideal para sua operação
+          O plano ideal para sua operação
         </h1>
         <p className="text-muted-foreground max-w-xl mx-auto">
-          Controle total de MTRs, Compliance e Rastreabilidade com segurança jurídica.
+          Controle total de MTRs, Compliance e Rastreabilidade para quem coleta, transporta e destina resíduos.
         </p>
       </section>
 

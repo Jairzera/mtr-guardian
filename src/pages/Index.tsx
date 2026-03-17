@@ -68,15 +68,15 @@ const plans = [
 const faqs = [
   {
     q: "O MTR gerado aqui vale para o IBAMA?",
-    a: "Sim. Nosso sistema emite o MTR diretamente na API oficial do SINIR (IN 13/2012 IBAMA). Todos os campos obrigatórios — Estado Físico, Acondicionamento, CNPJ e Licença do Destinador — são validados automaticamente antes da emissão, garantindo total validade jurídica.",
+    a: "Sim. Nosso sistema emite o MTR diretamente na API oficial do SINIR (IN 13/2012 IBAMA). Todos os campos obrigatórios são validados automaticamente antes da emissão, garantindo total validade jurídica.",
   },
   {
     q: "Preciso instalar algo no meu computador?",
     a: "Não. O CicloMTR é 100% Web e Cloud. Funciona em qualquer navegador, computador ou celular. Basta criar sua conta e começar a usar imediatamente.",
   },
   {
-    q: "E se o destinador não usar o sistema?",
-    a: "Sem problema. Temos a opção de upload manual de comprovante de recebimento. Você não fica na mão e mantém sua documentação completa e auditável.",
+    q: "Como gerencio os MTRs dos meus clientes?",
+    a: "Pelo painel multiempresa você cadastra os CNPJs dos seus clientes e emite, acompanha e documenta todos os MTRs de forma centralizada, sem precisar acessar conta por conta.",
   },
   {
     q: "Quanto tempo leva para emitir um MTR?",
@@ -88,11 +88,11 @@ const faqs = [
   },
   {
     q: "Como funciona o CDF (Certificado de Destinação Final)?",
-    a: "O CDF oficial é emitido pelo portal do SINIR pelo destinador. No CicloMTR, oferecemos o Cofre de CDFs: um repositório seguro onde você faz upload dos CDFs oficiais baixados do governo, mantendo tudo organizado e auditável num só lugar.",
+    a: "O CDF oficial é emitido pelo portal do SINIR. No CicloMTR, oferecemos o Cofre de CDFs: um repositório seguro onde você faz upload dos CDFs oficiais, mantendo tudo organizado e auditável num só lugar.",
   },
   {
-    q: "Posso cancelar um MTR pelo CicloMTR?",
-    a: "O cancelamento de MTRs deve ser feito diretamente no portal do SINIR (mtr.sinir.gov.br), pois o governo não disponibiliza esse recurso via API. Nosso sistema avisa você automaticamente quando isso for necessário.",
+    q: "Posso dar acesso de visualização aos meus clientes?",
+    a: "Sim. Com o acesso View-Only, seus clientes acompanham os MTRs e comprovantes sem poder editar nada — total transparência na prestação de serviço.",
   },
 ];
 

@@ -128,9 +128,9 @@ const Pricing = () => {
         <Card className="p-8 border-2 border-primary/20">
           <div className="text-center">
             <Badge className="mb-3 gradient-primary text-primary-foreground border-0">Expansão sob demanda</Badge>
-            <h2 className="text-2xl font-bold text-foreground mb-2">Precisa de mais empresas?</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-2">Precisa gerenciar mais clientes?</h2>
             <p className="text-muted-foreground max-w-lg mx-auto">
-              No plano Consultoria, adicione pacotes de <strong className="text-foreground">+10 empresas</strong> por apenas <strong className="text-foreground">R$ 397,00/mês</strong>. Escale sua operação conforme a receita cresce.
+              Adicione pacotes de <strong className="text-foreground">+10 empresas/clientes</strong> por apenas <strong className="text-foreground">R$ 397,00/mês</strong>. Escale sua operação conforme a carteira cresce.
             </p>
           </div>
         </Card>

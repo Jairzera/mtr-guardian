@@ -301,10 +301,10 @@ const Index = () => {
           <div className="text-center mb-14 max-w-2xl mx-auto">
             <Badge variant="secondary" className="mb-4 text-xs font-medium">O Problema</Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              O processo manual está <span className="text-destructive">custando caro</span>
+              O processo manual está <span className="text-destructive">travando sua operação</span>
             </h2>
             <p className="text-muted-foreground text-lg">
-              Cada erro no manifesto é uma multa potencial. Cada minuto no site do governo é produtividade perdida.
+              Cada erro no manifesto é uma multa potencial. Cada minuto no site do governo é um cliente a menos atendido.
             </p>
           </div>
 

@@ -581,7 +581,7 @@ const Index = () => {
               14 dias grátis em todos os planos. Escolha o período de pagamento.
             </p>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6 max-w-md mx-auto">
             {plans.map((plan) => {
               const period = selectedPeriods[plan.name] || "mensal";
               return (

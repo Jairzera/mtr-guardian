@@ -34,7 +34,7 @@ const PlanCards = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 max-w-md mx-auto">
         {plans.map((plan) => {
           const Icon = plan.icon;
           return (

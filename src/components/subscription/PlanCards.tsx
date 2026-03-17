@@ -5,37 +5,11 @@ import { Badge } from "@/components/ui/badge";
 
 const plans = [
   {
-    name: "Essencial",
-    price: "99,00",
-    subtitle: "Pequenas empresas",
-    icon: Zap,
-    popular: false,
-    link: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=51PFUS6",
-    features: [
-      "Até 5 MTRs por mês",
-      "Painel Web completo",
-      "Suporte por e-mail",
-    ],
-  },
-  {
-    name: "Pro",
-    price: "129,90",
-    subtitle: "Gestão própria",
-    icon: Crown,
-    popular: true,
-    link: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=ERDQ60M",
-    features: [
-      "MTRs ilimitados",
-      "Auditoria de Compliance",
-      "Rastreio em tempo real",
-    ],
-  },
-    {
-      name: "Consultoria/Industria",
+    name: "Consultoria/Industria",
     price: "797,90",
     subtitle: "Consultorias e transportadoras",
     icon: Building2,
-    popular: false,
+    popular: true,
     link: "https://checkout.nexano.com.br/checkout/cmlx0xo8z05791xqefmwp6f6f?offer=QZMTVR0",
     features: [
       "MTRs ilimitados",

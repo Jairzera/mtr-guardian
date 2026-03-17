@@ -366,10 +366,10 @@ const Index = () => {
           <div className="text-center mb-14 max-w-2xl mx-auto">
             <Badge variant="secondary" className="mb-4 text-xs font-medium">Por que o CicloMTR?</Badge>
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Três pilares para sua operação ficar <span className="text-primary">blindada</span>
+              Três pilares para escalar sua operação com <span className="text-primary">segurança</span>
             </h2>
             <p className="text-muted-foreground text-lg">
-              Deixe de lado planilhas, sites lentos e o medo de fiscalização.
+              Deixe de lado planilhas e sites lentos. Gerencie dezenas de clientes sem aumentar equipe.
             </p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
@@ -377,21 +377,21 @@ const Index = () => {
               {
                 icon: Shield,
                 title: "Blindagem Jurídica",
-                desc: "O sistema valida se o resíduo combina com o destino. Nunca mais envie carga errada e evite multas milionárias do IBAMA.",
+                desc: "O sistema valida se o resíduo combina com o destino. Proteja sua empresa e seus clientes de multas e não-conformidades.",
                 accent: "bg-primary/10 text-primary",
                 border: "hover:border-primary/40",
               },
               {
                 icon: Zap,
-                title: "Preenchimento Inteligente",
-                desc: "Catálogos oficiais do IBAMA carregados automaticamente. CEP auto-completa endereço. Zero digitação manual, zero erros.",
+                title: "Gestão Multiempresa",
+                desc: "Cadastre dezenas de CNPJs de clientes e opere tudo em um único painel. Emita, rastreie e documente sem trocar de conta.",
                 accent: "bg-warning/10 text-warning",
                 border: "hover:border-warning/40",
               },
               {
                 icon: TrendingUp,
-                title: "Marketplace de Resíduos",
-                desc: "Conecte-se a quem compra seu lixo. Transforme custo de descarte em nova receita para sua empresa.",
+                title: "Rastreio e Comprovação",
+                desc: "Acompanhe cada carga em tempo real e centralize CDFs e comprovantes. Ofereça transparência total ao seu cliente.",
                 accent: "bg-accent text-accent-foreground",
                 border: "hover:border-accent-foreground/30",
               },

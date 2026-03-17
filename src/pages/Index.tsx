@@ -237,8 +237,8 @@ const Index = () => {
                   <Shield className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-foreground">100% Compliance</p>
-                  <p className="text-xs text-muted-foreground">Validação IBAMA automática</p>
+                 <p className="text-sm font-bold text-foreground">100% Compliance</p>
+                  <p className="text-xs text-muted-foreground">Validação SINIR automática</p>
                 </div>
               </div>
 

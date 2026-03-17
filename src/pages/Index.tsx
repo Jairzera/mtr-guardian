@@ -426,9 +426,9 @@ const Index = () => {
             {/* Connector line */}
             <div className="hidden md:block absolute top-12 left-[20%] right-[20%] h-px bg-gradient-to-r from-transparent via-sidebar-border to-transparent" />
             {[
-              { step: "01", icon: FileText, title: "Emita o MTR", desc: "Preencha em segundos pelo painel web. Dados validados automaticamente contra a base do IBAMA." },
-              { step: "02", icon: Truck, title: "Rastreie a Carga", desc: "O motorista recebe o link de rastreio. Acompanhe a ida e a entrega em tempo real no mapa." },
-              { step: "03", icon: Award, title: "Documente Tudo", desc: "O destinador confirma o recebimento. Todos os comprovantes ficam organizados no seu Cofre Jurídico." },
+              { step: "01", icon: FileText, title: "Emita o MTR", desc: "Preencha em segundos pelo painel web. Selecione o cliente, o resíduo e o destino — tudo validado automaticamente." },
+              { step: "02", icon: Truck, title: "Rastreie a Carga", desc: "O motorista recebe o link de rastreio. Você e seu cliente acompanham a coleta e a entrega em tempo real." },
+              { step: "03", icon: Award, title: "Documente Tudo", desc: "Comprovantes de recebimento e CDFs ficam organizados no Cofre Jurídico. Relatórios prontos para fiscalização." },
             ].map((s, i) => (
               <div key={s.step} className="relative text-center space-y-5">
                 <div className="w-16 h-16 rounded-2xl gradient-primary flex items-center justify-center mx-auto shadow-primary relative z-10 transition-transform hover:scale-105">
